@@ -1,0 +1,37 @@
+{
+  "name": "io.fourplayers.odin",
+  "version": "1.6.4",
+  "displayName": "4Players ODIN",
+  "description": "A Unity integration plugin to add 4Players ODIN technology into your game.",
+  "unity": "2019.4",
+  "dependencies": {},
+  "documentationUrl": "https://developers.4players.io/odin",
+  "license": "MIT",
+  "keywords": [
+    "4players",
+    "odin",
+    "sdk",
+    "audio",
+    "chat",
+    "3d sound",
+    "spatial audio",
+    "communication",
+    "integration",
+    "voice",
+    "voip"
+  ],
+  "author": {
+    "name": "4Players GmbH",
+    "email": "info@4players.io",
+    "url": "https://www.4players.io"
+  },
+  "testables": [
+    "io.fourplayers.odin"
+  ],
+  "hideInEditor": false,
+  "samples": [{
+    "displayName": "Examples",
+    "description": "Examples showcasing ODIN core features including Push-To-Talk, 3D Audio, and more.",
+    "path": "Samples"
+  }]
+}

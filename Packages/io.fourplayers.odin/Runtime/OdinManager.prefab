@@ -1,0 +1,174 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1257227337902900295
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4347901583853084589}
+  - component: {fileID: 5540569860311324330}
+  - component: {fileID: 5372910402810491490}
+  - component: {fileID: 7715469215244056103}
+  - component: {fileID: 3711129780530095855}
+  m_Layer: 0
+  m_Name: OdinManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4347901583853084589
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1257227337902900295}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5540569860311324330
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1257227337902900295}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2cc55e3f392cb7246a1515d44c061f9b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &5372910402810491490
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1257227337902900295}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a1daa96d9a65de4ebf4538816a59d45, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Verbose: 0
+  VerboseDebug: 0
+  AccessKey: 
+  ClientId: 
+  Server: https://gateway.odin.4players.io
+  UserDataText: 
+  DeviceSampleRate: 1
+  DeviceChannels: 1
+  RemoteSampleRate: 48000
+  RemoteChannels: 1
+  PeerJoinedEvent: 1
+  PeerLeftEvent: 1
+  PeerUpdatedEvent: 1
+  MediaAddedEvent: 1
+  MediaRemovedEvent: 1
+  RoomUpdatedEvent: 1
+  MediaActiveStateChangedEvent: 1
+  MessageReceivedEvent: 1
+  TokenLifetime: 300
+  VoiceActivityDetection: 1
+  VoiceActivityDetectionAttackProbability: 0.9
+  VoiceActivityDetectionReleaseProbability: 0.8
+  VolumeGate: 0
+  VolumeGateAttackLoudness: -30
+  VolumeGateReleaseLoudness: -40
+  EchoCanceller: 0
+  HighPassFilter: 0
+  PreAmplifier: 0
+  NoiseSuppressionLevel: 2
+  TransientSuppressor: 0
+--- !u!114 &7715469215244056103
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1257227337902900295}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a3ac950980e11974fa99d75c09ea5ba0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Microphone: {fileID: 3711129780530095855}
+  OnRoomJoin:
+    m_PersistentCalls:
+      m_Calls: []
+  OnRoomJoined:
+    m_PersistentCalls:
+      m_Calls: []
+  OnRoomLeave:
+    m_PersistentCalls:
+      m_Calls: []
+  OnRoomLeft:
+    m_PersistentCalls:
+      m_Calls: []
+  OnPeerJoined:
+    m_PersistentCalls:
+      m_Calls: []
+  OnPeerUserDataChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  OnPeerLeft:
+    m_PersistentCalls:
+      m_Calls: []
+  OnMediaAdded:
+    m_PersistentCalls:
+      m_Calls: []
+  OnMediaRemoved:
+    m_PersistentCalls:
+      m_Calls: []
+  OnMediaActiveStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  OnRoomUserDataChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  OnMessageReceived:
+    m_PersistentCalls:
+      m_Calls: []
+  OnConnectionStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  OnCreatedMediaObject:
+    m_PersistentCalls:
+      m_Calls: []
+  OnDeleteMediaObject:
+    m_PersistentCalls:
+      m_Calls: []
+  _persistent: 1
+  Use3DAudio: 0
+  CreatePlayback: 1
+  PlaybackAudioMixer: {fileID: 0}
+  PlaybackAudioMixerGroup: {fileID: 0}
+--- !u!114 &3711129780530095855
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1257227337902900295}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2b94aaec87e5ac649a98e650ec999187, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  RedirectCapturedAudio: 1
+  ContinueRecording: 1
+  AudioClipLength: 3
+  OverrideSampleRate: 0
+  SampleRate: 1
+  CustomInputDevice: 1
+  InputDevice: 
+  AutostartListen: 1
+  Loopback: 0

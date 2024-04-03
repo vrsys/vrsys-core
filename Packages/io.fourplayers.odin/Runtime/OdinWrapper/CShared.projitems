@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>6f0c8d68-e5c1-421f-9a05-9529b087b718</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>.</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Core\Handles\ResamplerHandle.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\Handles\RoomHandle.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\Handles\SdkHandle.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\Handles\StreamHandle.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\Handles\TokenGeneratorHandle.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\Imports\Native.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\Imports\NativeBindings.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\Imports\NativeMethodBindings.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\Imports\NativeMethods.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\IOdinApmConfig.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\OdinException.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\OdinLibrary.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\OdinLibraryParameters.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\OdinMediaConfig.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\OdinRoomConfig.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\Platform\PlatformSpecific.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\Platform\Supported.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\Utility.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)OdinClient.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Odin\Media\IAudioStream.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Odin\Media\IVideoStream.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Odin\Media\MediaCollection.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Odin\Media\MediaStream.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Odin\Media\MicrophoneStream.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Odin\Media\PlaybackStream.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Odin\OdinDefaults.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Odin\OdinWrapperException.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Odin\Peer\Peer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Odin\Peer\PeerCollection.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Odin\Room\Room.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Odin\Room\RoomCollection.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Odin\Room\RoomConfig.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Odin\Room\RoomEvents.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Odin\UserData.cs" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,13 @@
+fileFormatVersion: 2
+guid: ace820dedac0545429ec99b39e23a29f
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - OdinManagerPrefab: {fileID: 1257227337902900295, guid: a421abe223e2dee45b89e686a84e5545,
+      type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

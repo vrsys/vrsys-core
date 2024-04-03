@@ -92,3 +92,9 @@ ProjectSettings/Packages/com.unity.testtools.codecoverage/Settings.json
 ProjectSettings/PresetManager.asset
 ProjectSettings/TimeManager.asset
 ProjectSettings/VFXManager.asset
+Assets/DefaultNetworkPrefabs.asset
+Assets/DefaultNetworkPrefabs.asset.meta
+Assets/XRI/Settings/Resources/XRDeviceSimulatorSettings.asset
+Assets/XRI/Settings/Resources/XRDeviceSimulatorSettings.asset.meta
+Assets/XRI/Settings/XRInteractionEditorSettings.asset
+Assets/XRI/Settings/XRInteractionEditorSettings.asset.meta

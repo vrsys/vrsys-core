@@ -70,3 +70,25 @@ crashlytics-build.properties
 # Temporary auto-generated Android Assets
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
+
+# Framework repository ignores
+ProjectSettings/EditorSettings.asset
+ProjectSettings/ProjectSettings.asset
+ProjectSettings/QualitySettings.asset
+ProjectSettings/GraphicsSettings.asset
+ProjectSettings/XRSettings.asset
+ProjectSettings/UnityConnectSettings.asset
+ProjectSettings/VersionControlSettings.asset
+.idea/*
+ProjectSettings/Physics2DSettings.asset
+ProjectSettings/AudioManager.asset
+ProjectSettings/ClusterInputManager.asset
+ProjectSettings/DynamicsManager.asset
+ProjectSettings/EditorBuildSettings.asset
+ProjectSettings/InputManager.asset
+ProjectSettings/MemorySettings.asset
+ProjectSettings/PackageManagerSettings.asset
+ProjectSettings/Packages/com.unity.testtools.codecoverage/Settings.json
+ProjectSettings/PresetManager.asset
+ProjectSettings/TimeManager.asset
+ProjectSettings/VFXManager.asset

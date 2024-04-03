@@ -1,0 +1,76 @@
+{
+    "name": "VRSYS-Odin-Actions",
+    "maps": [
+        {
+            "name": "Voice Control",
+            "id": "d1cf1b9c-75d4-4928-989a-117e9dbeb8ae",
+            "actions": [
+                {
+                    "name": "Toggle Stereo",
+                    "type": "Button",
+                    "id": "53576a3f-d585-42df-93b5-a39555ea1793",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Toggle Global Mute",
+                    "type": "Button",
+                    "id": "8b1bb8c7-efa4-498f-b852-dc59137ed4d0",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "37657031-136f-4686-af52-b1e99d3f7986",
+                    "path": "<Keyboard>/period",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Toggle Stereo",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "b969f6ed-ec51-48b6-bb79-1298c8cea604",
+                    "path": "<XRController>{LeftHand}/primaryButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Toggle Stereo",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "2ded61d5-4b24-4f29-b5a8-76f0a22cc306",
+                    "path": "<XRController>{LeftHand}/secondaryButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Toggle Global Mute",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "a8feac4b-eb46-49c9-9083-df9e642b4400",
+                    "path": "<Keyboard>/m",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Toggle Global Mute",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}

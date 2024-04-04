@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.18028378, g: 0.22571412, b: 0.30692285, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -207,7 +207,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   loadSceneNow: 0
-  loadSceneNowTarget: VRSYS-MultiScene-LobbySwitch
+  loadSceneNowTarget: VRSYS-MultiScene-SceneB
 --- !u!1 &266033499
 GameObject:
   m_ObjectHideFlags: 0
@@ -519,11 +519,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4795098908308064376, guid: fe0e5761f8533b645a893bc92770cc8c, type: 3}
       propertyPath: m_LocalScale.x
-      value: 1.1123595
+      value: 1.1685393
       objectReference: {fileID: 0}
     - target: {fileID: 4795098908308064376, guid: fe0e5761f8533b645a893bc92770cc8c, type: 3}
       propertyPath: m_LocalScale.y
-      value: 1.2
+      value: 1.3000001
       objectReference: {fileID: 0}
     - target: {fileID: 4795098908349719107, guid: fe0e5761f8533b645a893bc92770cc8c, type: 3}
       propertyPath: m_RootOrder

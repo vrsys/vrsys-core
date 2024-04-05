@@ -1,0 +1,84 @@
+{
+    "configName": "Projection Wall Config",
+    "startupFeedback": false,
+    "startupFeedbackPath": "",
+  "multiUserSettings": {
+    "dTrackPort": 5005,
+    "screenWidth": 4.32,
+    "screenHeight": 2.32,
+    "screenPos": [
+      0.0,
+      1.38,
+      1.6
+    ],
+    "windowSettings": [
+      4096,
+      2160,
+      0,
+      0
+    ],
+    "windowSettingsCropped": [
+      4096,
+      2160,
+      0,
+      0
+    ],
+    "monoFallback": false,
+    "monoFallbackDetectionDuration": 10.0,
+    "monoFallbackDetectionMovementThreshold": 0.01,
+    "userDefault": {
+      "username": "Default Wall User",
+      "hostname": "localhost",
+      "masterFlag": true,
+      "headtrackingFlag": true,
+      "trackingID": 1,
+      "fixedHeadPos": [
+        0,
+        1.7,
+        -0.4
+      ],
+      "eyeDistance": 0.064
+    },
+    "users": [
+      {
+        "username": "User1",
+        "hostname": "desktop1",
+        "masterFlag": true,
+        "headtrackingFlag": true,
+        "trackingID": 1,
+        "fixedHeadPos": [
+          0,
+          1.7,
+          -0.4
+        ],
+        "eyeDistance": 0.064
+      },
+      {
+        "username": "User2",
+        "hostname": "desktop2",
+        "masterFlag": false,
+        "headtrackingFlag": true,
+        "trackingID": 2,
+        "fixedHeadPos": [
+          0,
+          1.7,
+          -0.4
+        ],
+        "eyeDistance": 0.064
+      },
+      {
+        "username": "User3",
+        "hostname": "desktop3",
+        "masterFlag": false,
+        "headtrackingFlag": true,
+        "trackingID": 3,
+        "fixedHeadPos": [
+          0,
+          1.7,
+          -0.4
+        ],
+        "eyeDistance": 0.064
+      }
+    ]
+  }
+}

@@ -21,3 +21,7 @@ To use the package in your project, first include the following packages:
 
 ### If you want to use the 4Players Odin Voice integration:
 - Odin SDK v1.6.4 (https://github.com/4Players/odin-sdk-unity/releases/tag/v1.6.4)
+
+## Documentation
+
+t.d.a.

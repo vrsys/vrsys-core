@@ -1,5 +1,5 @@
 {
-    "configName": "Projection Wall Config",
+    "configName": "Projection Wall 6 Users S143 Example Config ",
     "startupFeedback": false,
     "startupFeedbackPath": "",
   "multiUserSettings": {
@@ -40,81 +40,57 @@
       "eyeDistance": 0.064
     },
     "users": [
-      {
-        "username": "User1",
-        "hostname": "desktop1",
+	  {
+        "username": "Alice",
+        "hostname": "ikaros",
+        "masterFlag": false,
+        "headtrackingFlag": true,
+        "trackingID": 43,
+        "fixedHeadPos": [ 0, 1.7, -0.4 ],
+        "eyeDistance": 0.064
+      },{
+        "username": "Bob",
+        "hostname": "minos",
         "masterFlag": true,
         "headtrackingFlag": true,
-        "trackingID": 1,
-        "fixedHeadPos": [
-          0,
-          1.7,
-          -0.4
-        ],
+        "trackingID": 44,
+        "fixedHeadPos": [ 0, 1.7, -0.4 ],
         "eyeDistance": 0.064
       },
       {
-        "username": "User2",
-        "hostname": "desktop2",
+        "username": "Eve",
+        "hostname": "kepler",
         "masterFlag": false,
         "headtrackingFlag": true,
-        "trackingID": 2,
-        "fixedHeadPos": [
-          0,
-          1.7,
-          -0.4
-        ],
+        "trackingID": 45,
+        "fixedHeadPos": [ 0, 1.7, -0.4 ],
+        "eyeDistance": 0.064
+      },      
+	  {
+        "username": "Charlie",
+        "hostname": "apollo",
+        "masterFlag": false,
+        "headtrackingFlag": true,
+        "trackingID": 46,
+        "fixedHeadPos": [ 0, 1.7, -0.4 ],
         "eyeDistance": 0.064
       },
       {
-        "username": "User3",
-        "hostname": "desktop3",
+        "username": "Diana",
+        "hostname": "helios",
         "masterFlag": false,
         "headtrackingFlag": true,
-        "trackingID": 3,
-        "fixedHeadPos": [
-          0,
-          1.7,
-          -0.4
-        ],
-        "eyeDistance": 0.064
-      },      {
-        "username": "User4",
-        "hostname": "desktop4",
-        "masterFlag": true,
-        "headtrackingFlag": true,
-        "trackingID": 1,
-        "fixedHeadPos": [
-          0,
-          1.7,
-          -0.4
-        ],
+        "trackingID": 47,
+        "fixedHeadPos": [ 0, 1.7, -0.4 ],
         "eyeDistance": 0.064
       },
       {
-        "username": "User5",
-        "hostname": "desktop5",
+        "username": "Franz",
+        "hostname": "boreas",
         "masterFlag": false,
         "headtrackingFlag": true,
-        "trackingID": 2,
-        "fixedHeadPos": [
-          0,
-          1.7,
-          -0.4
-        ],
-        "eyeDistance": 0.064
-      },
-      {
-        "username": "User6",
-        "hostname": "desktop6",
-        "masterFlag": false,
-        "headtrackingFlag": true,
-        "trackingID": 6,
-        "fixedHeadPos": [
-          0,
-          1.7,
-          -0.4
-        ],
+        "trackingID": 48,
+        "fixedHeadPos": [ 0, 1.7, -0.4 ],
         "eyeDistance": 0.064
       }
     ]

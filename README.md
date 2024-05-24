@@ -36,5 +36,13 @@ To use the package in your project, first include the following packages:
 - In the dropdown menu select the target device (e.g. HMD). For Quest controllers selection is done using the "A" button.
 - Add or join a lobby
 - You should now be in a networked version of the scene and see other users that have joined your lobby.
- 
+
+### Single Scene with Odin Voice Test
+- Open the scene "Assets/VRSYS/Chat-Odin/Demo/VRSYS-3DUI-Odin"
+- On the "OdinEditorConfig" component of the "OdinManager" object, click "Manage Access" under "ClientAuthentication" and generate a new access key in the window that opens
+- Start the scene "Assets/VRSYS/Chat-Odin/Demo/VRSYS-3DUI-Odin"
+- In the dropdown menu select the target device (e.g. HMD). For Quest controllers selection is done using the "A" button.
+- Add or join a lobby
+- You should now be in a networked version of the scene and see/hear other users that have joined your lobby.
+
 t.b.a.

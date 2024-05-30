@@ -984,60 +984,6 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
-                },
-                {
-                    "name": "Aim Position",
-                    "type": "Value",
-                    "id": "b9c6fb78-2b27-4d20-a42a-94f37cba1745",
-                    "expectedControlType": "Vector3",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": true
-                },
-                {
-                    "name": "Aim Rotation",
-                    "type": "Value",
-                    "id": "a95b8155-f0bd-41c6-aa5f-00c5a6024c11",
-                    "expectedControlType": "Quaternion",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": true
-                },
-                {
-                    "name": "Aim Flags",
-                    "type": "Value",
-                    "id": "6ef4633e-c258-49f4-b5ca-b6dcc003ff30",
-                    "expectedControlType": "Integer",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": true
-                },
-                {
-                    "name": "Pinch Position",
-                    "type": "Value",
-                    "id": "72715fad-114a-4e14-9af4-fc9d9381f6ad",
-                    "expectedControlType": "Vector3",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": true
-                },
-                {
-                    "name": "Poke Position",
-                    "type": "Value",
-                    "id": "e9c27301-2f2b-4206-9025-cb98fed505e2",
-                    "expectedControlType": "Vector3",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": true
-                },
-                {
-                    "name": "Poke Rotation",
-                    "type": "Value",
-                    "id": "89d01f40-2a46-40d3-a752-42b2d8045e55",
-                    "expectedControlType": "Quaternion",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": true
                 }
             ],
             "bindings": [
@@ -1067,17 +1013,6 @@
                     "name": "second",
                     "id": "70d61cfb-812f-4404-93fc-21ab1ebe8e08",
                     "path": "<XRController>{LeftHand}/deviceRotation",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Rotation",
-                    "isComposite": false,
-                    "isPartOfComposite": true
-                },
-                {
-                    "name": "third",
-                    "id": "c5a4ce23-5cd7-4bee-98ba-07b4afe85c5a",
-                    "path": "<XRHandDevice>{LeftHand}/deviceRotation",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
@@ -1119,17 +1054,6 @@
                     "isPartOfComposite": true
                 },
                 {
-                    "name": "third",
-                    "id": "8a933b65-a182-40f8-8354-3e9cec591d83",
-                    "path": "<XRHandDevice>{LeftHand}/devicePosition",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Position",
-                    "isComposite": false,
-                    "isPartOfComposite": true
-                },
-                {
                     "name": "",
                     "id": "04db08b3-e3b3-4d0a-ae28-5236dc58df05",
                     "path": "<XRController>{LeftHand}/*",
@@ -1153,100 +1077,12 @@
                 },
                 {
                     "name": "",
-                    "id": "0e2c2f39-dfa6-4e79-9f74-ec745c90a7ef",
-                    "path": "<XRHandDevice>{LeftHand}/trackingState",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Tracking State",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "1db65514-cc68-4edb-87b8-6f4f538d57e3",
-                    "path": "<MetaAimHand>{LeftHand}/devicePosition",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Aim Position",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "ac414691-692a-4da1-b6ee-91b6317089ce",
-                    "path": "<MetaAimHand>{LeftHand}/deviceRotation",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Aim Rotation",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "9820d450-5639-4802-858f-5cb49272e871",
-                    "path": "<XRHandDevice>{LeftHand}/pinchPosition",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Pinch Position",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "2f4faa04-4445-44ae-9aaa-b6b9924cfb63",
-                    "path": "<XRHandDevice>{LeftHand}/pokePosition",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Poke Position",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "bd541401-9f86-4c02-bd6d-168c05c9b769",
-                    "path": "<XRHandDevice>{LeftHand}/pokeRotation",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Poke Rotation",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
                     "id": "855800a0-8d7a-4f8c-bb99-8ae215e9578b",
                     "path": "<XRController>{LeftHand}/isTracked",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
                     "action": "Is Tracked",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "8c078fe7-7ce8-45b9-8b21-c44ff35c13d0",
-                    "path": "<XRHandDevice>{LeftHand}/isTracked",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Is Tracked",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "612b35e7-c82b-4adc-a45d-e3bc3db17913",
-                    "path": "<MetaAimHand>{LeftHand}/aimFlags",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Aim Flags",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
@@ -1343,30 +1179,8 @@
                 },
                 {
                     "name": "",
-                    "id": "2183d3be-5e4b-4153-910d-f34ebe62edd1",
-                    "path": "<MetaAimHand>{LeftHand}/indexPressed",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Select",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
                     "id": "34ee0427-ac5b-4e73-b5ff-d8692c0e962e",
                     "path": "<XRController>{LeftHand}/grip",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Select Value",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "b15374b3-3400-4747-b6a3-c4b6b095502b",
-                    "path": "<MetaAimHand>{LeftHand}/pinchStrengthIndex",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
@@ -1409,30 +1223,8 @@
                 },
                 {
                     "name": "",
-                    "id": "c30f0c75-9280-4b4a-aa03-87fe47f506c6",
-                    "path": "<MetaAimHand>{LeftHand}/indexPressed",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "UI Press",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
                     "id": "d6f3768c-756b-48c2-bb7b-50aa622c6c69",
                     "path": "<XRController>{LeftHand}/trigger",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "UI Press Value",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "19975f41-42be-42a6-9cb6-36514db4e506",
-                    "path": "<MetaAimHand>{LeftHand}/pinchStrengthIndex",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
@@ -1680,60 +1472,6 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
-                },
-                {
-                    "name": "Aim Position",
-                    "type": "Value",
-                    "id": "41270f88-a453-4221-b834-81d494b06b96",
-                    "expectedControlType": "Vector3",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": true
-                },
-                {
-                    "name": "Aim Rotation",
-                    "type": "Value",
-                    "id": "42e5805c-b1a5-438d-865e-58547dc168b0",
-                    "expectedControlType": "Quaternion",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": true
-                },
-                {
-                    "name": "Aim Flags",
-                    "type": "Value",
-                    "id": "a5bcbc37-aebc-4277-8e97-f3e8f636bc05",
-                    "expectedControlType": "Integer",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": true
-                },
-                {
-                    "name": "Pinch Position",
-                    "type": "Value",
-                    "id": "ecd5ea80-5192-454b-a489-b5c9df000a51",
-                    "expectedControlType": "Vector3",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": true
-                },
-                {
-                    "name": "Poke Position",
-                    "type": "Value",
-                    "id": "e82563f4-5b22-45a6-b7c0-a8aa7910633c",
-                    "expectedControlType": "Vector3",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": true
-                },
-                {
-                    "name": "Poke Rotation",
-                    "type": "Value",
-                    "id": "b03aa858-ef1b-4d71-a3e3-f088bf26b45b",
-                    "expectedControlType": "Quaternion",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": true
                 }
             ],
             "bindings": [
@@ -1763,17 +1501,6 @@
                     "name": "second",
                     "id": "490bb931-c8e3-434e-963d-3742ef875f46",
                     "path": "<XRController>{RightHand}/deviceRotation",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Rotation",
-                    "isComposite": false,
-                    "isPartOfComposite": true
-                },
-                {
-                    "name": "third",
-                    "id": "78662579-5fd1-4513-b437-f6191a0f5401",
-                    "path": "<XRHandDevice>{RightHand}/deviceRotation",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
@@ -1815,17 +1542,6 @@
                     "isPartOfComposite": true
                 },
                 {
-                    "name": "third",
-                    "id": "a85ad414-6907-47c4-861b-3ef9438cc220",
-                    "path": "<XRHandDevice>{RightHand}/devicePosition",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Position",
-                    "isComposite": false,
-                    "isPartOfComposite": true
-                },
-                {
                     "name": "",
                     "id": "f3a06b31-5931-4d0d-a5b7-3128d2c61d76",
                     "path": "<XRController>{RightHand}/*",
@@ -1849,100 +1565,12 @@
                 },
                 {
                     "name": "",
-                    "id": "ee19ef40-3d8e-480b-953e-fdc001fea7e4",
-                    "path": "<XRHandDevice>{RightHand}/trackingState",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Tracking State",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "31dd0811-af47-4fbe-a429-4940f579d8d4",
-                    "path": "<MetaAimHand>{RightHand}/devicePosition",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Aim Position",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "1bf4dffd-3239-4f67-a19c-942cd9b06f7d",
-                    "path": "<MetaAimHand>{RightHand}/deviceRotation",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Aim Rotation",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "a3be5e4b-23fd-484b-b084-6af6ea8a68fe",
-                    "path": "<XRHandDevice>{RightHand}/pinchPosition",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Pinch Position",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "09252566-a2fd-4e08-ab21-4e221e5c2f85",
-                    "path": "<XRHandDevice>{RightHand}/pokePosition",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Poke Position",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "1c9fe6c9-3fa3-4fb0-8c12-37d5df431c20",
-                    "path": "<XRHandDevice>{RightHand}/pokeRotation",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Poke Rotation",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
                     "id": "24e3daa9-01a8-4b87-9dde-82eff28bcd07",
                     "path": "<XRController>{RightHand}/isTracked",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
                     "action": "Is Tracked",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "d0958985-a833-4bf9-a266-b3446e91c099",
-                    "path": "<XRHandDevice>{RightHand}/isTracked",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Is Tracked",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "c55be7fc-c45f-431e-b268-b1b4da319eae",
-                    "path": "<MetaAimHand>{RightHand}/aimFlags",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Aim Flags",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
@@ -2039,30 +1667,8 @@
                 },
                 {
                     "name": "",
-                    "id": "5e6624f5-3392-4107-a050-f74c047a2f5e",
-                    "path": "<MetaAimHand>{RightHand}/indexPressed",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Select",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
                     "id": "512e1564-29b7-43ff-9f0d-bbeec86c3532",
                     "path": "<XRController>{RightHand}/grip",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Select Value",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "3a346633-81de-442d-99dc-ca1d2c0d6b5d",
-                    "path": "<MetaAimHand>{RightHand}/pinchStrengthIndex",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
@@ -2105,30 +1711,8 @@
                 },
                 {
                     "name": "",
-                    "id": "ea5597a5-9c20-4e26-9eed-0874bd6b3626",
-                    "path": "<MetaAimHand>{RightHand}/indexPressed",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "UI Press",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
                     "id": "aabe9afb-86e5-4079-8947-ca44aad4f43f",
                     "path": "<XRController>{RightHand}/trigger",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "UI Press Value",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "5111ba71-100c-4d69-b968-0de619812de5",
-                    "path": "<MetaAimHand>{RightHand}/pinchStrengthIndex",
                     "interactions": "",
                     "processors": "",
                     "groups": "",

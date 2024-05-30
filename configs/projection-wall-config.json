@@ -78,6 +78,44 @@
           -0.4
         ],
         "eyeDistance": 0.064
+      },      {
+        "username": "User4",
+        "hostname": "desktop4",
+        "masterFlag": true,
+        "headtrackingFlag": true,
+        "trackingID": 1,
+        "fixedHeadPos": [
+          0,
+          1.7,
+          -0.4
+        ],
+        "eyeDistance": 0.064
+      },
+      {
+        "username": "User5",
+        "hostname": "desktop5",
+        "masterFlag": false,
+        "headtrackingFlag": true,
+        "trackingID": 2,
+        "fixedHeadPos": [
+          0,
+          1.7,
+          -0.4
+        ],
+        "eyeDistance": 0.064
+      },
+      {
+        "username": "User6",
+        "hostname": "desktop6",
+        "masterFlag": false,
+        "headtrackingFlag": true,
+        "trackingID": 6,
+        "fixedHeadPos": [
+          0,
+          1.7,
+          -0.4
+        ],
+        "eyeDistance": 0.064
       }
     ]
   }

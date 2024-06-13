@@ -161,6 +161,7 @@ GameObject:
   - component: {fileID: 3170936477419720336}
   - component: {fileID: 7185273160591877586}
   - component: {fileID: 5560205822843782552}
+  - component: {fileID: 4200266085734284299}
   m_Layer: 0
   m_Name: DesktopUserPrefab
   m_TagString: Untagged
@@ -196,7 +197,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 951099334
+  GlobalObjectIdHash: 651206118
+  InScenePlacedSourceGlobalObjectIdHash: 0
   AlwaysReplicateAsRoot: 0
   SynchronizeTransform: 1
   ActiveSceneSynchronization: 0
@@ -216,6 +218,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c1175d4c69579d54faa82ae10441d03c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  UseUnreliableDeltas: 0
   SyncPositionX: 1
   SyncPositionY: 1
   SyncPositionZ: 1
@@ -332,7 +335,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8231461269131396514}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9b3f161e6a164b34da7a3c7ed6008993, type: 3}
   m_Name: 
@@ -437,7 +440,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8231461269131396514}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 04425e4a1fcd45e46a6acf1ade0ffaaa, type: 3}
   m_Name: 
@@ -450,6 +453,80 @@ MonoBehaviour:
   riseSpeed: 9.81
   fallSpeed: 2
   adjustmentThreshold: 0.01
+--- !u!114 &4200266085734284299
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8231461269131396514}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cde496cb356ca584599c5e5b4a8ba1a3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  target: {fileID: 8231461269484759695}
+  currentNavigationTechnique: 0
+  moveAction:
+    m_UseReference: 1
+    m_Action:
+      m_Name: Move
+      m_Type: 0
+      m_ExpectedControlType: 
+      m_Id: ddd43a1e-8071-4503-b89e-954c6a426557
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
+    m_Reference: {fileID: -7086023270213894933, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
+  translationVelocityAction:
+    m_UseReference: 1
+    m_Action:
+      m_Name: Translation Velocity
+      m_Type: 0
+      m_ExpectedControlType: 
+      m_Id: 9ecbe648-0f10-472c-b9bc-9d280eb2927a
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
+    m_Reference: {fileID: 4401980307490995021, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
+  headRotationAction:
+    m_UseReference: 1
+    m_Action:
+      m_Name: Head Rotation
+      m_Type: 0
+      m_ExpectedControlType: 
+      m_Id: 9ae19221-2735-4861-8fbc-985b3a976bfb
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
+    m_Reference: {fileID: -5127996711169741789, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
+  headRotationVelocityAction:
+    m_UseReference: 1
+    m_Action:
+      m_Name: Head Rotation Velocity
+      m_Type: 0
+      m_ExpectedControlType: 
+      m_Id: 1a7103fc-792d-4819-8a93-0db33ac9f449
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
+    m_Reference: {fileID: 1583054133644129676, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
+  techniqueSelectionAction:
+    m_UseReference: 1
+    m_Action:
+      m_Name: Technique Selection
+      m_Type: 0
+      m_ExpectedControlType: 
+      m_Id: d60a33bd-39b8-4413-8e50-34e03a13b814
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
+    m_Reference: {fileID: 8487737116985186960, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
 --- !u!1 &8231461269484759694
 GameObject:
   m_ObjectHideFlags: 0
@@ -550,6 +627,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c1175d4c69579d54faa82ae10441d03c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  UseUnreliableDeltas: 0
   SyncPositionX: 1
   SyncPositionY: 1
   SyncPositionZ: 1

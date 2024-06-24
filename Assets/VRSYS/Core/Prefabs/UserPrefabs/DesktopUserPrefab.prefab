@@ -353,6 +353,9 @@ MonoBehaviour:
       m_SingletonActionBindings: []
       m_Flags: 0
     m_Reference: {fileID: 4584091051045144211, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
+  translationVelocity: 3
+  rotationVelocity: 5
+  verbose: 0
   yawAction:
     m_UseReference: 1
     m_Action:
@@ -377,8 +380,6 @@ MonoBehaviour:
       m_SingletonActionBindings: []
       m_Flags: 0
     m_Reference: {fileID: 15680138719376272, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
-  translationVelocity: 3
-  rotationVelocity: 5
 --- !u!114 &7185273160591877586
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -386,7 +387,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8231461269131396514}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 29bee4e7304395649ae79ef78a81adb6, type: 3}
   m_Name: 
@@ -404,6 +405,9 @@ MonoBehaviour:
       m_SingletonActionBindings: []
       m_Flags: 0
     m_Reference: {fileID: 3890643210046113832, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
+  translationVelocity: 4
+  rotationVelocity: 15
+  verbose: 1
   verticalMovementAction:
     m_UseReference: 1
     m_Action:
@@ -430,9 +434,7 @@ MonoBehaviour:
     m_Reference: {fileID: 2693381537909975644, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
   verticalMovement: 1
   flipVerticalMovementMapping: 0
-  translationVelocity: 4
   verticalTranslationVelocity: 4
-  rotationVelocity: 15
 --- !u!114 &5560205822843782552
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -460,13 +462,12 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8231461269131396514}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: cde496cb356ca584599c5e5b4a8ba1a3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   target: {fileID: 8231461269484759695}
-  currentNavigationTechnique: 0
   moveAction:
     m_UseReference: 1
     m_Action:
@@ -479,6 +480,10 @@ MonoBehaviour:
       m_SingletonActionBindings: []
       m_Flags: 0
     m_Reference: {fileID: -7086023270213894933, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
+  translationVelocity: 3
+  rotationVelocity: 5
+  verbose: 0
+  currentNavigationTechnique: 0
   translationVelocityAction:
     m_UseReference: 1
     m_Action:
@@ -527,6 +532,18 @@ MonoBehaviour:
       m_SingletonActionBindings: []
       m_Flags: 0
     m_Reference: {fileID: 8487737116985186960, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
+  resetOrientationAction:
+    m_UseReference: 1
+    m_Action:
+      m_Name: Reset Orientation
+      m_Type: 0
+      m_ExpectedControlType: 
+      m_Id: 1a974c72-1a2d-4606-8803-a114dfa33828
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
+    m_Reference: {fileID: 7819175934794019079, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
 --- !u!1 &8231461269484759694
 GameObject:
   m_ObjectHideFlags: 0

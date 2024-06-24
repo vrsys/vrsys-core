@@ -44,39 +44,19 @@ using VRSYS.Core.Logging;
 
 namespace VRSYS.Core.Navigation
 {
-    public class JoystickNavigation : MonoBehaviour
+    public class JoystickNavigation : ControllerNavigation
     {
         #region Member Variables
 
-        public Transform target;
 
-        [Header("Input Actions")]
-        public InputActionProperty moveAction;
+        [Header("Controller Specific Input Actions")]
         public InputActionProperty verticalMovementAction;
         public InputActionProperty rotateAction;
         
         [Header("Movement Properties")]
         public bool verticalMovement = false;
         public bool flipVerticalMovementMapping = false;
-        [Range(0, 10)] public float translationVelocity = 3.0f;
         [Range(0, 10)] public float verticalTranslationVelocity = 3.0f;
-        [Range(0, 30)] public float rotationVelocity = 5.0f;
-
-        private bool? isOfflineOrOwner_;
-        private bool isOfflineOrOwner
-        {
-            get
-            {
-                if (!isOfflineOrOwner_.HasValue)
-                {
-                    if (GetComponent<NetworkObject>() is not null)
-                        isOfflineOrOwner_ = GetComponent<NetworkObject>().IsOwner;
-                    else
-                        isOfflineOrOwner_ = true;
-                }
-                return isOfflineOrOwner_.Value;
-            }
-        }
 
         #endregion
 
@@ -84,12 +64,9 @@ namespace VRSYS.Core.Navigation
 
         private void Start()
         {
-            if (!isOfflineOrOwner)
-                Destroy(this);
-            else if (target == null)
-                target = transform;
-        }
+            Init();
 
+        }
         private void Update()
         {
             if (!isOfflineOrOwner)
@@ -101,18 +78,7 @@ namespace VRSYS.Core.Navigation
 
         #region Custom Methods
 
-        public void MapInput(Vector3 transInput, Vector3 rotInput)
-        {
-            // map translation input
-            if(transInput.magnitude > 0.0f)
-                target.Translate(transInput);
-            
-            // map rotation input
-            if(rotInput.magnitude > 0.0f)
-                target.localRotation *= Quaternion.Euler(rotInput);
-        }
-
-        public Vector3 CalcTranslationInput()
+        protected override Vector3 CalcTranslationInput()
         {
             Vector3 xzInput = new Vector3(moveAction.action.ReadValue<Vector2>().x, 0f,
                 moveAction.action.ReadValue<Vector2>().y);
@@ -130,8 +96,8 @@ namespace VRSYS.Core.Navigation
 
             return transInput;
         }
-        
-        public Vector3 CalcRotationInput()
+
+        protected override Vector3 CalcRotationInput()
         {
             Vector3 rotInput = new Vector3(0f, rotateAction.action.ReadValue<float>(), 0f);
             rotInput *= (rotationVelocity * Time.deltaTime);

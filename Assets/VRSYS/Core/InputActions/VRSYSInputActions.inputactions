@@ -2773,6 +2773,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": true
+                },
+                {
+                    "name": "Reset Orientation",
+                    "type": "Button",
+                    "id": "29c09640-6139-42fe-a05a-59f3739ca640",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -2850,6 +2859,17 @@
                     "processors": "",
                     "groups": "Xbox Controller",
                     "action": "Rotation Velocity",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "779667fb-eab7-4cf5-88f3-51eeb6408605",
+                    "path": "<XInputController>/rightShoulder",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Reset Orientation",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

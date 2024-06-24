@@ -44,6 +44,7 @@ namespace VRSYS.Core.Navigation
 {
     public class NavigationPlatformJoystickConnector : NetworkBehaviour, INavigationPlatformCallbacks
     {
+        
         private JoystickNavigation joystickNavigation;
     
         public void OnEnterPlatform(NavigationPlatformLink link)

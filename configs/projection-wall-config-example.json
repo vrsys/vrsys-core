@@ -3,7 +3,7 @@
     "startupFeedback": false,
     "startupFeedbackPath": "",
   "multiUserSettings": {
-    "dTrackPort": 5005,
+    "dTrackPort": 5006,
     "screenWidth": 4.32,
     "screenHeight": 2.32,
     "screenPos": [
@@ -31,7 +31,7 @@
       "hostname": "localhost",
       "masterFlag": true,
       "headtrackingFlag": true,
-      "trackingID": 44,
+      "trackingID": 47,
       "fixedHeadPos": [
         0,
         1.7,
@@ -42,10 +42,10 @@
     "users": [
       {
         "username": "User1",
-        "hostname": "ikaros",
+        "hostname": "desktop1",
         "masterFlag": true,
         "headtrackingFlag": true,
-        "trackingID": 43,
+        "trackingID": 1,
         "fixedHeadPos": [
           0,
           1.7,
@@ -55,10 +55,10 @@
       },
       {
         "username": "User2",
-        "hostname": "minos",
+        "hostname": "desktop2",
         "masterFlag": false,
         "headtrackingFlag": true,
-        "trackingID": 44,
+        "trackingID": 2,
         "fixedHeadPos": [
           0,
           1.7,
@@ -68,10 +68,10 @@
       },
       {
         "username": "User3",
-        "hostname": "kepler",
+        "hostname": "desktop3",
         "masterFlag": false,
         "headtrackingFlag": true,
-        "trackingID": 45,
+        "trackingID": 3,
         "fixedHeadPos": [
           0,
           1.7,

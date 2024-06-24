@@ -15,39 +15,69 @@ MonoBehaviour:
   configPath: configs/projection-wall-config.json
   verbose: 0
   config:
-    configName: 
+    configName: Projection Wall Config
     startupFeedback: 0
     startupFeedbackPath: 
     multiUserSettings:
-      screenWidth: 0
-      screenHeight: 0
+      dTrackPort: 5005
+      screenWidth: 5
+      screenHeight: 2.65
       screenPos:
       - 0
-      - 0
-      - 0
-      - 0
+      - 1.415
+      - 1.6
       windowSettings:
-      - 0
-      - 0
+      - 4096
+      - 2160
       - 0
       - 0
       windowSettingsCropped:
-      - 0
-      - 0
+      - 4096
+      - 2160
       - 0
       - 0
       monoFallback: 0
-      monoFallbackDetectionDuration: 0
-      monoFallbackDetectionMovementThreshold: 0
+      monoFallbackDetectionDuration: 10
+      monoFallbackDetectionMovementThreshold: 0.01
       userDefault:
-        username: 
-        hostname: 
-        masterFlag: 0
+        username: User
+        hostname: localhost
+        masterFlag: 1
         headtrackingFlag: 1
-        trackingID: 0
+        trackingID: 44
         fixedHeadPos:
         - 0
+        - 1.7
+        - -0.4
+        eyeDistance: 0
+      users:
+      - username: Alice
+        hostname: ikaros
+        masterFlag: 1
+        headtrackingFlag: 1
+        trackingID: 44
+        fixedHeadPos:
         - 0
-        - 0
+        - 1.7
+        - -0.4
         eyeDistance: 0.064
-      users: []
+      - username: Bob
+        hostname: minos
+        masterFlag: 0
+        headtrackingFlag: 1
+        trackingID: 44
+        fixedHeadPos:
+        - 0
+        - 1.7
+        - -0.4
+        eyeDistance: 0.064
+      - username: Eve
+        hostname: kepler
+        masterFlag: 0
+        headtrackingFlag: 1
+        trackingID: 45
+        fixedHeadPos:
+        - 0
+        - 1.7
+        - -0.4
+        eyeDistance: 0.064

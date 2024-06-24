@@ -42,43 +42,17 @@ using UnityEngine.InputSystem;
 
 namespace VRSYS.Core.Navigation
 {
-    public class DesktopNavigation : MonoBehaviour
+    public class DesktopNavigation : ControllerNavigation
     {
         #region Member Variables
 
-        public Transform target;
 
-        [Header("Input Actions")] 
-        public InputActionProperty moveAction;
+        [Header("Controller Specific Input Actions")] 
         public InputActionProperty yawAction;
         public InputActionProperty pitchAction;
-        
-        [Header("Movement Properties")]
-        [Tooltip("Translation Velocity [m/sec]")]
-        [Range(0.1f, 10.0f)]
-        public float translationVelocity = 3.0f;
-
-        [Tooltip("Rotation Velocity [degree/sec]")]
-        [Range(1.0f, 10.0f)]
-        public float rotationVelocity = 5.0f;
-        
+                
         private Vector3 rotInput = Vector3.zero;
 
-        private bool? isOfflineOrOwner_;
-        private bool isOfflineOrOwner
-        {
-            get
-            {
-                if(!isOfflineOrOwner_.HasValue)
-                {
-                    if (GetComponent<NetworkObject>() is not null)
-                        isOfflineOrOwner_ = GetComponent<NetworkObject>().IsOwner;
-                    else
-                        isOfflineOrOwner_ = true;
-                }
-                return isOfflineOrOwner_.Value;
-            }
-        }
 
         #endregion
 
@@ -86,10 +60,7 @@ namespace VRSYS.Core.Navigation
 
         private void Start()
         {
-            if (!isOfflineOrOwner)
-                Destroy(this);
-            else if (target == null)
-                target = transform;                
+            Init();        
         }
 
         private void Update()
@@ -103,7 +74,7 @@ namespace VRSYS.Core.Navigation
         
         #region Custom Methods
 
-        private Vector3 CalcTranslationInput()
+        protected override Vector3 CalcTranslationInput()
         {
             Vector2 input = moveAction.action.ReadValue<Vector2>();
             Vector3 transInput = Vector3.zero;
@@ -117,7 +88,7 @@ namespace VRSYS.Core.Navigation
             return transInput * (translationVelocity * Time.deltaTime);
         }
 
-        private Vector3 CalcRotationInput()
+        protected override Vector3 CalcRotationInput()
         {
             float yaw = yawAction.action.ReadValue<float>();
             float pitch = pitchAction.action.ReadValue<float>();
@@ -134,7 +105,7 @@ namespace VRSYS.Core.Navigation
             return rotInput;
         }
 
-        private void MapInput(Vector3 transInput, Vector3 rotInput)
+        protected override void MapInput(Vector3 transInput, Vector3 rotInput)
         {
             // map translation input
             if (transInput.magnitude > 0.0f)

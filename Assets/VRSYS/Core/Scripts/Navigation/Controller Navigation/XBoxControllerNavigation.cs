@@ -8,21 +8,17 @@ using VRSYS.Core.Logging;
 
 
 
-public class XBoxControllerNavigation : MonoBehaviour
+public class XBoxControllerNavigation : ControllerNavigation
 {
-
-    public Transform target;
+    [Header("Navigation Options")]
     public NavigationTechnique currentNavigationTechnique = NavigationTechnique.Steering;
 
-    [Header("Input Actions")]
-    public InputActionProperty moveAction;
+    [Header("Controller Specific Input Actions")]
     public InputActionProperty translationVelocityAction;
     public InputActionProperty headRotationAction;
     public InputActionProperty headRotationVelocityAction;
     public InputActionProperty techniqueSelectionAction;
-
-    [Range(0, 10)] public float translationVelocity = 3.0f;
-    [Range(0, 30)] public float rotationVelocity = 5.0f;
+    public InputActionProperty resetOrientationAction;
 
     public enum NavigationTechnique
     {
@@ -31,29 +27,10 @@ public class XBoxControllerNavigation : MonoBehaviour
 
     }
 
-    private bool? isOfflineOrOwner_;
-    private bool isOfflineOrOwner
-    {
-        get
-        {
-            if (!isOfflineOrOwner_.HasValue)
-            {
-                if (GetComponent<NetworkObject>() is not null)
-                    isOfflineOrOwner_ = GetComponent<NetworkObject>().IsOwner;
-                else
-                    isOfflineOrOwner_ = true;
-            }
-            return isOfflineOrOwner_.Value;
-        }
-    }
-
-
     private void Start()
     {
-        if (!isOfflineOrOwner)
-            Destroy(this);
-        else if (target == null)
-            target = transform;
+        Init();
+
         currentNavigationTechnique = NavigationTechnique.Steering;
     }
 
@@ -70,7 +47,7 @@ public class XBoxControllerNavigation : MonoBehaviour
         if (!isOfflineOrOwner)
             return;
         MapInput(CalcTranslationInput(), CalcRotationInput());
-
+        ResetOrientation();
 
     }
 
@@ -95,28 +72,33 @@ public class XBoxControllerNavigation : MonoBehaviour
         }
     }
 
-    public void MapInput(Vector3 transInput, Vector3 rotInput)
+    public void ResetOrientation()
     {
-        // map translation input
-        if (transInput.magnitude > 0.0f)
-            target.Translate(transInput);
+        var resetPressed = resetOrientationAction.action.WasPressedThisFrame();
 
-        // map rotation input
-        if (rotInput.magnitude > 0.0f)
-            target.localRotation *= Quaternion.Euler(rotInput);
+        if (resetPressed)
+            target.rotation = Quaternion.Euler(0, target.rotation.eulerAngles.y, target.rotation.eulerAngles.z);
+
+        if (verbose)
+        {
+            ExtendedLogger.LogInfo(resetOrientationAction.action.ToString(), "Reset orientation");
+        }
     }
 
-    public Vector3 CalcTranslationInput()
+    protected override Vector3 CalcTranslationInput()
     {
         Vector3 xzInput = new Vector3(moveAction.action.ReadValue<Vector2>().x, 0f,
             moveAction.action.ReadValue<Vector2>().y);
 
-        ExtendedLogger.LogInfo(GetType().Name, "xzInput " + xzInput);
 
         float acceleration = translationVelocity * (translationVelocityAction.action.ReadValue<float>() + 1);
 
-        ExtendedLogger.LogInfo(GetType().Name, "acceleration " + acceleration);
+        if (verbose)
+        {
+            ExtendedLogger.LogInfo(GetType().Name, "acceleration " + acceleration);
+            ExtendedLogger.LogInfo(GetType().Name, "xzInput " + xzInput);
 
+        }
 
         Vector3 transInput = xzInput * (acceleration * Time.deltaTime);
 
@@ -124,7 +106,7 @@ public class XBoxControllerNavigation : MonoBehaviour
         return transInput;
     }
 
-    public Vector3 CalcRotationInput()
+    protected override Vector3 CalcRotationInput()
     {
         float headAcceleration = rotationVelocity * (headRotationVelocityAction.action.ReadValue<float>() + 1);
 
@@ -137,6 +119,11 @@ public class XBoxControllerNavigation : MonoBehaviour
 
     public void Jumping()
     {
-        ExtendedLogger.LogInfo(GetType().Name, "Jump!");
+        if (verbose)
+        {
+
+            ExtendedLogger.LogInfo(GetType().Name, "Jump!");
+
+        }
     }
 }

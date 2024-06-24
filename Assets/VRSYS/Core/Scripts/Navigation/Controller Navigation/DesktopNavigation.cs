@@ -32,8 +32,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //-----------------------------------------------------------------
-//   Authors:        Tony Jan Zoeppig, Sebastian Muehlhaus, Ephraim Schott
-//   Date:           2023
+//   Authors:        Tony Jan Zoeppig, Sebastian Muehlhaus, Ephraim Schott, Lucky Chandrautama
+//   Date:           2024
 //-----------------------------------------------------------------
 
 using Unity.Netcode;
@@ -47,7 +47,7 @@ namespace VRSYS.Core.Navigation
         #region Member Variables
 
 
-        [Header("Controller Specific Input Actions")] 
+        [Header("Controller-Specific Input Actions")] 
         public InputActionProperty yawAction;
         public InputActionProperty pitchAction;
                 
@@ -67,14 +67,14 @@ namespace VRSYS.Core.Navigation
         {
             if (!isOfflineOrOwner)
                 return;
-            MapInput(CalcTranslationInput(), CalcRotationInput());
+            MapSteeringInput(CalculateTranslationInput(), CalculateRotationInput());
         }
 
         #endregion
         
         #region Custom Methods
 
-        protected override Vector3 CalcTranslationInput()
+        protected override Vector3 CalculateTranslationInput()
         {
             Vector2 input = moveAction.action.ReadValue<Vector2>();
             Vector3 transInput = Vector3.zero;
@@ -88,7 +88,7 @@ namespace VRSYS.Core.Navigation
             return transInput * (translationVelocity * Time.deltaTime);
         }
 
-        protected override Vector3 CalcRotationInput()
+        protected override Vector3 CalculateRotationInput()
         {
             float yaw = yawAction.action.ReadValue<float>();
             float pitch = pitchAction.action.ReadValue<float>();
@@ -105,7 +105,7 @@ namespace VRSYS.Core.Navigation
             return rotInput;
         }
 
-        protected override void MapInput(Vector3 transInput, Vector3 rotInput)
+        protected override void MapSteeringInput(Vector3 transInput, Vector3 rotInput)
         {
             // map translation input
             if (transInput.magnitude > 0.0f)

@@ -40,7 +40,7 @@ using System;
 using UnityEngine;
 using VRSYS.Core.Utility;
 
-namespace VRSYS.Core.Projection
+namespace VRSYS.ProjectionWall
 {
     [ExecuteInEditMode]
     public class PortalScaleHelper : MonoBehaviour

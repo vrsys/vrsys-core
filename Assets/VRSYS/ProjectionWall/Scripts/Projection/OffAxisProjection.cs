@@ -39,24 +39,24 @@
 using UnityEngine;
 using UnityEngine.Serialization;
 
-namespace VRSYS.Core.Projection {
+namespace VRSYS.ProjectionWall {
     
     [RequireComponent(typeof(Camera))]
     public class OffAxisProjection : MonoBehaviour {
         public ProjectionScreen screen;
         public bool autoUpdateProjection = false;
-        [FormerlySerializedAs("autoUpdateNearClipPlane")] public bool screenIsNearClipPlane = false;
+        public bool screenIsNearClipPlane = false;
         public bool flipProjection = false;
         
-        private Camera cam;
-        public new Camera camera => cam;
+        private Camera userCamera;
+        public Camera UserCamera => userCamera;
         
         private float originalNearClipPlane;
         private bool lastScreenIsNearClipPlane;
         
         private void Awake() {
-            cam = GetComponent<Camera>();
-            originalNearClipPlane = cam.nearClipPlane;
+            userCamera = GetComponent<Camera>();
+            originalNearClipPlane = userCamera.nearClipPlane;
             lastScreenIsNearClipPlane = screenIsNearClipPlane;
         }
 
@@ -70,9 +70,9 @@ namespace VRSYS.Core.Projection {
         private void UpdateNearClipPlaneSetting()
         {
             if (screenIsNearClipPlane)
-                originalNearClipPlane = cam.nearClipPlane;
+                originalNearClipPlane = userCamera.nearClipPlane;
             else
-                cam.nearClipPlane = originalNearClipPlane;
+                userCamera.nearClipPlane = originalNearClipPlane;
             lastScreenIsNearClipPlane = screenIsNearClipPlane;
         }
 
@@ -89,15 +89,15 @@ namespace VRSYS.Core.Projection {
             if (flipProjection)
                 eyePosSP *= -1;
             
-            var near = cam.nearClipPlane;
+            var near = userCamera.nearClipPlane;
             if (screenIsNearClipPlane) {
                 var s1 = screen.transform.position;
                 var s2 = screen.transform.position - screen.transform.forward;
                 var camOnScreenForward = Vector3.Project((transform.position - s1), (s2 - s1)) + s1;
                 near = Vector3.Distance(screen.transform.position, camOnScreenForward);
-                cam.nearClipPlane = near;
+                userCamera.nearClipPlane = near;
             }
-            var far = cam.farClipPlane;
+            var far = userCamera.farClipPlane;
 
             var factor = near / eyePosSP.z;
             var l = (eyePosSP.x - screen.width * 0.5f) * factor;
@@ -105,7 +105,7 @@ namespace VRSYS.Core.Projection {
             var b = (eyePosSP.y - screen.height * 0.5f) * factor;
             var t = (eyePosSP.y + screen.height * 0.5f) * factor;
 
-            cam.projectionMatrix = Matrix4x4.Frustum(l, r, b, t, near, far);
+            userCamera.projectionMatrix = Matrix4x4.Frustum(l, r, b, t, near, far);
         }
     }
 }

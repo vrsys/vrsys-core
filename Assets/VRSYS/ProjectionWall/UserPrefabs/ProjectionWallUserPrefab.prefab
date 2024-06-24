@@ -426,7 +426,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 951099334
+  GlobalObjectIdHash: 3901826913
+  InScenePlacedSourceGlobalObjectIdHash: 0
   AlwaysReplicateAsRoot: 0
   SynchronizeTransform: 1
   ActiveSceneSynchronization: 0
@@ -559,6 +560,9 @@ MonoBehaviour:
       m_SingletonActionBindings: []
       m_Flags: 0
     m_Reference: {fileID: 4584091051045144211, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
+  translationVelocity: 3
+  rotationVelocity: 5
+  verbose: 0
   yawAction:
     m_UseReference: 1
     m_Action:
@@ -583,8 +587,6 @@ MonoBehaviour:
       m_SingletonActionBindings: []
       m_Flags: 0
     m_Reference: {fileID: 15680138719376272, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
-  translationVelocity: 3
-  rotationVelocity: 5
 --- !u!114 &7185273160591877586
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -592,7 +594,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8231461269131396514}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 29bee4e7304395649ae79ef78a81adb6, type: 3}
   m_Name: 
@@ -610,6 +612,9 @@ MonoBehaviour:
       m_SingletonActionBindings: []
       m_Flags: 0
     m_Reference: {fileID: 3890643210046113832, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
+  translationVelocity: 3
+  rotationVelocity: 30
+  verbose: 0
   verticalMovementAction:
     m_UseReference: 1
     m_Action:
@@ -636,9 +641,7 @@ MonoBehaviour:
     m_Reference: {fileID: 2693381537909975644, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
   verticalMovement: 1
   flipVerticalMovementMapping: 0
-  translationVelocity: 3
   verticalTranslationVelocity: 3
-  rotationVelocity: 30
 --- !u!114 &8902741089912256446
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -682,7 +685,7 @@ GameObject:
   - component: {fileID: 8231461269484759695}
   - component: {fileID: 6236657671921194457}
   - component: {fileID: 7046110109706079852}
-  - component: {fileID: 6698120159528111708}
+  - component: {fileID: 5172895548247800946}
   m_Layer: 0
   m_Name: Head
   m_TagString: Untagged
@@ -722,6 +725,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c1175d4c69579d54faa82ae10441d03c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  UseUnreliableDeltas: 0
   SyncPositionX: 1
   SyncPositionY: 1
   SyncPositionZ: 1
@@ -748,7 +752,7 @@ AudioListener:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8231461269484759694}
   m_Enabled: 1
---- !u!114 &6698120159528111708
+--- !u!114 &5172895548247800946
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -757,10 +761,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 8231461269484759694}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 29979b65aa5cd7d9d97194732d12df1b, type: 3}
+  m_Script: {fileID: 11500000, guid: 692f312103e79c4438c0742d0a7ee4f1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bodyId: 7
+  bodyId: 0
   applyPosition: 1
   applyRotation: 1
 --- !u!1 &8231461269807200400

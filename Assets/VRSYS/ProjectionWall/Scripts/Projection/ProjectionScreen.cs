@@ -1,4 +1,4 @@
-// VRSYS plugin of Virtual Reality and Visualization Group (Bauhaus-University Weimar)
+// VRSYS plugin of Virtual Reality and Visualization Research Group (Bauhaus University Weimar)
 //  _    ______  _______  _______
 // | |  / / __ \/ ___/\ \/ / ___/
 // | | / / /_/ /\__ \  \  /\__ \ 
@@ -13,7 +13,7 @@
 // |  | |__  |  |\/|  /\  |__)                                                          
 // |/\| |___ |  |  | /~~\ |  \                                                                                                                                                                                     
 //
-// Copyright (c) 2024 Virtual Reality and Visualization Group
+// Copyright (c) 2022 Virtual Reality and Visualization Research Group
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
@@ -32,31 +32,47 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //-----------------------------------------------------------------
-//   Authors:        Tony Jan Zoeppig
-//   Date:           2024
+//   Authors:        Sebastian Muehlhaus, Andre Kunert
+//   Date:           2022
 //-----------------------------------------------------------------
 
-using Unity.Netcode;
 using UnityEngine;
-using VRSYS.Core.Logging;
-using VRSYS.Core.Projection;
+using VRSYS.Core.Utility;
 
-
-namespace VRSYS.Core.Navigation
+namespace VRSYS.ProjectionWall
 {
-    [RequireComponent(typeof(NavigationPlatformLink))]
-
-    public abstract class NavigationPlatformConnector : NetworkBehaviour, INavigationPlatformCallbacks
+    [ExecuteInEditMode]
+    public class ProjectionScreen : MonoBehaviour
     {
-        
-        public void OnEnterPlatform(NavigationPlatformLink link)
+        public float width
         {
-            throw new System.NotImplementedException();
+            get => transform.localScale.x;
+            set => transform.SetLocalScaleX(value);
         }
-
-        public void OnLeavePlatform(NavigationPlatformLink link)
+        
+        public float height
         {
-            throw new System.NotImplementedException();
+            get => transform.localScale.y;
+            set => transform.SetLocalScaleY(value);
+        }
+        
+        public bool drawGizmoFlag = true;
+        
+        public Vector3 topLeftCorner => transform.TransformPoint(new Vector3(-0.5f, 0.5f, 0f));
+        public Vector3 topRightCorner => transform.TransformPoint(new Vector3(0.5f, 0.5f, 0f));
+        public Vector3 bottomRightCorner => transform.TransformPoint(new Vector3(0.5f, -0.5f, 0f));
+        public Vector3 bottomLeftCorner => transform.TransformPoint(new Vector3(-0.5f, -0.5f, 0f));
+
+        private void OnDrawGizmos()
+        {
+            if (drawGizmoFlag)
+            {
+                Gizmos.color = Color.red;
+                Gizmos.DrawLine(bottomLeftCorner, topLeftCorner);
+                Gizmos.DrawLine(topLeftCorner, topRightCorner);
+                Gizmos.DrawLine(topRightCorner, bottomRightCorner);
+                Gizmos.DrawLine(bottomRightCorner, bottomLeftCorner);
+            }
         }
     }
 }

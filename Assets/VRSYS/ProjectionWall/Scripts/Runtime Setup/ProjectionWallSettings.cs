@@ -40,8 +40,9 @@ using System;
 using System.IO;
 using UnityEngine;
 using VRSYS.Core.Logging;
+using VRSYS.Core.ScriptableObjects;
 
-namespace VRSYS.Core.ScriptableObjects
+namespace VRSYS.ProjectionWall
 {
     [CreateAssetMenu(menuName = "Scriptable Objects/ProjectionWallSettings")]
     public class ProjectionWallSettings : JsonConfig

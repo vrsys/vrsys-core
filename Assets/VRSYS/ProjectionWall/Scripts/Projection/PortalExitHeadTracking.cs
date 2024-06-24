@@ -41,7 +41,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using VRSYS.Core.Networking;
 
-namespace VRSYS.Core.Projection
+namespace VRSYS.ProjectionWall
 {
     public class PortalExitHeadTracking : MonoBehaviour
     {

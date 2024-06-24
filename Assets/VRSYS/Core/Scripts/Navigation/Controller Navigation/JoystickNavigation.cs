@@ -32,8 +32,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //-----------------------------------------------------------------
-//   Authors:        Tony Zoeppig
-//   Date:           2023
+//   Authors:        Tony Zoeppig, Lucky Chandrautama
+//   Date:           2024
 //-----------------------------------------------------------------
 
 using System;
@@ -71,14 +71,14 @@ namespace VRSYS.Core.Navigation
         {
             if (!isOfflineOrOwner)
                 return;
-            MapInput(CalcTranslationInput(), CalcRotationInput());
+            MapSteeringInput(CalculateTranslationInput(), CalculateRotationInput());
         }
 
         #endregion
 
         #region Custom Methods
 
-        protected override Vector3 CalcTranslationInput()
+        protected override Vector3 CalculateTranslationInput()
         {
             Vector3 xzInput = new Vector3(moveAction.action.ReadValue<Vector2>().x, 0f,
                 moveAction.action.ReadValue<Vector2>().y);
@@ -97,7 +97,7 @@ namespace VRSYS.Core.Navigation
             return transInput;
         }
 
-        protected override Vector3 CalcRotationInput()
+        protected override Vector3 CalculateRotationInput()
         {
             Vector3 rotInput = new Vector3(0f, rotateAction.action.ReadValue<float>(), 0f);
             rotInput *= (rotationVelocity * Time.deltaTime);

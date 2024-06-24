@@ -32,8 +32,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //-----------------------------------------------------------------
-//   Authors:        Sebastian Muehlhaus, Andre Kunert, Tony Jan Zoeppig
-//   Date:           2023
+//   Authors:        Sebastian Muehlhaus, Andre Kunert, Tony Jan Zoeppig, Lucky Chandrautama
+//   Date:           2024
 //-----------------------------------------------------------------
 
 using Unity.Netcode;
@@ -41,10 +41,9 @@ using UnityEngine;
 using VRSYS.Core.Avatar;
 using VRSYS.Core.Logging;
 using VRSYS.Core.Networking;
-using VRSYS.Core.ScriptableObjects;
 using VRSYS.Core.Utility;
 
-namespace VRSYS.Core.Projection
+namespace VRSYS.ProjectionWall
 {
     public class ProjectionWallRuntimeSetup : MonoBehaviour, INetworkUserCallbacks
     {
@@ -85,15 +84,9 @@ namespace VRSYS.Core.Projection
         private void Awake()
         {
             ParseDeviceConfiguration();
-
-            SetDTrackPort();
+            InitializeDTrackSettings();
 
         }
-        /*private void Start()
-        {
-            // Custom fixed update for projection calculation, set a 120Hz
-            //InvokeRepeating("MyFixedUpdate", 0, (1f / 120f));
-        }*/
 
         private void LateUpdate()
         {
@@ -113,11 +106,22 @@ namespace VRSYS.Core.Projection
             isInitialized = true;
         }
 
-        private void SetDTrackPort()
+        private void InitializeDTrackSettings()
         {
-            var dTrack = (DTrack.DTrack)FindFirstObjectByType(typeof(DTrack.DTrack));
+            DTrack.DTrack dTrack;
+            try
+            {
+                dTrack = (DTrack.DTrack)FindFirstObjectByType(typeof(DTrack.DTrack));
+
+            }
+            catch (System.Exception)
+            {
+                ExtendedLogger.LogError(GetType().Name, "DTrack object not found. Please create a GameObject with DTrack component in this scene to enable ART Tracking.");
+                throw;
+            }
 
             dTrack.listenPort = config.multiUserSettings.dTrackPort;
+            dTrack.dTrackCoordinates = DTrack.DTrack.DTrackCoordinates.powerwall;
         }
 
         private void ApplyUserConfiguration()
@@ -125,7 +129,7 @@ namespace VRSYS.Core.Projection
             NetworkUser.LocalInstance.SetUserName(user.username);
             
             var head = GetComponent<AvatarAnatomy>().head;
-            var dtrackReceiver = head.GetComponent<DTrack.DTrackReceiver6Dof>();
+            var dtrackReceiver = head.GetComponent<VrsysDTrackReceiver6Dof>();
 
             if (user.headtrackingFlag)
             {
@@ -176,8 +180,8 @@ namespace VRSYS.Core.Projection
 
         private void SetViewportOnCameras()
         {            
-            leftCamera.camera.rect = new Rect(viewportHorizontalOffset * 0.5f, 0f, viewportWidth * 0.5f, 1f);
-            rightCamera.camera.rect = new Rect(0.5f + viewportHorizontalOffset * 0.5f, 0f, viewportWidth * 0.5f, 1f);            
+            leftCamera.UserCamera.rect = new Rect(viewportHorizontalOffset * 0.5f, 0f, viewportWidth * 0.5f, 1f);
+            rightCamera.UserCamera.rect = new Rect(0.5f + viewportHorizontalOffset * 0.5f, 0f, viewportWidth * 0.5f, 1f);            
         }
 
         private void SetEyeDistance(float eyeDist)

@@ -38,9 +38,9 @@
 
 using Unity.Netcode;
 using VRSYS.Core.Logging;
-using VRSYS.Core.Projection;
+using VRSYS.Core.Navigation;
 
-namespace VRSYS.Core.Navigation
+namespace VRSYS.ProjectionWall
 {
     public class NavigationPlatformJoystickConnector : NetworkBehaviour, INavigationPlatformCallbacks
     {

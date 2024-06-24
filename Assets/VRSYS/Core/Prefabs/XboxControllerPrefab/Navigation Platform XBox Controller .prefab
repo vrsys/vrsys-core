@@ -1913,7 +1913,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8717703267937227106}
   - component: {fileID: -2991985290256413685}
-  - component: {fileID: 643115535}
+  - component: {fileID: 1307964736}
   m_Layer: 0
   m_Name: 'Navigation Platform XBox Controller '
   m_TagString: Untagged
@@ -1950,9 +1950,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cde496cb356ca584599c5e5b4a8ba1a3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  linkToNavigationPlatform: 1
-  target: {fileID: 0}
-  currentNavigationTechnique: 0
+  target: {fileID: 8717703267937227106}
   moveAction:
     m_UseReference: 1
     m_Action:
@@ -1965,6 +1963,10 @@ MonoBehaviour:
       m_SingletonActionBindings: []
       m_Flags: 0
     m_Reference: {fileID: -7086023270213894933, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
+  translationVelocity: 3
+  rotationVelocity: 5
+  verbose: 0
+  currentNavigationTechnique: 0
   translationVelocityAction:
     m_UseReference: 1
     m_Action:
@@ -2025,10 +2027,7 @@ MonoBehaviour:
       m_SingletonActionBindings: []
       m_Flags: 0
     m_Reference: {fileID: 7819175934794019079, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
-  translationVelocity: 3
-  rotationVelocity: 5
-  verbose: 0
---- !u!114 &643115535
+--- !u!114 &1307964736
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -2037,7 +2036,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 8336251161440504792}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 29979b65aa5cd7d9d97194732d12df1b, type: 3}
+  m_Script: {fileID: 11500000, guid: 692f312103e79c4438c0742d0a7ee4f1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   bodyId: 49

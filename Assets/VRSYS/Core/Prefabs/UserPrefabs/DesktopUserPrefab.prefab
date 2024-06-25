@@ -162,6 +162,7 @@ GameObject:
   - component: {fileID: 7185273160591877586}
   - component: {fileID: 5560205822843782552}
   - component: {fileID: 4200266085734284299}
+  - component: {fileID: 9076826888789417356}
   m_Layer: 0
   m_Name: DesktopUserPrefab
   m_TagString: Untagged
@@ -499,7 +500,7 @@ MonoBehaviour:
   headTransformAction:
     m_UseReference: 0
     m_Action:
-      m_Name: 
+      m_Name: Head Transform
       m_Type: 0
       m_ExpectedControlType: 
       m_Id: f03baac3-93e9-4111-867f-382c3e9848cb
@@ -523,7 +524,7 @@ MonoBehaviour:
   verticalMovementSwitch:
     m_UseReference: 0
     m_Action:
-      m_Name: 
+      m_Name: Vertical Movement Switch
       m_Type: 0
       m_ExpectedControlType: 
       m_Id: dfce6c72-94ac-4d57-93a9-725fe6f83c01
@@ -544,20 +545,98 @@ MonoBehaviour:
       m_SingletonActionBindings: []
       m_Flags: 0
     m_Reference: {fileID: 8487737116985186960, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
-  resetOrientationAction:
-    m_UseReference: 1
+  untiltingAction:
+    m_UseReference: 0
     m_Action:
-      m_Name: Reset Orientation
+      m_Name: Untilting
       m_Type: 0
       m_ExpectedControlType: 
-      m_Id: 1a974c72-1a2d-4606-8803-a114dfa33828
+      m_Id: 4cbf792d-14c5-477e-999d-927b1b54e8a3
       m_Processors: 
       m_Interactions: 
       m_SingletonActionBindings: []
       m_Flags: 0
-    m_Reference: {fileID: 7819175934794019079, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
+    m_Reference: {fileID: 0}
   verticalTranslationVelocity: 3
-  activateVerticalMovement_: 0
+  activateVerticalMovement: 0
+--- !u!114 &9076826888789417356
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8231461269131396514}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3875c8798c1cb540a1d9e48ca525584, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  hoveredTransform: {fileID: 0}
+  selectedTransform: {fileID: 0}
+  layersToInteractWith:
+    serializedVersion: 2
+    m_Bits: 1
+  hoverEntered:
+    m_PersistentCalls:
+      m_Calls: []
+  hoverExited:
+    m_PersistentCalls:
+      m_Calls: []
+  selectEntered:
+    m_PersistentCalls:
+      m_Calls: []
+  selectExited:
+    m_PersistentCalls:
+      m_Calls: []
+  userCamera: {fileID: 8231461269484759693}
+  mousePosition:
+    m_UseReference: 1
+    m_Action:
+      m_Name: Mouse Position
+      m_Type: 0
+      m_ExpectedControlType: 
+      m_Id: 26bdfb10-211c-41bb-b4b0-d77405e718a8
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
+    m_Reference: {fileID: 2843845800886696326, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
+  leftMouseClick:
+    m_UseReference: 1
+    m_Action:
+      m_Name: Left Mouse Click
+      m_Type: 0
+      m_ExpectedControlType: 
+      m_Id: 5c71bd8f-a66a-46ba-a471-183de2c391e5
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
+    m_Reference: {fileID: -493906538824365286, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
+  rightMouseClick:
+    m_UseReference: 1
+    m_Action:
+      m_Name: Right Mouse Click
+      m_Type: 0
+      m_ExpectedControlType: 
+      m_Id: 94a793a0-3396-482d-afe2-2cc6786b72ea
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
+    m_Reference: {fileID: -3591252237535457928, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
+  middleMouseClick:
+    m_UseReference: 1
+    m_Action:
+      m_Name: Middle Mouse Click
+      m_Type: 0
+      m_ExpectedControlType: 
+      m_Id: e02029a7-892b-4c41-9291-017561307d5d
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
+    m_Reference: {fileID: -1854768422675439773, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
 --- !u!1 &8231461269484759694
 GameObject:
   m_ObjectHideFlags: 0

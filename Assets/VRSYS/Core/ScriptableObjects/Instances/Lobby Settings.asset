@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: Lobby Settings
   m_EditorClassIdentifier: 
   autoStart: 1
-  lobbyName: Lobby_test xbox
+  lobbyName: Lobby_test
   maxUsers: 10
   isPrivate: 0

@@ -2782,6 +2782,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "Vertical Mode Switch",
+                    "type": "Button",
+                    "id": "bf251184-ba4a-4548-b831-9cd798ba41d8",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -2870,6 +2879,17 @@
                     "processors": "",
                     "groups": "",
                     "action": "Reset Orientation",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "2f48a940-a1ed-4b01-9569-60853d2ed71d",
+                    "path": "<XInputController>/rightStickPress",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Xbox Controller",
+                    "action": "Vertical Mode Switch",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

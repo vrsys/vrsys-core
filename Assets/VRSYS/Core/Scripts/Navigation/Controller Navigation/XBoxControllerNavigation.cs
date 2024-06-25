@@ -53,10 +53,26 @@ namespace VRSYS.Core.Navigation
 
         [Header("Controller Specific Input Actions")]
         public InputActionProperty translationVelocityAction;
-        public InputActionProperty headRotationAction;
+        public InputActionProperty headTransformAction;
         public InputActionProperty headRotationVelocityAction;
+        public InputActionProperty verticalMovementSwitch;
         public InputActionProperty techniqueSelectionAction;
-        public InputActionProperty resetOrientationAction;
+        public InputActionProperty untiltingAction;
+
+        [Range(0, 10)] public float verticalTranslationVelocity = 3.0f;
+
+        public bool activateVerticalMovement = false;
+
+        public void ToggleVerticalMovement()
+        {
+            
+            if (verticalMovementSwitch.action.WasPressedThisFrame())
+            {
+                ExtendedLogger.LogInfo(GetType().Name, "IsPressed");
+                activateVerticalMovement =!activateVerticalMovement;
+            }
+        }
+            
 
         public enum NavigationTechnique
         {
@@ -85,7 +101,7 @@ namespace VRSYS.Core.Navigation
 
         private void Steering()
         {
-
+            ToggleVerticalMovement();
             MapSteeringInput(CalculateTranslationInput(), CalculateRotationInput());
             ResetOrientation();
 
@@ -114,14 +130,14 @@ namespace VRSYS.Core.Navigation
 
         public void ResetOrientation()
         {
-            var resetPressed = resetOrientationAction.action.WasPressedThisFrame();
+            var resetPressed = untiltingAction.action.WasPressedThisFrame();
 
             if (resetPressed)
                 target.rotation = Quaternion.Euler(0, target.rotation.eulerAngles.y, target.rotation.eulerAngles.z);
 
             if (verbose)
             {
-                ExtendedLogger.LogInfo(resetOrientationAction.action.ToString(), "Reset orientation");
+                ExtendedLogger.LogInfo(untiltingAction.action.ToString(), "Reset orientation");
             }
         }
 
@@ -129,7 +145,6 @@ namespace VRSYS.Core.Navigation
         {
             Vector3 xzInput = new Vector3(moveAction.action.ReadValue<Vector2>().x, 0f,
                 moveAction.action.ReadValue<Vector2>().y);
-
 
             float acceleration = translationVelocity * (translationVelocityAction.action.ReadValue<float>() + 1);
 
@@ -143,6 +158,17 @@ namespace VRSYS.Core.Navigation
             Vector3 transInput = xzInput * (acceleration * Time.deltaTime);
 
 
+            if (activateVerticalMovement)
+            {
+                float verticalMovement = headTransformAction.action.ReadValue<Vector2>().y;
+
+
+                Vector3 yInput = new Vector3(0f, verticalMovement, 0f);
+                transInput += yInput * (verticalTranslationVelocity * Time.deltaTime);
+            }
+
+
+
             return transInput;
         }
 
@@ -150,8 +176,22 @@ namespace VRSYS.Core.Navigation
         {
             float headAcceleration = rotationVelocity * (headRotationVelocityAction.action.ReadValue<float>() + 1);
 
-            Vector2 headRotation = headRotationAction.action.ReadValue<Vector2>();
-            Vector3 rotInput = new Vector3(headRotation.y, headRotation.x, 0.0f);
+            Vector2 headRotation = headTransformAction.action.ReadValue<Vector2>();
+            
+            float pitch = headRotation.x;
+            float yaw = headRotation.y;
+
+            Vector3 rotInput;
+
+            if (activateVerticalMovement)
+            {
+                rotInput = new Vector3(0.0f, pitch, 0.0f);
+            }
+            else
+            {
+                rotInput = new Vector3(yaw, pitch, 0.0f);
+            }
+
             rotInput *= (headAcceleration * Time.deltaTime);
             return rotInput;
         }

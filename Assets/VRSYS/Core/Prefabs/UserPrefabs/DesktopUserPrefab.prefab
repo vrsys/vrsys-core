@@ -197,7 +197,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 651206118
+  GlobalObjectIdHash: 535290594
   InScenePlacedSourceGlobalObjectIdHash: 0
   AlwaysReplicateAsRoot: 0
   SynchronizeTransform: 1
@@ -387,7 +387,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8231461269131396514}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 29bee4e7304395649ae79ef78a81adb6, type: 3}
   m_Name: 
@@ -496,18 +496,18 @@ MonoBehaviour:
       m_SingletonActionBindings: []
       m_Flags: 0
     m_Reference: {fileID: 4401980307490995021, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
-  headRotationAction:
-    m_UseReference: 1
+  headTransformAction:
+    m_UseReference: 0
     m_Action:
-      m_Name: Head Rotation
+      m_Name: 
       m_Type: 0
       m_ExpectedControlType: 
-      m_Id: 9ae19221-2735-4861-8fbc-985b3a976bfb
+      m_Id: f03baac3-93e9-4111-867f-382c3e9848cb
       m_Processors: 
       m_Interactions: 
       m_SingletonActionBindings: []
       m_Flags: 0
-    m_Reference: {fileID: -5127996711169741789, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
+    m_Reference: {fileID: 0}
   headRotationVelocityAction:
     m_UseReference: 1
     m_Action:
@@ -520,6 +520,18 @@ MonoBehaviour:
       m_SingletonActionBindings: []
       m_Flags: 0
     m_Reference: {fileID: 1583054133644129676, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
+  verticalMovementSwitch:
+    m_UseReference: 0
+    m_Action:
+      m_Name: 
+      m_Type: 0
+      m_ExpectedControlType: 
+      m_Id: dfce6c72-94ac-4d57-93a9-725fe6f83c01
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
+    m_Reference: {fileID: 0}
   techniqueSelectionAction:
     m_UseReference: 1
     m_Action:
@@ -544,6 +556,8 @@ MonoBehaviour:
       m_SingletonActionBindings: []
       m_Flags: 0
     m_Reference: {fileID: 7819175934794019079, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
+  verticalTranslationVelocity: 3
+  activateVerticalMovement_: 0
 --- !u!1 &8231461269484759694
 GameObject:
   m_ObjectHideFlags: 0

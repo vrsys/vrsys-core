@@ -41,16 +41,16 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
 
-public class MouseInteractor : BaseInteractor
+public class MouseInteractor : BaseRayInteractor
 {
     [SerializeField] [Tooltip("User prefab camera.")]
     protected Camera userCamera;
-   
-    [Header("Input Actions")] 
-    public InputActionProperty mousePosition;
-    public InputActionProperty leftMouseClick;
-    public InputActionProperty rightMouseClick;
-    public InputActionProperty middleMouseClick;
+          
+    [Header("Input Actions")]
+    [SerializeField] protected InputActionProperty leftMouseClick;
+    [SerializeField] protected InputActionProperty mousePosition;
+    [SerializeField] protected InputActionProperty rightMouseClick;
+    [SerializeField] protected InputActionProperty middleMouseClick;
     
 
     private void Start()
@@ -60,7 +60,6 @@ public class MouseInteractor : BaseInteractor
         else
         {
             userCamera ??= Camera.main;
-
         }
     }
 
@@ -73,80 +72,18 @@ public class MouseInteractor : BaseInteractor
         EvaluateInteraction();
     }
 
-    private void EvaluateInteraction()
+    protected void EvaluateInteraction()
     {
         Vector2 mouseVec2 = mousePosition.action.ReadValue<Vector2>();
         Ray ray = userCamera.ScreenPointToRay(mouseVec2);
         var prevHoveredTransform = hoveredTransform;
         var prevSelectedTransform = selectedTransform;
-        if (Physics.Raycast(ray, out var hit, 100, layersToInteractWith)){
-            if (hoveredTransform is null || hit.transform == hoveredTransform)
-            {
-                hoveredTransform = hit.transform;
-                if (leftMouseClick.action.WasPressedThisFrame())
-                    selectedTransform = hoveredTransform;
-                else if(leftMouseClick.action.WasReleasedThisFrame())
-                    selectedTransform = null;
-            }
-            else if (hoveredTransform is not null && hit.transform != hoveredTransform)
-            {
-                if (leftMouseClick.action.WasReleasedThisFrame())
-                {
-                    hoveredTransform = hit.transform;
-                    selectedTransform = null;
-                }
-            }
-        }
-        else if (selectedTransform is null || selectedTransform is not null && !leftMouseClick.action.IsPressed())
-        {
-            hoveredTransform = null;
-            selectedTransform = null;
-        }
+
+
+        EvaluateRaySelection(ray, leftMouseClick.action);
         
         EvaluateHoverStateChange(prevHoveredTransform);
         EvaluateSelectStateChange(prevSelectedTransform);
-    }
-
-    private void EvaluateHoverStateChange(Transform prevHoveredTransform)
-    {
-        if (prevHoveredTransform == hoveredTransform) return;
-        if (prevHoveredTransform is not null)
-        {
-            if (prevHoveredTransform.TryGetComponent<IBaseInteractable>(out var interactable))
-            {
-                interactable.OnHoverExited(this);
-                hoverExited.Invoke();
-            }
-        }
-
-        if (hoveredTransform is null) return;
-        {
-            if (!hoveredTransform.TryGetComponent<SimpleMouseInteractable>(out var interactable)) return;
-            
-            interactable.OnHoverEntered(this);
-            hoverEntered.Invoke();
-        }
-    }
-
-    private void EvaluateSelectStateChange(Transform prevSelectTransform)
-    {
-        if(selectedTransform is null)
-            return;
-        
-        var isInteractable = selectedTransform.TryGetComponent<SimpleMouseInteractable>(out var interactableComponent);
-
-        if (prevSelectTransform == selectedTransform || !isInteractable) return;
-        if (prevSelectTransform is null)
-        {
-            interactableComponent.OnSelectEntered(this);
-            selectEntered.Invoke();
-
-        }
-        else
-        { 
-            interactableComponent.OnSelectExited(this);
-            selectExited.Invoke();
-        }
     }
     
 }

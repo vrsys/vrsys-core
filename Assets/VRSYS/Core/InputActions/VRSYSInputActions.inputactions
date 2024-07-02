@@ -2818,7 +2818,7 @@
             "id": "18dfcb43-8826-4ab3-bdd1-2eb718168412",
             "actions": [
                 {
-                    "name": "Move",
+                    "name": "Move/Rail",
                     "type": "Value",
                     "id": "21f9c1e6-c7ef-4a95-a29a-202028b0866c",
                     "expectedControlType": "Vector2",
@@ -2879,6 +2879,24 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "Select",
+                    "type": "Button",
+                    "id": "ce1679e5-a257-4f2b-a652-9e5e652cf27d",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Move/Rail Toggle",
+                    "type": "Button",
+                    "id": "6d455843-9889-4737-83a1-5f802d41d1db",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -2889,7 +2907,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "Xbox Controller",
-                    "action": "Move",
+                    "action": "Move/Rail",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -2978,6 +2996,28 @@
                     "processors": "",
                     "groups": "Xbox Controller",
                     "action": "Vertical Mode Switch",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "db4e832c-708a-406c-9ed5-6620f7f7ae4f",
+                    "path": "<XInputController>/buttonSouth",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Xbox Controller",
+                    "action": "Select",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "e7857868-564f-4d9d-821c-47b56b49ba35",
+                    "path": "<XInputController>/leftShoulder",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Xbox Controller",
+                    "action": "Move/Rail Toggle",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

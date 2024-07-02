@@ -32,23 +32,73 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //-----------------------------------------------------------------
-//   Authors:        Sebastian Muehlhaus. Lucky Chandrautama
+//   Authors:        Sebastian Muehlhaus, Lucky Chandrautama
 //   Date:           2024
 //-----------------------------------------------------------------
 
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
+using VRSYS.Core.Logging;
 
-
-/// <summary>
-/// Interface for all non-XR Interactable classes which communicates with the BaseInteractor (also non-XR)
-/// </summary>
-public interface IBaseInteractable
+public class BaseInteractable : MonoBehaviour
 {
-    public void OnHoverEntered(BaseInteractor interactor);
-    public void OnHoverExited(BaseInteractor interactor);
-    public void OnSelectEntered(BaseInteractor interactor);
-    public void OnSelectExited(BaseInteractor interactor);
+    public UnityEvent hoverEntered = new();
+    
+    public UnityEvent hoverExited = new();
+    
+    public UnityEvent selectEntered = new();
+    
+    public UnityEvent selectExited = new();
+    
+    public bool isHovered { get; private set; }
+    public bool isSelected { get; private set; }
 
+    public bool verbose = false;
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        isHovered = false;
+        isSelected = false;
+    }
+
+    public void OnHoverEntered(BaseInteractor interactor)
+    {
+        hoverEntered.Invoke();
+        isHovered = true;
+
+        if (verbose)
+            ExtendedLogger.LogInfo(GetType().Name, interactor.gameObject.name +  " hover entering " + gameObject.name);
+
+    }
+
+    public void OnHoverExited(BaseInteractor interactor)
+    {
+        hoverExited.Invoke();
+        isHovered = false;
+
+        if (verbose)
+            ExtendedLogger.LogInfo(GetType().Name, interactor.gameObject.name + " hover exiting " + gameObject.name);
+
+
+    }
+
+    public void OnSelectEntered(BaseInteractor interactor)
+    {
+        selectEntered.Invoke();
+        isSelected = true;
+
+        if (verbose)
+            ExtendedLogger.LogInfo(GetType().Name, interactor.gameObject.name + " select entering " + gameObject.name);
+
+    }
+
+    public void OnSelectExited(BaseInteractor interactor)
+    {
+        selectExited.Invoke();
+        isSelected = false;
+
+        if (verbose)
+            ExtendedLogger.LogInfo(GetType().Name, interactor.gameObject.name + " select entering " + gameObject.name);
+    }
 }

@@ -2,12 +2,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-
+[RequireComponent(typeof(RayControllerInteractor))]
 [RequireComponent(typeof(LineRenderer))]
 public class RayControllerInteractorLineVisual : MonoBehaviour
 {
-    [SerializeField]
-    Transform lineOrigin;
+
+    private RayControllerInteractor interactor;
 
     [SerializeField]
     float lineOriginOffset = 0f;
@@ -45,20 +45,12 @@ public class RayControllerInteractorLineVisual : MonoBehaviour
 
     LineRenderer lineRenderer;
 
-    private void UpdateLineGeometry()
-    {
-        lineRenderer.widthMultiplier = LineWidth;
-        lineRenderer.widthCurve = WidthCurve;
 
-    }
 
     private void Awake()
     {
-        lineRenderer = GetComponent<LineRenderer>();
-        lineRenderer.useWorldSpace = false;
-        lineRenderer.SetPosition(0, transform.localPosition + transform.forward * LineOriginOffset);
-        lineRenderer.SetPosition(1, transform.localPosition + transform.forward * LineLength);
 
+        Setup();
     }
 
     // Start is called before the first frame update
@@ -72,4 +64,27 @@ public class RayControllerInteractorLineVisual : MonoBehaviour
     {
         //UpdateLineGeometry();
     }
+
+    #region Custom Methods
+    private void UpdateLineGeometry()
+    {
+        lineRenderer.widthMultiplier = LineWidth;
+        lineRenderer.widthCurve = WidthCurve;
+
+    }
+
+    private void Setup()
+    {
+        interactor = GetComponent<RayControllerInteractor>();
+        LineOriginOffset = interactor.rayOriginOffset;
+        LineLength = interactor.rayLength;
+
+        lineRenderer = GetComponent<LineRenderer>();
+        lineRenderer.useWorldSpace = false;
+        lineRenderer.SetPosition(0, transform.localPosition + transform.forward * LineOriginOffset);
+        lineRenderer.SetPosition(1, transform.localPosition + transform.forward * LineLength);
+
+
+    }
+    #endregion
 }

@@ -49,7 +49,11 @@ namespace VRSYS.Core.Navigation
     public class XBoxControllerNavigation : ControllerNavigation
     {
         [Header("Navigation Options")]
+        public bool allowNavigation = true;
         public NavigationTechnique currentNavigationTechnique = NavigationTechnique.Steering;
+        public bool activateVerticalMovement = false;
+        [Range(0, 10)] public float verticalTranslationVelocity = 3.0f;
+
 
         [Header("Controller Specific Input Actions")]
         public InputActionProperty translationVelocityAction;
@@ -59,16 +63,13 @@ namespace VRSYS.Core.Navigation
         public InputActionProperty techniqueSelectionAction;
         public InputActionProperty untiltingAction;
 
-        [Range(0, 10)] public float verticalTranslationVelocity = 3.0f;
 
-        public bool activateVerticalMovement = false;
 
         public void ToggleVerticalMovement()
         {
             
             if (verticalMovementSwitch.action.WasPressedThisFrame())
             {
-                ExtendedLogger.LogInfo(GetType().Name, "IsPressed");
                 activateVerticalMovement =!activateVerticalMovement;
             }
         }
@@ -95,7 +96,12 @@ namespace VRSYS.Core.Navigation
             if (!isOfflineOrOwner)
                 return;
 
-            TechniqueSelection();
+            if(allowNavigation)
+                ActivateNavigation();
+
+
+            ResetOrientation();
+
         }
 
 
@@ -103,11 +109,10 @@ namespace VRSYS.Core.Navigation
         {
             ToggleVerticalMovement();
             MapSteeringInput(CalculateTranslationInput(), CalculateRotationInput());
-            ResetOrientation();
 
         }
 
-        private void TechniqueSelection()
+        private void ActivateNavigation()
         {
             float input = techniqueSelectionAction.action.ReadValue<float>();
             int selection = input < 0 ? -1 : input > 0 ? 1 : 0;

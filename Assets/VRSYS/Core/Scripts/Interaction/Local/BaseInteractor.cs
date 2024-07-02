@@ -42,7 +42,7 @@ using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Events;
-
+using VRSYS.Core.Logging;
 
 /// <summary>
 /// Base class for all non-XR Interactor classes
@@ -63,6 +63,7 @@ public abstract class BaseInteractor : MonoBehaviour
     [Tooltip("The transform that the mouse is currently selecting")]
     protected Transform selectedTransform;
     public bool isSelecting => selectedTransform is not null;
+    public bool verbose = false;
 
     [Header("Base Interactor Unity Events")]
 
@@ -73,6 +74,7 @@ public abstract class BaseInteractor : MonoBehaviour
     public UnityEvent selectEntered = new();
 
     public UnityEvent selectExited = new();
+
 
     protected bool? isOfflineOrOwner_;
     protected bool isOfflineOrOwner
@@ -89,4 +91,47 @@ public abstract class BaseInteractor : MonoBehaviour
             return isOfflineOrOwner_.Value;
         }
     }
+
+    protected void EvaluateHoverStateChange(Transform prevHoveredTransform)
+    {
+        if (prevHoveredTransform == hoveredTransform) return;
+        if (prevHoveredTransform is not null)
+        {
+            if (prevHoveredTransform.TryGetComponent<BaseInteractable>(out var interactable))
+            {
+                interactable.OnHoverExited(this);
+                hoverExited.Invoke();
+            }
+        }
+
+        if (hoveredTransform is null) return;
+        {
+            if (!hoveredTransform.TryGetComponent<BaseInteractable>(out var interactable)) return;
+
+            interactable.OnHoverEntered(this);
+            hoverEntered.Invoke();
+        }
+    }
+
+    protected void EvaluateSelectStateChange(Transform prevSelectTransform)
+    {
+        if (selectedTransform is null)
+            return;
+
+        var isInteractable = selectedTransform.TryGetComponent<BaseInteractable>(out var interactableComponent);
+
+        if (prevSelectTransform == selectedTransform || !isInteractable) return;
+        if (prevSelectTransform is null)
+        {
+            interactableComponent.OnSelectEntered(this);
+            selectEntered.Invoke();
+
+        }
+        else
+        {
+            interactableComponent.OnSelectExited(this);
+            selectExited.Invoke();
+        }
+    }
+
 }

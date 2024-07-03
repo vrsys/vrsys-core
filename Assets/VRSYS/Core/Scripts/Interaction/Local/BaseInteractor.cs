@@ -86,8 +86,8 @@ namespace VRSYS.Core.Interaction
             {
                 if (!isOfflineOrOwner_.HasValue)
                 {
-                    if (GetComponent<NetworkObject>() is not null)
-                        isOfflineOrOwner_ = GetComponent<NetworkObject>().IsOwner;
+                    if (TryGetComponent<NetworkObject>(out var networkObject))
+                        isOfflineOrOwner_ = networkObject.IsOwner;
                     else
                         isOfflineOrOwner_ = true;
                 }
@@ -109,7 +109,9 @@ namespace VRSYS.Core.Interaction
                 }
             }
 
-            if (!hoveredTransform) return;
+            if (!isHovering) return;
+            
+            
             {
                 if (!hoveredTransform.TryGetComponent<BaseInteractable>(out var interactable)) return;
 
@@ -128,9 +130,9 @@ namespace VRSYS.Core.Interaction
             {
                 if (!selectedTransform) return;
 
-                if (selectedTransform.TryGetComponent<BaseInteractable>(out var interactableComponent))
+                if (selectedTransform.TryGetComponent<BaseInteractable>(out var interactable))
                 {
-                    interactableComponent.OnSelectEntered(this);
+                    interactable.OnSelectEntered(this);
                     selectEntered.Invoke();
                 }
 
@@ -140,9 +142,9 @@ namespace VRSYS.Core.Interaction
                 if (prevSelectTransform is not null && isHovering)
                 {
 
-                    if (prevSelectTransform.TryGetComponent<BaseInteractable>(out var interactableComponent))
+                    if (prevSelectTransform.TryGetComponent<BaseInteractable>(out var interactable))
                     {
-                        interactableComponent.OnSelectExited(this);
+                        interactable.OnSelectExited(this);
                         selectExited.Invoke();
                     }
 

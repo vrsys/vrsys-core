@@ -48,15 +48,11 @@ namespace VRSYS.Core.Interaction
         public float rayLength;
         public Vector3 hitPoint;
 
-
-
         protected void EvaluateRaySelection(Ray ray, InputAction action)
         {
             if (Physics.Raycast(ray, out var hit, rayLength, LayersToInteractWith))
             {
-
-                Transform target;
-                target = hit.transform;
+                Transform target = hit.transform;
                 hitPoint = hit.point;
 
                 if (hoveredTransform is null || target == hoveredTransform)
@@ -78,7 +74,6 @@ namespace VRSYS.Core.Interaction
             }
             else
             {
-
                 hitPoint = ray.origin + ray.direction * rayLength;
 
                 if (!action.IsPressed())

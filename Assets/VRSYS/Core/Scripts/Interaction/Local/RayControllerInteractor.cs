@@ -55,12 +55,10 @@ namespace VRSYS.Core.Interaction
         public Transform rayOrigin;
         public float rayOriginOffsetZ;
 
-
         [Header("Input Actions")]
         public InputActionProperty selectActionProperty;
         public InputActionProperty railingActionProperty;
         public InputActionProperty railingToggleProperty;
-
 
         private Vector3 rayStartPoint;
         private Vector3 rayEndPoint;
@@ -94,7 +92,7 @@ namespace VRSYS.Core.Interaction
 
             CalculateRayGeometry();
 
-            Ray ray = new(RayStartPoint, rayOrigin.TransformDirection(Vector3.forward));
+            Ray ray = new(RayStartPoint, rayOrigin.forward);
 
             EvaluateRaySelection(ray, selectActionProperty.action);
 
@@ -103,8 +101,8 @@ namespace VRSYS.Core.Interaction
         }
         private void CalculateRayGeometry()
         {
-            RayStartPoint = rayOrigin.position + rayOrigin.TransformDirection(Vector3.forward) * rayOriginOffsetZ;
-            RayEndPoint = RayStartPoint + rayOrigin.TransformDirection(Vector3.forward) * rayLength;
+            RayStartPoint = rayOrigin.position + rayOrigin.forward * rayOriginOffsetZ;
+            RayEndPoint = RayStartPoint + rayOrigin.forward * rayLength;
 
         }
         private void NavigationRailingToggle()

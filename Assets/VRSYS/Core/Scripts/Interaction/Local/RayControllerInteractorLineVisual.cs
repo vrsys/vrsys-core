@@ -40,131 +40,129 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(RayControllerInteractor))]
-[RequireComponent(typeof(LineRenderer))]
-public class RayControllerInteractorLineVisual : MonoBehaviour
+
+namespace VRSYS.Core.Interaction
 {
-    private LineRenderer lineRenderer;
-    private RayControllerInteractor interactor;
-    private float LineOriginOffset => interactor.rayOriginOffsetZ;
-    private float LineLength => interactor.rayLength;
 
-    [SerializeField][Range(0.0001f, 0.05f)]
-    float lineWidth = 0.005f;
-
-    [SerializeField]
-    AnimationCurve widthCurve = AnimationCurve.Linear(0f, 1f, 1f, 1f);
-
-    [SerializeField]
-    Gradient validHoverColorGradient = new Gradient
+    [RequireComponent(typeof(RayControllerInteractor))]
+    [RequireComponent(typeof(LineRenderer))]
+    public class RayControllerInteractorLineVisual : MonoBehaviour
     {
-        colorKeys = new[] { new GradientColorKey(Color.blue, 0f), new GradientColorKey(Color.blue, 1f) },
-        alphaKeys = new[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(1f, 1f) },
-    };
+        private LineRenderer lineRenderer;
+        private RayControllerInteractor interactor;
 
-    [SerializeField]
-    Gradient invalidHoverColorGradient = new Gradient
-    {
-        colorKeys = new[] { new GradientColorKey(Color.red, 0f), new GradientColorKey(Color.red, 1f) },
-        alphaKeys = new[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(1f, 1f) },
-    };
+        [SerializeField]
+        [Range(0.0001f, 0.05f)]
+        float lineWidth = 0.005f;
 
-    [SerializeField]
-    Gradient unhitColorGradient = new Gradient
-    {
-        colorKeys = new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
-        alphaKeys = new[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(1f, 1f) },
-    };
-        
-    [SerializeField]
-    Gradient selectedColorGradient = new Gradient
-    {
-        colorKeys = new[] { new GradientColorKey(Color.green, 0f), new GradientColorKey(Color.green, 1f) },
-        alphaKeys = new[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(1f, 1f) },
-    };
+        [SerializeField]
+        AnimationCurve widthCurve = AnimationCurve.Linear(0f, 1f, 1f, 1f);
+
+        [SerializeField]
+        Gradient validHoverColorGradient = new Gradient
+        {
+            colorKeys = new[] { new GradientColorKey(Color.blue, 0f), new GradientColorKey(Color.blue, 1f) },
+            alphaKeys = new[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(1f, 1f) },
+        };
+
+        [SerializeField]
+        Gradient unhitColorGradient = new Gradient
+        {
+            colorKeys = new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+            alphaKeys = new[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(1f, 1f) },
+        };
+
+        [SerializeField]
+        Gradient selectedColorGradient = new Gradient
+        {
+            colorKeys = new[] { new GradientColorKey(Color.green, 0f), new GradientColorKey(Color.green, 1f) },
+            alphaKeys = new[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(1f, 1f) },
+        };
 
 
-    private void Awake()
-    {
-        interactor = GetComponent<RayControllerInteractor>();
+        private void Awake()
+        {
+            interactor = GetComponent<RayControllerInteractor>();
 
-        Setup();
+            Setup();
+        }
+
+        // Start is called before the first frame update
+        void Start()
+        {
+        }
+
+        // Update is called once per frame
+        void Update()
+        {
+            UpdateLineGeometry();
+        }
+
+        #region Custom Methods
+        private void UpdateLineGeometry()
+        {
+            lineRenderer.SetPosition(0, interactor.RayStartPoint);
+            lineRenderer.SetPosition(1, interactor.hitPoint);
+
+        }
+
+
+
+        private void Setup()
+        {
+            InteractorEventSetup();
+            LineRendererSetup();
+        }
+        private void InteractorEventSetup()
+        {
+
+            interactor.hoverEntered.AddListener(HoverEnteredVisualFeedback);
+            interactor.hoverExited.AddListener(HoverExitedVisualFeedback);
+            interactor.selectEntered.AddListener(SelectionEnteredVisualFeedback);
+            interactor.selectExited.AddListener(SelectionExitedVisualFeedback);
+
+        }
+
+        private void LineRendererSetup()
+        {
+
+
+            lineRenderer = GetComponent<LineRenderer>();
+
+            lineRenderer.useWorldSpace = true;
+
+            lineRenderer.SetPosition(0, interactor.RayStartPoint);
+            lineRenderer.SetPosition(1, interactor.RayEndPoint);
+
+            lineRenderer.widthMultiplier = lineWidth;
+            lineRenderer.widthCurve = widthCurve;
+
+        }
+
+        private void HoverEnteredVisualFeedback()
+        {
+
+            lineRenderer.colorGradient = validHoverColorGradient;
+
+        }
+        private void HoverExitedVisualFeedback()
+        {
+            lineRenderer.colorGradient = unhitColorGradient;
+
+        }
+        private void SelectionEnteredVisualFeedback()
+        {
+            lineRenderer.colorGradient = selectedColorGradient;
+
+        }
+        private void SelectionExitedVisualFeedback()
+        {
+            lineRenderer.colorGradient = validHoverColorGradient;
+
+        }
+
+        #endregion
     }
 
-    // Start is called before the first frame update
-    void Start()
-    {
-        //UpdateLineGeometry();
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        UpdateLineGeometry();
-    }
-
-    #region Custom Methods
-    private void UpdateLineGeometry()
-    {
-        lineRenderer.SetPosition(0, interactor.RayStartPoint);
-        lineRenderer.SetPosition(1, interactor.hitPoint);
-
-    }
-
-
-
-    private void Setup()
-    {
-        InteractorEventSetup();
-        LineRendererSetup();
-    }
-    private void InteractorEventSetup()
-    {
-
-        interactor.hoverEntered.AddListener(HoverEnteredVisualFeedback);
-        interactor.hoverExited.AddListener(HoverExitedVisualFeedback);
-        interactor.selectEntered.AddListener(SelectionEnteredVisualFeedback);
-        interactor.selectExited.AddListener(SelectionExitedVisualFeedback);
-
-    }
-
-    private void LineRendererSetup()
-    {
-
-
-        lineRenderer = GetComponent<LineRenderer>();
-
-        lineRenderer.useWorldSpace = true;
-
-        lineRenderer.SetPosition(0, interactor.RayStartPoint);
-        lineRenderer.SetPosition(1, interactor.RayEndPoint);
-
-        lineRenderer.widthMultiplier = lineWidth;
-        lineRenderer.widthCurve = widthCurve;
-
-    }
-
-    private void HoverEnteredVisualFeedback()
-    {
-
-        lineRenderer.colorGradient = validHoverColorGradient;
-
-    }
-    private void HoverExitedVisualFeedback()
-    {
-        lineRenderer.colorGradient = unhitColorGradient;
-
-    }
-    private void SelectionEnteredVisualFeedback()
-    {
-        lineRenderer.colorGradient = selectedColorGradient;
-
-    }
-    private void SelectionExitedVisualFeedback()
-    {
-        lineRenderer.colorGradient = validHoverColorGradient;
-
-    }
-
-    #endregion
 }
+

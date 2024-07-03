@@ -44,103 +44,108 @@ using UnityEngine;
 using UnityEngine.Events;
 using VRSYS.Core.Logging;
 
-/// <summary>
-/// Base class for all non-XR Interactor classes
-/// </summary>
-public abstract class BaseInteractor : MonoBehaviour
+
+namespace VRSYS.Core.Interaction
 {
-    [SerializeField]
-    [Tooltip("The layers that the this interactor will interact with")]
-    protected LayerMask layersToInteractWith;
-
-    [Header("Debug")]
-    [SerializeField]
-    [Tooltip("The transform that the device is currently hovering over")]
-    protected Transform hoveredTransform = null;
-    public bool isHovering => hoveredTransform is not null;
-
-    [SerializeField]
-    [Tooltip("The transform that the device is currently selecting")]
-    protected Transform selectedTransform = null;
-    public bool isSelecting => selectedTransform is not null;
-    public bool verbose = false;
-
-    [Header("Base Interactor Unity Events")]
-
-    public UnityEvent hoverEntered = new();
-
-    public UnityEvent hoverExited = new();
-
-    public UnityEvent selectEntered = new();
-
-    public UnityEvent selectExited = new();
-
-
-    protected bool? isOfflineOrOwner_;
-    protected bool isOfflineOrOwner
+    /// <summary>
+    /// Base class for all non-XR Interactor classes
+    /// </summary>
+    public abstract class BaseInteractor : MonoBehaviour
     {
-        get
+        [SerializeField]
+        [Tooltip("The layers that the this interactor will interact with")]
+        protected LayerMask layersToInteractWith;
+
+        [Header("Debug")]
+        [SerializeField]
+        [Tooltip("The transform that the device is currently hovering over")]
+        protected Transform hoveredTransform = null;
+        public bool isHovering => hoveredTransform is not null;
+
+        [SerializeField]
+        [Tooltip("The transform that the device is currently selecting")]
+        protected Transform selectedTransform = null;
+        public bool isSelecting => selectedTransform is not null;
+        public bool verbose = false;
+
+        [Header("Base Interactor Unity Events")]
+
+        public UnityEvent hoverEntered = new();
+
+        public UnityEvent hoverExited = new();
+
+        public UnityEvent selectEntered = new();
+
+        public UnityEvent selectExited = new();
+
+
+        protected bool? isOfflineOrOwner_;
+        protected bool isOfflineOrOwner
         {
-            if (!isOfflineOrOwner_.HasValue)
+            get
             {
-                if (GetComponent<NetworkObject>() is not null)
-                    isOfflineOrOwner_ = GetComponent<NetworkObject>().IsOwner;
-                else
-                    isOfflineOrOwner_ = true;
-            }
-            return isOfflineOrOwner_.Value;
-        }
-    }
-
-    public LayerMask LayersToInteractWith { get => layersToInteractWith; set => layersToInteractWith = value; }
-
-    protected void EvaluateHoverStateChange(Transform prevHoveredTransform)
-    {
-        if (prevHoveredTransform == hoveredTransform) return;
-        if (prevHoveredTransform)
-        {
-            if (prevHoveredTransform.TryGetComponent<BaseInteractable>(out var interactable))
-            {
-                interactable.OnHoverExited(this);
-                hoverExited.Invoke();
-            }
-        }
-
-        if (!hoveredTransform) return;
-        {
-            if (!hoveredTransform.TryGetComponent<BaseInteractable>(out var interactable)) return;
-
-            if(isHovering && !isSelecting)
-            {
-                interactable.OnHoverEntered(this);
-                hoverEntered.Invoke();
-            }
-        }
-    }
-
-    protected void EvaluateSelectStateChange(Transform prevSelectTransform)
-    {
-
-        if (isSelecting)
-        {
-            if (!selectedTransform) return;
-
-            if (selectedTransform.TryGetComponent<BaseInteractable>(out var interactableComponent))
-            {
-                interactableComponent.OnSelectEntered(this);
-                selectEntered.Invoke();
-            }            
-
-        }
-        else
-        {
-            if(prevSelectTransform is not null && isHovering)
-            {
-
-                if (prevSelectTransform.TryGetComponent<BaseInteractable>(out var interactableComponent))
+                if (!isOfflineOrOwner_.HasValue)
                 {
-                    interactableComponent.OnSelectExited(this);
-                    selectExited.Invoke();
+                    if (GetComponent<NetworkObject>() is not null)
+                        isOfflineOrOwner_ = GetComponent<NetworkObject>().IsOwner;
+                    else
+                        isOfflineOrOwner_ = true;
+                }
+                return isOfflineOrOwner_.Value;
+            }
+        }
+
+        public LayerMask LayersToInteractWith { get => layersToInteractWith; set => layersToInteractWith = value; }
+
+        protected void EvaluateHoverStateChange(Transform prevHoveredTransform)
+        {
+            if (prevHoveredTransform == hoveredTransform) return;
+            if (prevHoveredTransform)
+            {
+                if (prevHoveredTransform.TryGetComponent<BaseInteractable>(out var interactable))
+                {
+                    interactable.OnHoverExited(this);
+                    hoverExited.Invoke();
+                }
+            }
+
+            if (!hoveredTransform) return;
+            {
+                if (!hoveredTransform.TryGetComponent<BaseInteractable>(out var interactable)) return;
+
+                if (isHovering && !isSelecting)
+                {
+                    interactable.OnHoverEntered(this);
+                    hoverEntered.Invoke();
+                }
+            }
+        }
+
+        protected void EvaluateSelectStateChange(Transform prevSelectTransform)
+        {
+
+            if (isSelecting)
+            {
+                if (!selectedTransform) return;
+
+                if (selectedTransform.TryGetComponent<BaseInteractable>(out var interactableComponent))
+                {
+                    interactableComponent.OnSelectEntered(this);
+                    selectEntered.Invoke();
+                }
+
+            }
+            else
+            {
+                if (prevSelectTransform is not null && isHovering)
+                {
+
+                    if (prevSelectTransform.TryGetComponent<BaseInteractable>(out var interactableComponent))
+                    {
+                        interactableComponent.OnSelectExited(this);
+                        selectExited.Invoke();
+                    }
+
                 }
 
             }

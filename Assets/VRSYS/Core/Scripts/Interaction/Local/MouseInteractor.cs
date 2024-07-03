@@ -41,51 +41,57 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
 
-public class MouseInteractor : BaseRayInteractor
+namespace VRSYS.Core.Interaction
 {
-    [SerializeField] [Tooltip("User prefab camera.")]
-    protected Camera userCamera;
-          
-    [Header("Input Actions")]
-    [SerializeField] protected InputActionProperty leftMouseClick;
-    [SerializeField] protected InputActionProperty mousePosition;
-    [SerializeField] protected InputActionProperty rightMouseClick;
-    [SerializeField] protected InputActionProperty middleMouseClick;
-    
 
-    private void Start()
+    public class MouseInteractor : BaseRayInteractor
     {
-        if (!isOfflineOrOwner)
-            Destroy(this);
-        else
+        [SerializeField]
+        [Tooltip("User prefab camera.")]
+        protected Camera userCamera;
+
+        [Header("Input Actions")]
+        [SerializeField] protected InputActionProperty leftMouseClick;
+        [SerializeField] protected InputActionProperty mousePosition;
+        [SerializeField] protected InputActionProperty rightMouseClick;
+        [SerializeField] protected InputActionProperty middleMouseClick;
+
+
+        private void Start()
         {
-            userCamera ??= Camera.main;
+            if (!isOfflineOrOwner)
+                Destroy(this);
+            else
+            {
+                userCamera ??= Camera.main;
+            }
+
+            rayLength = Mathf.Infinity;
         }
 
-        rayLength = Mathf.Infinity;
+        // Update is called once per frame
+        void Update()
+        {
+            if (!isOfflineOrOwner)
+                return;
+
+            EvaluateInteraction();
+        }
+
+        protected void EvaluateInteraction()
+        {
+            Vector2 mouseVec2 = mousePosition.action.ReadValue<Vector2>();
+            Ray ray = userCamera.ScreenPointToRay(mouseVec2);
+            var prevHoveredTransform = hoveredTransform;
+            var prevSelectedTransform = selectedTransform;
+
+
+            EvaluateRaySelection(ray, leftMouseClick.action);
+
+            EvaluateHoverStateChange(prevHoveredTransform);
+            EvaluateSelectStateChange(prevSelectedTransform);
+        }
+
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        if (!isOfflineOrOwner)
-            return;
-
-        EvaluateInteraction();
-    }
-
-    protected void EvaluateInteraction()
-    {
-        Vector2 mouseVec2 = mousePosition.action.ReadValue<Vector2>();
-        Ray ray = userCamera.ScreenPointToRay(mouseVec2);
-        var prevHoveredTransform = hoveredTransform;
-        var prevSelectedTransform = selectedTransform;
-
-
-        EvaluateRaySelection(ray, leftMouseClick.action);
-        
-        EvaluateHoverStateChange(prevHoveredTransform);
-        EvaluateSelectStateChange(prevSelectedTransform);
-    }
-    
 }

@@ -40,53 +40,57 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
-
-public class BaseRayInteractor : BaseInteractor
+namespace VRSYS.Core.Interaction
 {
-    [Header("Ray Interactor Variables")]
-    public float rayLength;
-    public Vector3 hitPoint;
-
-
-
-    protected void EvaluateRaySelection(Ray ray, InputAction action)
+    public class BaseRayInteractor : BaseInteractor
     {
-        if (Physics.Raycast(ray, out var hit, rayLength, LayersToInteractWith))
+        [Header("Ray Interactor Variables")]
+        public float rayLength;
+        public Vector3 hitPoint;
+
+
+
+        protected void EvaluateRaySelection(Ray ray, InputAction action)
         {
-
-            Transform target;
-            target = hit.transform;
-            hitPoint = hit.point;
-
-            if (hoveredTransform is null || target == hoveredTransform)
+            if (Physics.Raycast(ray, out var hit, rayLength, LayersToInteractWith))
             {
-                hoveredTransform = target;
-                if (action.WasPressedThisFrame())
-                    selectedTransform = hoveredTransform;
-                else if (action.WasReleasedThisFrame())
-                    selectedTransform = null;
-            }
-            else if (hoveredTransform is not null && target != hoveredTransform)
-            {
-                if (action.WasReleasedThisFrame())
+
+                Transform target;
+                target = hit.transform;
+                hitPoint = hit.point;
+
+                if (hoveredTransform is null || target == hoveredTransform)
                 {
                     hoveredTransform = target;
+                    if (action.WasPressedThisFrame())
+                        selectedTransform = hoveredTransform;
+                    else if (action.WasReleasedThisFrame())
+                        selectedTransform = null;
+                }
+                else if (hoveredTransform is not null && target != hoveredTransform)
+                {
+                    if (action.WasReleasedThisFrame())
+                    {
+                        hoveredTransform = target;
+                        selectedTransform = null;
+                    }
+                }
+            }
+            else
+            {
+
+                hitPoint = ray.origin + ray.direction * rayLength;
+
+                if (!action.IsPressed())
+                {
+                    hoveredTransform = null;
                     selectedTransform = null;
                 }
             }
+
+
         }
-        else
-        {
-
-            hitPoint = ray.origin + ray.direction * rayLength;
-
-            if (!action.IsPressed())
-            {
-                hoveredTransform = null;
-                selectedTransform = null;
-            }
-        }
-
-
     }
+
+
 }

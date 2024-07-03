@@ -46,68 +46,72 @@ using UnityEngine.InputSystem;
 using VRSYS.Core.Navigation;
 using VRSYS.Core.Logging;
 
-public class RayControllerInteractor : BaseRayInteractor
+namespace VRSYS.Core.Interaction
 {
-    [Header("Controller Ray Properties")]
-    public XBoxControllerNavigation xBoxControllerNavigation;
-    public Transform rayOrigin;
-    public float rayOriginOffsetZ;
-
-
-    [Header("Input Actions")]
-    public InputActionProperty selectActionProperty;
-    public InputActionProperty railingActionProperty;
-    public InputActionProperty railingToggleProperty;
-
-
-    private Vector3 rayStartPoint;
-    private Vector3 rayEndPoint;
-
-    private bool AllowNavigation => xBoxControllerNavigation.allowNavigation;
-
-    public Vector3 RayStartPoint { get => rayStartPoint; set => rayStartPoint = value; }
-    public Vector3 RayEndPoint { get => rayEndPoint; set => rayEndPoint = value; }
-
-    private void Start()
+    public class RayControllerInteractor : BaseRayInteractor
     {
-        if (!isOfflineOrOwner)
-            Destroy(this);
+        [Header("Controller Ray Properties")]
+        public XBoxControllerNavigation xBoxControllerNavigation;
+        public Transform rayOrigin;
+        public float rayOriginOffsetZ;
+
+
+        [Header("Input Actions")]
+        public InputActionProperty selectActionProperty;
+        public InputActionProperty railingActionProperty;
+        public InputActionProperty railingToggleProperty;
+
+
+        private Vector3 rayStartPoint;
+        private Vector3 rayEndPoint;
+
+        private bool AllowNavigation => xBoxControllerNavigation.allowNavigation;
+
+        public Vector3 RayStartPoint { get => rayStartPoint; set => rayStartPoint = value; }
+        public Vector3 RayEndPoint { get => rayEndPoint; set => rayEndPoint = value; }
+
+        private void Start()
+        {
+            if (!isOfflineOrOwner)
+                Destroy(this);
+        }
+
+
+        private void Update()
+        {
+            if (!isOfflineOrOwner)
+                return;
+
+            EvaluateInteraction();
+            NavigationRailingToggle();
+        }
+
+        protected void EvaluateInteraction()
+        {
+
+            var prevHoveredTransform = hoveredTransform;
+            var prevSelectedTransform = selectedTransform;
+
+            CalculateRayGeometry();
+
+            Ray ray = new(RayStartPoint, rayOrigin.TransformDirection(Vector3.forward));
+
+            EvaluateRaySelection(ray, selectActionProperty.action);
+
+            EvaluateHoverStateChange(prevHoveredTransform);
+            EvaluateSelectStateChange(prevSelectedTransform);
+        }
+        private void CalculateRayGeometry()
+        {
+            RayStartPoint = rayOrigin.position + rayOrigin.TransformDirection(Vector3.forward) * rayOriginOffsetZ;
+            RayEndPoint = RayStartPoint + rayOrigin.TransformDirection(Vector3.forward) * rayLength;
+
+        }
+        private void NavigationRailingToggle()
+        {
+            if (railingToggleProperty.action.WasPressedThisFrame())
+                xBoxControllerNavigation.allowNavigation = !AllowNavigation;
+        }
     }
 
-
-    private void Update()
-    {
-        if (!isOfflineOrOwner)
-            return;
-
-        EvaluateInteraction();
-        NavigationRailingToggle();
-    }
-
-    protected void EvaluateInteraction()
-    {
-
-        var prevHoveredTransform = hoveredTransform;
-        var prevSelectedTransform = selectedTransform;
-        
-        CalculateRayGeometry();
-
-        Ray ray = new(RayStartPoint, rayOrigin.TransformDirection(Vector3.forward));
-
-        EvaluateRaySelection(ray, selectActionProperty.action);
-
-        EvaluateHoverStateChange(prevHoveredTransform);
-        EvaluateSelectStateChange(prevSelectedTransform);
-    }
-    private void CalculateRayGeometry()
-    {
-        RayStartPoint = rayOrigin.position + rayOrigin.TransformDirection(Vector3.forward) * rayOriginOffsetZ;
-        RayEndPoint = RayStartPoint + rayOrigin.TransformDirection(Vector3.forward) * rayLength;
-
-    }
-    private void NavigationRailingToggle()
-    {
-        if(railingToggleProperty.action.WasPressedThisFrame())
-            xBoxControllerNavigation.allowNavigation = !AllowNavigation;
-    }
 }

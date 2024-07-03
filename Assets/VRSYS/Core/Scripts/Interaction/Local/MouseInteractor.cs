@@ -61,6 +61,8 @@ public class MouseInteractor : BaseRayInteractor
         {
             userCamera ??= Camera.main;
         }
+
+        rayLength = Mathf.Infinity;
     }
 
     // Update is called once per frame

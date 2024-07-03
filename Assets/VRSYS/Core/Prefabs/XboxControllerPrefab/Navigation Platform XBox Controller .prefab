@@ -1966,7 +1966,10 @@ MonoBehaviour:
   translationVelocity: 3
   rotationVelocity: 5
   verbose: 0
+  allowNavigation: 1
   currentNavigationTechnique: 0
+  activateVerticalMovement: 0
+  verticalTranslationVelocity: 3
   translationVelocityAction:
     m_UseReference: 1
     m_Action:
@@ -2039,8 +2042,6 @@ MonoBehaviour:
       m_SingletonActionBindings: []
       m_Flags: 0
     m_Reference: {fileID: 7819175934794019079, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
-  verticalTranslationVelocity: 3
-  activateVerticalMovement: 0
 --- !u!114 &1307964736
 MonoBehaviour:
   m_ObjectHideFlags: 0

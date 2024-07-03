@@ -92,6 +92,8 @@ public abstract class BaseInteractor : MonoBehaviour
         }
     }
 
+    public LayerMask LayersToInteractWith { get => layersToInteractWith; set => layersToInteractWith = value; }
+
     protected void EvaluateHoverStateChange(Transform prevHoveredTransform)
     {
         if (prevHoveredTransform == hoveredTransform) return;

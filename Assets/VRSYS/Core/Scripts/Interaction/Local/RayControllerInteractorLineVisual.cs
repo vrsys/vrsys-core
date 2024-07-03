@@ -44,14 +44,10 @@ using UnityEngine;
 [RequireComponent(typeof(LineRenderer))]
 public class RayControllerInteractorLineVisual : MonoBehaviour
 {
-
+    private LineRenderer lineRenderer;
     private RayControllerInteractor interactor;
-
-    [SerializeField]
-    float lineOriginOffset = 0f;
-
-    [SerializeField]
-    float lineLength = 10f;
+    private float LineOriginOffset => interactor.rayOriginOffsetZ;
+    private float LineLength => interactor.rayLength;
 
     [SerializeField][Range(0.0001f, 0.05f)]
     float lineWidth = 0.005f;
@@ -87,19 +83,10 @@ public class RayControllerInteractorLineVisual : MonoBehaviour
         alphaKeys = new[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(1f, 1f) },
     };
 
-    public float LineOriginOffset { get => lineOriginOffset; set => lineOriginOffset = value; }
-    public float LineLength { get => lineLength; set => lineLength = value; }
-    public float LineWidth { get => lineWidth; set => lineWidth = value; }
-    public AnimationCurve WidthCurve { get => widthCurve; set => widthCurve = value; }
-
-
-
-    LineRenderer lineRenderer;
-
-
 
     private void Awake()
     {
+        interactor = GetComponent<RayControllerInteractor>();
 
         Setup();
     }
@@ -113,14 +100,14 @@ public class RayControllerInteractorLineVisual : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        //UpdateLineGeometry();
-
-        
+        UpdateLineGeometry();
     }
 
     #region Custom Methods
     private void UpdateLineGeometry()
     {
+        lineRenderer.SetPosition(0, interactor.RayStartPoint);
+        lineRenderer.SetPosition(1, interactor.hitPoint);
 
     }
 
@@ -134,11 +121,6 @@ public class RayControllerInteractorLineVisual : MonoBehaviour
     private void InteractorEventSetup()
     {
 
-        interactor = GetComponent<RayControllerInteractor>();
-        LineOriginOffset = interactor.rayOriginOffset;
-        LineLength = interactor.rayLength;
-
-
         interactor.hoverEntered.AddListener(HoverEnteredVisualFeedback);
         interactor.hoverExited.AddListener(HoverExitedVisualFeedback);
         interactor.selectEntered.AddListener(SelectionEnteredVisualFeedback);
@@ -151,12 +133,14 @@ public class RayControllerInteractorLineVisual : MonoBehaviour
 
 
         lineRenderer = GetComponent<LineRenderer>();
-        lineRenderer.useWorldSpace = false;
-        lineRenderer.SetPosition(0, transform.localPosition + transform.forward * LineOriginOffset);
-        lineRenderer.SetPosition(1, transform.localPosition + transform.forward * LineLength);
 
-        lineRenderer.widthMultiplier = LineWidth;
-        lineRenderer.widthCurve = WidthCurve;
+        lineRenderer.useWorldSpace = true;
+
+        lineRenderer.SetPosition(0, interactor.RayStartPoint);
+        lineRenderer.SetPosition(1, interactor.RayEndPoint);
+
+        lineRenderer.widthMultiplier = lineWidth;
+        lineRenderer.widthCurve = widthCurve;
 
     }
 
@@ -169,14 +153,17 @@ public class RayControllerInteractorLineVisual : MonoBehaviour
     private void HoverExitedVisualFeedback()
     {
         lineRenderer.colorGradient = unhitColorGradient;
+
     }
     private void SelectionEnteredVisualFeedback()
     {
         lineRenderer.colorGradient = selectedColorGradient;
+
     }
     private void SelectionExitedVisualFeedback()
     {
-        lineRenderer.colorGradient = invalidHoverColorGradient;
+        lineRenderer.colorGradient = validHoverColorGradient;
+
     }
 
     #endregion

@@ -198,7 +198,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 535290594
+  GlobalObjectIdHash: 651206118
   InScenePlacedSourceGlobalObjectIdHash: 0
   AlwaysReplicateAsRoot: 0
   SynchronizeTransform: 1
@@ -484,7 +484,10 @@ MonoBehaviour:
   translationVelocity: 3
   rotationVelocity: 5
   verbose: 0
+  allowNavigation: 1
   currentNavigationTechnique: 0
+  activateVerticalMovement: 0
+  verticalTranslationVelocity: 3
   translationVelocityAction:
     m_UseReference: 1
     m_Action:
@@ -557,8 +560,6 @@ MonoBehaviour:
       m_SingletonActionBindings: []
       m_Flags: 0
     m_Reference: {fileID: 0}
-  verticalTranslationVelocity: 3
-  activateVerticalMovement: 0
 --- !u!114 &9076826888789417356
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -566,16 +567,17 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8231461269131396514}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b3875c8798c1cb540a1d9e48ca525584, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  hoveredTransform: {fileID: 0}
-  selectedTransform: {fileID: 0}
   layersToInteractWith:
     serializedVersion: 2
     m_Bits: 1
+  hoveredTransform: {fileID: 0}
+  selectedTransform: {fileID: 0}
+  verbose: 0
   hoverEntered:
     m_PersistentCalls:
       m_Calls: []
@@ -588,19 +590,10 @@ MonoBehaviour:
   selectExited:
     m_PersistentCalls:
       m_Calls: []
+  rayOriginOffset: 0
+  rayLength: 0
+  rayOrigin: {x: 0, y: 0, z: 0}
   userCamera: {fileID: 8231461269484759693}
-  mousePosition:
-    m_UseReference: 1
-    m_Action:
-      m_Name: Mouse Position
-      m_Type: 0
-      m_ExpectedControlType: 
-      m_Id: 26bdfb10-211c-41bb-b4b0-d77405e718a8
-      m_Processors: 
-      m_Interactions: 
-      m_SingletonActionBindings: []
-      m_Flags: 0
-    m_Reference: {fileID: 2843845800886696326, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
   leftMouseClick:
     m_UseReference: 1
     m_Action:
@@ -613,6 +606,18 @@ MonoBehaviour:
       m_SingletonActionBindings: []
       m_Flags: 0
     m_Reference: {fileID: -493906538824365286, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
+  mousePosition:
+    m_UseReference: 1
+    m_Action:
+      m_Name: Mouse Position
+      m_Type: 0
+      m_ExpectedControlType: 
+      m_Id: 26bdfb10-211c-41bb-b4b0-d77405e718a8
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
+    m_Reference: {fileID: 2843845800886696326, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
   rightMouseClick:
     m_UseReference: 1
     m_Action:

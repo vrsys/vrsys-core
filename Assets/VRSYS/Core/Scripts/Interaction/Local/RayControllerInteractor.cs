@@ -48,9 +48,11 @@ using VRSYS.Core.Logging;
 
 public class RayControllerInteractor : BaseRayInteractor
 {
-    
+    [Header("Controller Ray Properties")]
     public XBoxControllerNavigation xBoxControllerNavigation;
-    private bool AllowNavigation => xBoxControllerNavigation.allowNavigation;
+    public Transform rayOrigin;
+    public float rayOriginOffsetZ;
+
 
     [Header("Input Actions")]
     public InputActionProperty selectActionProperty;
@@ -58,14 +60,18 @@ public class RayControllerInteractor : BaseRayInteractor
     public InputActionProperty railingToggleProperty;
 
 
+    private Vector3 rayStartPoint;
+    private Vector3 rayEndPoint;
+
+    private bool AllowNavigation => xBoxControllerNavigation.allowNavigation;
+
+    public Vector3 RayStartPoint { get => rayStartPoint; set => rayStartPoint = value; }
+    public Vector3 RayEndPoint { get => rayEndPoint; set => rayEndPoint = value; }
 
     private void Start()
     {
         if (!isOfflineOrOwner)
             Destroy(this);
-
-        rayOrigin = transform.position + transform.TransformDirection(Vector3.forward) * rayOriginOffset;
-
     }
 
 
@@ -83,15 +89,22 @@ public class RayControllerInteractor : BaseRayInteractor
 
         var prevHoveredTransform = hoveredTransform;
         var prevSelectedTransform = selectedTransform;
+        
+        CalculateRayGeometry();
 
-        Ray ray = new(rayOrigin, transform.TransformDirection(Vector3.forward));
+        Ray ray = new(RayStartPoint, rayOrigin.TransformDirection(Vector3.forward));
 
         EvaluateRaySelection(ray, selectActionProperty.action);
 
         EvaluateHoverStateChange(prevHoveredTransform);
         EvaluateSelectStateChange(prevSelectedTransform);
     }
+    private void CalculateRayGeometry()
+    {
+        RayStartPoint = rayOrigin.position + rayOrigin.TransformDirection(Vector3.forward) * rayOriginOffsetZ;
+        RayEndPoint = RayStartPoint + rayOrigin.TransformDirection(Vector3.forward) * rayLength;
 
+    }
     private void NavigationRailingToggle()
     {
         if(railingToggleProperty.action.WasPressedThisFrame())

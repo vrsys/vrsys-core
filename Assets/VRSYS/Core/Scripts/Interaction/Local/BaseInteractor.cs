@@ -55,13 +55,13 @@ public abstract class BaseInteractor : MonoBehaviour
 
     [Header("Debug")]
     [SerializeField]
-    [Tooltip("The transform that the mouse is currently hovering over")]
-    protected Transform hoveredTransform;
+    [Tooltip("The transform that the device is currently hovering over")]
+    protected Transform hoveredTransform = null;
     public bool isHovering => hoveredTransform is not null;
 
     [SerializeField]
-    [Tooltip("The transform that the mouse is currently selecting")]
-    protected Transform selectedTransform;
+    [Tooltip("The transform that the device is currently selecting")]
+    protected Transform selectedTransform = null;
     public bool isSelecting => selectedTransform is not null;
     public bool verbose = false;
 
@@ -97,7 +97,7 @@ public abstract class BaseInteractor : MonoBehaviour
     protected void EvaluateHoverStateChange(Transform prevHoveredTransform)
     {
         if (prevHoveredTransform == hoveredTransform) return;
-        if (prevHoveredTransform is not null)
+        if (prevHoveredTransform)
         {
             if (prevHoveredTransform.TryGetComponent<BaseInteractable>(out var interactable))
             {
@@ -106,34 +106,47 @@ public abstract class BaseInteractor : MonoBehaviour
             }
         }
 
-        if (hoveredTransform is null) return;
+        if (!hoveredTransform) return;
         {
             if (!hoveredTransform.TryGetComponent<BaseInteractable>(out var interactable)) return;
 
-            interactable.OnHoverEntered(this);
-            hoverEntered.Invoke();
+            if(isHovering && !isSelecting)
+            {
+                interactable.OnHoverEntered(this);
+                hoverEntered.Invoke();
+            }
         }
     }
 
     protected void EvaluateSelectStateChange(Transform prevSelectTransform)
     {
-        if (selectedTransform is null)
-            return;
 
-        var isInteractable = selectedTransform.TryGetComponent<BaseInteractable>(out var interactableComponent);
-
-        if (prevSelectTransform == selectedTransform || !isInteractable) return;
-        if (prevSelectTransform is null)
+        if (isSelecting)
         {
-            interactableComponent.OnSelectEntered(this);
-            selectEntered.Invoke();
+            if (!selectedTransform) return;
+
+            if (selectedTransform.TryGetComponent<BaseInteractable>(out var interactableComponent))
+            {
+                interactableComponent.OnSelectEntered(this);
+                selectEntered.Invoke();
+            }            
 
         }
         else
         {
-            interactableComponent.OnSelectExited(this);
-            selectExited.Invoke();
+            if(prevSelectTransform is not null && isHovering)
+            {
+
+                if (prevSelectTransform.TryGetComponent<BaseInteractable>(out var interactableComponent))
+                {
+                    interactableComponent.OnSelectExited(this);
+                    selectExited.Invoke();
+                }
+
+            }
+
         }
+
     }
 
 }

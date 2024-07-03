@@ -44,16 +44,19 @@ using UnityEngine.InputSystem;
 public class BaseRayInteractor : BaseInteractor
 {
     [Header("Ray Interactor Variables")]
-    public float rayOriginOffset;
     public float rayLength;
-    public Vector3 rayOrigin;
+    public Vector3 hitPoint;
+
+
 
     protected void EvaluateRaySelection(Ray ray, InputAction action)
     {
-        Transform target;
         if (Physics.Raycast(ray, out var hit, rayLength, LayersToInteractWith))
         {
+
+            Transform target;
             target = hit.transform;
+            hitPoint = hit.point;
 
             if (hoveredTransform is null || target == hoveredTransform)
             {
@@ -74,6 +77,9 @@ public class BaseRayInteractor : BaseInteractor
         }
         else
         {
+
+            hitPoint = ray.origin + ray.direction * rayLength;
+
             if (!action.IsPressed())
             {
                 hoveredTransform = null;

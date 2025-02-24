@@ -37,7 +37,7 @@
 //-----------------------------------------------------------------
 
 using UnityEngine;
-using UnityEngine.XR.Interaction.Toolkit;
+
 
 namespace VRSYS.Core.Navigation
 {
@@ -53,7 +53,7 @@ namespace VRSYS.Core.Navigation
 
         public void PerformTeleport();
 
-        public XRRayInteractor GetRayInteractor();
+        public UnityEngine.XR.Interaction.Toolkit.Interactors.XRRayInteractor GetRayInteractor();
     }
 }
 

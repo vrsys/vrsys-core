@@ -7,7 +7,7 @@ namespace UnityEngine.XR.Content.Interaction
     /// <summary>
     /// An interactable that follows the position of the interactor on a single axis
     /// </summary>
-    public class XRSlider : XRBaseInteractable
+    public class XRSlider : UnityEngine.XR.Interaction.Toolkit.Interactables.XRBaseInteractable
     {
         [Serializable]
         public class ValueChangeEvent : UnityEvent<float> { }
@@ -33,7 +33,7 @@ namespace UnityEngine.XR.Content.Interaction
         [Tooltip("Events to trigger when the slider is moved")]
         ValueChangeEvent m_OnValueChange = new ValueChangeEvent();
 
-        IXRSelectInteractor m_Interactor;
+        UnityEngine.XR.Interaction.Toolkit.Interactors.IXRSelectInteractor m_Interactor;
 
         /// <summary>
         /// The value of the slider

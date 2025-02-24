@@ -41,7 +41,7 @@ using UnityEngine.XR.Interaction.Toolkit;
 
 namespace VRSYS.Core.Keyboard
 {
-    public class VRKeyboardKey : XRBaseInteractable
+    public class VRKeyboardKey : UnityEngine.XR.Interaction.Toolkit.Interactables.XRBaseInteractable
     {
         #region Member Variables
 

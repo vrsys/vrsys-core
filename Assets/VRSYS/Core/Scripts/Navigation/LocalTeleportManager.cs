@@ -53,7 +53,7 @@ namespace VRSYS.Core.Navigation
         public ActionBasedController leftController;
         public ActionBasedController rightController;
         private InputActionProperty teleportActionValue;
-        private XRRayInteractor rayInteractor;
+        private UnityEngine.XR.Interaction.Toolkit.Interactors.XRRayInteractor rayInteractor;
 
         [SerializeField] private GameObject previewAvatarPrefab;
 
@@ -122,8 +122,8 @@ namespace VRSYS.Core.Navigation
                 : rightController.selectActionValue;
 
             rayInteractor = currentHandType == HandType.Left
-                ? leftController.GetComponent<XRRayInteractor>()
-                : rightController.GetComponent<XRRayInteractor>();
+                ? leftController.GetComponent<UnityEngine.XR.Interaction.Toolkit.Interactors.XRRayInteractor>()
+                : rightController.GetComponent<UnityEngine.XR.Interaction.Toolkit.Interactors.XRRayInteractor>();
         }
 
         private void UpdatePreviewPosition(RaycastHit hit)
@@ -210,7 +210,7 @@ namespace VRSYS.Core.Navigation
             return teleportActionValue.action.ReadValue<float>();
         }
 
-        public XRRayInteractor GetRayInteractor()
+        public UnityEngine.XR.Interaction.Toolkit.Interactors.XRRayInteractor GetRayInteractor()
         {
             return rayInteractor;
         }

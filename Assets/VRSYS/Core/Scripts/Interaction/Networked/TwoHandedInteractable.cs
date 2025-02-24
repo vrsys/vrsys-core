@@ -45,7 +45,7 @@ using UnityEngine.XR.Interaction.Toolkit;
 namespace VRSYS.Core.Interaction
 {
     [RequireComponent(typeof(InteractableNetworkState))]
-    public class TwoHandedInteractable : XRBaseInteractable
+    public class TwoHandedInteractable : UnityEngine.XR.Interaction.Toolkit.Interactables.XRBaseInteractable
     {
         #region Member Variables
 
@@ -87,7 +87,7 @@ namespace VRSYS.Core.Interaction
         protected override void Awake()
         {
             networkState = GetComponent<InteractableNetworkState>();
-            selectMode = InteractableSelectMode.Multiple;
+            selectMode = UnityEngine.XR.Interaction.Toolkit.Interactables.InteractableSelectMode.Multiple;
 
             interactorOffsets = new Dictionary<int, Matrix4x4>();
             contactPointOffsets = new Dictionary<int, Matrix4x4>();
@@ -132,7 +132,7 @@ namespace VRSYS.Core.Interaction
                     GetComponent<Rigidbody>().isKinematic = true;
                 }
                 
-                XRBaseInteractor interactor = (XRBaseInteractor)args.interactorObject;
+                UnityEngine.XR.Interaction.Toolkit.Interactors.XRBaseInteractor interactor = (UnityEngine.XR.Interaction.Toolkit.Interactors.XRBaseInteractor)args.interactorObject;
                 
                 Matrix4x4 interactorOffset = CalculateInteractorOffset(interactor);
                 interactorOffsets.Add(interactor.GetInstanceID(), interactorOffset);
@@ -157,7 +157,7 @@ namespace VRSYS.Core.Interaction
                 lastframe_second_pointer_axis_index = -1;
                 
                 base.OnSelectExited(args);
-                XRBaseInteractor interactor = (XRBaseInteractor)args.interactorObject;
+                UnityEngine.XR.Interaction.Toolkit.Interactors.XRBaseInteractor interactor = (UnityEngine.XR.Interaction.Toolkit.Interactors.XRBaseInteractor)args.interactorObject;
                 
                 if (interactorOffsets.ContainsKey(interactor.GetInstanceID()))
                 {
@@ -193,7 +193,7 @@ namespace VRSYS.Core.Interaction
 
         private void EvaluateSingleContactUpdate() 
         {
-            XRBaseInteractor interactor = (XRBaseInteractor)interactorsSelecting[0];
+            UnityEngine.XR.Interaction.Toolkit.Interactors.XRBaseInteractor interactor = (UnityEngine.XR.Interaction.Toolkit.Interactors.XRBaseInteractor)interactorsSelecting[0];
 
             Matrix4x4 interactorMat = GetWorldMatrix(interactor.attachTransform.gameObject);
             Matrix4x4 mat = interactorMat * interactorOffsets[interactor.GetInstanceID()];
@@ -214,8 +214,8 @@ namespace VRSYS.Core.Interaction
         
         private void EvaluateDualContactUpdate() 
         {
-            XRBaseInteractor firstInteractor = (XRBaseInteractor)interactorsSelecting[0];
-            XRBaseInteractor secondInteractor = (XRBaseInteractor)interactorsSelecting[1];
+            UnityEngine.XR.Interaction.Toolkit.Interactors.XRBaseInteractor firstInteractor = (UnityEngine.XR.Interaction.Toolkit.Interactors.XRBaseInteractor)interactorsSelecting[0];
+            UnityEngine.XR.Interaction.Toolkit.Interactors.XRBaseInteractor secondInteractor = (UnityEngine.XR.Interaction.Toolkit.Interactors.XRBaseInteractor)interactorsSelecting[1];
 
             Matrix4x4 firstInteractorMat = GetWorldMatrix(firstInteractor.attachTransform.gameObject);
             Matrix4x4 firstContactPoint = firstInteractorMat * contactPointOffsets[firstInteractor.GetInstanceID()];
@@ -269,8 +269,8 @@ namespace VRSYS.Core.Interaction
             }
             foreach (var interactorInterface in interactorsSelecting)
             {
-                XRBaseInteractor interactor = (XRBaseInteractor)interactorInterface;
-                interactorOffsets[interactor.GetInstanceID()] = CalculateInteractorOffset((XRBaseInteractor)interactorInterface);
+                UnityEngine.XR.Interaction.Toolkit.Interactors.XRBaseInteractor interactor = (UnityEngine.XR.Interaction.Toolkit.Interactors.XRBaseInteractor)interactorInterface;
+                interactorOffsets[interactor.GetInstanceID()] = CalculateInteractorOffset((UnityEngine.XR.Interaction.Toolkit.Interactors.XRBaseInteractor)interactorInterface);
             }
         }
 
@@ -278,19 +278,19 @@ namespace VRSYS.Core.Interaction
 
         #region Calculation Methods
 
-        private Matrix4x4 CalculateInteractorOffset(XRBaseInteractor interactor)
+        private Matrix4x4 CalculateInteractorOffset(UnityEngine.XR.Interaction.Toolkit.Interactors.XRBaseInteractor interactor)
         {
             Matrix4x4 interactorMat = Matrix4x4.TRS(interactor.attachTransform.position, interactor.attachTransform.rotation, interactor.attachTransform.lossyScale);
             Matrix4x4 interactableMat = Matrix4x4.TRS(transform.position, transform.rotation, transform.lossyScale);
             return Matrix4x4.Inverse(interactorMat) * interactableMat;
         }
         
-        private Matrix4x4 CalculateContactPointOffset(XRBaseInteractor interactor)
+        private Matrix4x4 CalculateContactPointOffset(UnityEngine.XR.Interaction.Toolkit.Interactors.XRBaseInteractor interactor)
         {
-            if (interactor is XRRayInteractor)
+            if (interactor is UnityEngine.XR.Interaction.Toolkit.Interactors.XRRayInteractor)
             {
                 RaycastHit contactPoint;
-                XRRayInteractor rayInteractor = (XRRayInteractor)interactor;
+                UnityEngine.XR.Interaction.Toolkit.Interactors.XRRayInteractor rayInteractor = (UnityEngine.XR.Interaction.Toolkit.Interactors.XRRayInteractor)interactor;
                 rayInteractor.TryGetCurrent3DRaycastHit(out contactPoint);
 
                 Matrix4x4 interactorMat = Matrix4x4.TRS(interactor.attachTransform.position, interactor.attachTransform.rotation, interactor.attachTransform.lossyScale);

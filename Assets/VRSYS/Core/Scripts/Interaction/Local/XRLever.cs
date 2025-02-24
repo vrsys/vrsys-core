@@ -6,7 +6,7 @@ namespace UnityEngine.XR.Content.Interaction
     /// <summary>
     /// An interactable lever that snaps into an on or off position by a direct interactor
     /// </summary>
-    public class XRLever : XRBaseInteractable
+    public class XRLever : UnityEngine.XR.Interaction.Toolkit.Interactables.XRBaseInteractable
     {
         const float k_LeverDeadZone = 0.1f; // Prevents rapid switching between on and off states when right in the middle
 
@@ -40,7 +40,7 @@ namespace UnityEngine.XR.Content.Interaction
         [Tooltip("Events to trigger when the lever deactivates")]
         UnityEvent m_OnLeverDeactivate = new UnityEvent();
 
-        IXRSelectInteractor m_Interactor;
+        UnityEngine.XR.Interaction.Toolkit.Interactors.IXRSelectInteractor m_Interactor;
 
         /// <summary>
         /// The object that is visually grabbed and manipulated

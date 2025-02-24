@@ -154,7 +154,7 @@ namespace VRSYS.Core.Networking
             {
                 if(verbose)
                     ExtendedLogger.LogInfo(GetType().Name, "deleting lobby " + lobbyId);
-                Lobbies.Instance.DeleteLobbyAsync(lobbyId);
+                LobbyService.Instance.DeleteLobbyAsync(lobbyId);
             }
             AuthSignOut();
             Instance = null;
@@ -166,7 +166,7 @@ namespace VRSYS.Core.Networking
             {
                 if(verbose)
                     ExtendedLogger.LogInfo(GetType().Name, "kicking player " + playerId);
-                await Lobbies.Instance.RemovePlayerAsync(lobbyId, playerId);
+                await LobbyService.Instance.RemovePlayerAsync(lobbyId, playerId);
             }
         }
 
@@ -266,7 +266,7 @@ namespace VRSYS.Core.Networking
             try
             {
                 // Create RELAY object
-                Allocation allocation = await Relay.Instance.CreateAllocationAsync(maxConnections);
+                Allocation allocation = await RelayService.Instance.CreateAllocationAsync(maxConnections);
                 hostData = new RelayHostData()
                 {
                     Key = allocation.Key,
@@ -278,7 +278,7 @@ namespace VRSYS.Core.Networking
                 };
                 
                 // Retrieve JoinCode
-                hostData.JoinCode = await Relay.Instance.GetJoinCodeAsync(allocation.AllocationId);
+                hostData.JoinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
                 
                 // handle lobby name
                 if (lobbySettings.lobbyName.Equals(""))
@@ -300,7 +300,7 @@ namespace VRSYS.Core.Networking
                 };
 
                 // Create the lobby
-                lobby = await Lobbies.Instance.CreateLobbyAsync(lobbySettings.lobbyName, lobbySettings.maxUsers, options);
+                lobby = await LobbyService.Instance.CreateLobbyAsync(lobbySettings.lobbyName, lobbySettings.maxUsers, options);
                 
                 // Save Lobby ID for later users
                 lobbyId = lobby.Id;
@@ -342,7 +342,7 @@ namespace VRSYS.Core.Networking
 
             while (true)
             {
-                Lobbies.Instance.SendHeartbeatPingAsync(lobbyName);
+                LobbyService.Instance.SendHeartbeatPingAsync(lobbyName);
                 
                 if(verbose)
                     ExtendedLogger.LogInfo(GetType().Name, "Lobby Heartbeat");
@@ -356,7 +356,7 @@ namespace VRSYS.Core.Networking
             try
             {
                 // Join selected lobby
-                lobby = await Lobbies.Instance.JoinLobbyByIdAsync(lobbyId);
+                lobby = await LobbyService.Instance.JoinLobbyByIdAsync(lobbyId);
                 lobbySettings.lobbyName = lobby.Name;
                 this.lobbyId = lobbyId;
 
@@ -372,7 +372,7 @@ namespace VRSYS.Core.Networking
                 if(verbose)
                     ExtendedLogger.LogInfo(GetType().Name, "received JoinCode: " + joinCode);
 
-                JoinAllocation allocation = await Relay.Instance.JoinAllocationAsync(joinCode);
+                JoinAllocation allocation = await RelayService.Instance.JoinAllocationAsync(joinCode);
                 
                 // Create join object
                 joinData = new RelayJoinData
@@ -430,7 +430,7 @@ namespace VRSYS.Core.Networking
                             value: "0")
                     };
 
-                    QueryResponse result = await Lobbies.Instance.QueryLobbiesAsync(options);
+                    QueryResponse result = await LobbyService.Instance.QueryLobbiesAsync(options);
                     Lobby lobby = result.Results.Find(l => l.Name == lobbySettings.lobbyName);
 
                     if (lobby != null)
@@ -467,7 +467,7 @@ namespace VRSYS.Core.Networking
             try
             {
                 // Create RELAY object
-                Allocation allocation = await Relay.Instance.CreateAllocationAsync(maxConnections);
+                Allocation allocation = await RelayService.Instance.CreateAllocationAsync(maxConnections);
                 hostData = new RelayHostData()
                 {
                     Key = allocation.Key,
@@ -479,7 +479,7 @@ namespace VRSYS.Core.Networking
                 };
                 
                 // Retrieve JoinCode
-                hostData.JoinCode = await Relay.Instance.GetJoinCodeAsync(allocation.AllocationId);
+                hostData.JoinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
                 
                 // handle lobby name
                 if (!(dedicatedServerSettings.jsonConfig.LobbyName.Length > 0))
@@ -508,7 +508,7 @@ namespace VRSYS.Core.Networking
                 };
 
                 // Create the lobby
-                var lobby = await Lobbies.Instance.CreateLobbyAsync(lobbySettings.lobbyName, maxConnections, options);
+                var lobby = await LobbyService.Instance.CreateLobbyAsync(lobbySettings.lobbyName, maxConnections, options);
                 
                 // Save Lobby ID for later users
                 lobbyId = lobby.Id;
@@ -577,10 +577,6 @@ namespace VRSYS.Core.Networking
             public byte[] HostConnectionData;
             public byte[] Key;
         }
-
-        #endregion
-
-        #region Other Data Structs
 
         #endregion
     }   

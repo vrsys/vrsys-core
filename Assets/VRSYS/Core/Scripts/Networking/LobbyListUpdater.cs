@@ -90,8 +90,8 @@ namespace VRSYS.Core.Networking
                             op: QueryFilter.OpOptions.GT,
                             value: "0")
                     };
-                
-                    QueryResponse response = await Lobbies.Instance.QueryLobbiesAsync(options);
+                    
+                    QueryResponse response = await LobbyService.Instance.QueryLobbiesAsync(options);
 
                     lobbyList = new List<LobbyData>();
 

@@ -100,11 +100,11 @@ namespace VRSYS.Core.Navigation
         public HandType handType;
         private HandType currentHandType;
         public ActionBasedController leftController;
-        public XRRayInteractor leftRayInteractor;
+        public UnityEngine.XR.Interaction.Toolkit.Interactors.XRRayInteractor leftRayInteractor;
         public ActionBasedController rightController;
-        public XRRayInteractor rightRayInteractor;
+        public UnityEngine.XR.Interaction.Toolkit.Interactors.XRRayInteractor rightRayInteractor;
         private InputActionProperty teleportActionValue;
-        private XRRayInteractor rayInteractor;
+        private UnityEngine.XR.Interaction.Toolkit.Interactors.XRRayInteractor rayInteractor;
 
         [SerializeField]
         private GameObject previewAvatarPrefab;
@@ -231,7 +231,7 @@ namespace VRSYS.Core.Navigation
             return teleportActionValue.action.ReadValue<float>();
         }
 
-        public XRRayInteractor GetRayInteractor()
+        public UnityEngine.XR.Interaction.Toolkit.Interactors.XRRayInteractor GetRayInteractor()
         {
             return rayInteractor;
         }

@@ -42,7 +42,7 @@ using VRSYS.Core.Networking;
 
 namespace VRSYS.Core.Navigation
 {
-    public class TeleportTargetInteractable : XRBaseInteractable
+    public class TeleportTargetInteractable : UnityEngine.XR.Interaction.Toolkit.Interactables.XRBaseInteractable
     {
         public LocalTeleportManager localTeleportManager;
 
@@ -114,7 +114,7 @@ namespace VRSYS.Core.Navigation
             return teleportManager != null;
         }
 
-        private bool IsAllowedInteractor(IXRInteractor interactor)
+        private bool IsAllowedInteractor(UnityEngine.XR.Interaction.Toolkit.Interactors.IXRInteractor interactor)
         {
             return EnsureTeleportManager() && ReferenceEquals(interactor, teleportManager.GetRayInteractor());
         }
@@ -151,7 +151,7 @@ namespace VRSYS.Core.Navigation
             var ray = teleportManager.GetRayInteractor();
             prevKeepSelectedTargetValid = ray.keepSelectedTargetValid;
             ray.keepSelectedTargetValid = false;
-            var lineVisual = ray.GetComponent<XRInteractorLineVisual>();
+            var lineVisual = ray.GetComponent<UnityEngine.XR.Interaction.Toolkit.Interactors.Visuals.XRInteractorLineVisual>();
             if (lineVisual)
             {
                 prevLineBendRatio = lineVisual.lineBendRatio;
@@ -163,7 +163,7 @@ namespace VRSYS.Core.Navigation
         {
             var ray = teleportManager.GetRayInteractor();
             ray.keepSelectedTargetValid = prevKeepSelectedTargetValid;
-            var lineVisual = ray.GetComponent<XRInteractorLineVisual>();
+            var lineVisual = ray.GetComponent<UnityEngine.XR.Interaction.Toolkit.Interactors.Visuals.XRInteractorLineVisual>();
             if (lineVisual)
                 lineVisual.lineBendRatio = prevLineBendRatio;
         }

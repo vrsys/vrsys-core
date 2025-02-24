@@ -7,7 +7,7 @@ namespace UnityEngine.XR.Content.Interaction
     /// <summary>
     /// An interactable joystick that can move side to side, and forward and back by a direct interactor
     /// </summary>
-    public class XRJoystick : XRBaseInteractable
+    public class XRJoystick : UnityEngine.XR.Interaction.Toolkit.Interactables.XRBaseInteractable
     {
         const float k_MaxDeadZonePercent = 0.9f;
 
@@ -56,7 +56,7 @@ namespace UnityEngine.XR.Content.Interaction
         [Tooltip("Events to trigger when the joystick's y value changes")]
         ValueChangeEvent m_OnValueChangeY = new ValueChangeEvent();
 
-        IXRSelectInteractor m_Interactor;
+        UnityEngine.XR.Interaction.Toolkit.Interactors.IXRSelectInteractor m_Interactor;
 
         /// <summary>
         /// Controls how the joystick moves

@@ -10,13 +10,12 @@ If you need help with using the package, you want to participate in further deve
 To use the package in your project, first include the following packages:
 
 ### If you use VRSYS Core only:
-- Authentication v2.4.0
-- Input System v1.7.0
-- Lobby v1.1.2
-- Netcode for GameObjects v1.8.1
-- Relay v1.0.5
-- XR Interaction Toolkit v2.5.3
-- XR Plugin Management v4.4.0
+- Authentication v3.4.0
+- Input System v1.11.2
+- Netcode for GameObjects v2.2.0
+- Multiplayer Services 1.1.1
+- XR Interaction Toolkit v3.0.7
+- XR Plugin Management v4.5.0
 - [ART DTRACK Plugin v1.1.3](https://github.com/ar-tracking/UnityDTrackPlugin/releases/tag/v1.1.3)
 
 ### If you want to use the 4Players Odin Voice integration:

@@ -43,7 +43,7 @@ using VRSYS.Core.Logging;
 
 namespace VRSYS.Core.ScriptableObjects
 {
-    [CreateAssetMenu(menuName = "Scriptable Objects/ProjectionWallSettings")]
+    [CreateAssetMenu(menuName = "VRSYS/Core/Scriptable Objects/ProjectionWallSettings")]
     public class ProjectionWallSettings : JsonConfig
     {
         [Header("Parsed from SystemConfig")]

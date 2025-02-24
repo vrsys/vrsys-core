@@ -44,7 +44,7 @@ using VRSYS.Core.Logging;
 
 namespace VRSYS.Core.ScriptableObjects
 {
-    [CreateAssetMenu(menuName = "Scriptable Objects/DedicatedServerSettings")]
+    [CreateAssetMenu(menuName = "VRSYS/Core/Scriptable Objects/DedicatedServerSettings")]
     public class DedicatedServerSettings : ScriptableObject
     {
         public struct JsonConfig

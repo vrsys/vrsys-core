@@ -40,7 +40,7 @@ using UnityEngine;
 
 namespace VRSYS.Core.ScriptableObjects
 {
-    [CreateAssetMenu(menuName = "Scriptable Objects/LobbySettings")]
+    [CreateAssetMenu(menuName = "VRSYS/Core/Scriptable Objects/LobbySettings")]
     public class LobbySettings : ScriptableObject
     {
         public bool autoStart = false;

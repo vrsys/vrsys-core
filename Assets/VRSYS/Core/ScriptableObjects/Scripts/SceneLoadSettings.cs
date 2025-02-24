@@ -40,7 +40,7 @@ using UnityEngine;
 
 namespace VRSYS.Core.ScriptableObjects
 {
-    [CreateAssetMenu(menuName = "Scriptable Objects/SceneLoadSettings")]
+    [CreateAssetMenu(menuName = "VRSYS/Core/Scriptable Objects/SceneLoadSettings")]
     public class SceneLoadSettings : ScriptableObject
     {
         public string sceneToLoadOnSpawn = "";

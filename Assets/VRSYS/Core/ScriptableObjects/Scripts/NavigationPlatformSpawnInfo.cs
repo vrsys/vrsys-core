@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace VRSYS.Core.ScriptableObjects
 {
-    [CreateAssetMenu(menuName = "Scriptable Objects/NavigationPlatformSpawnInfo")]
+    [CreateAssetMenu(menuName = "VRSYS/Core/Scriptable Objects/NavigationPlatformSpawnInfo")]
     public class NavigationPlatformSpawnInfo : ScriptableObject
     {
         public string platformName = "NavigationPlatform";

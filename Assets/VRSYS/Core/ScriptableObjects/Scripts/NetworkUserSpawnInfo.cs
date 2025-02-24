@@ -3,7 +3,7 @@ using VRSYS.Core.Networking;
 
 namespace VRSYS.Core.ScriptableObjects
 {
-    [CreateAssetMenu(menuName = "Scriptable Objects/NetworkUserSpawnInfo")]
+    [CreateAssetMenu(menuName = "VRSYS/Core/Scriptable Objects/NetworkUserSpawnInfo")]
     public class NetworkUserSpawnInfo : ScriptableObject
     {
         public UserRole userRole = UserRole.HMD;

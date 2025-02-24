@@ -42,7 +42,7 @@ using VRSYS.Core.Logging;
 
 namespace VRSYS.Core.ScriptableObjects
 {
-    [CreateAssetMenu(menuName = "Scriptable Objects/JsonConfig")]
+    [CreateAssetMenu(menuName = "VRSYS/Core/Scriptable Objects/JsonConfig")]
     public class JsonConfig : ScriptableObject
     {
         public string configPath = "configs/my-config.json";

@@ -40,6 +40,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using Unity.Services.Authentication;
 using Unity.Services.Core;
@@ -71,6 +72,8 @@ namespace VRSYS.Core.Networking
 
         [Header("Lobby Properties")] 
         public LobbySettings lobbySettings;
+        
+        
 
         [Header("Debugging")] 
         [SerializeField] private bool verbose = false;
@@ -541,6 +544,15 @@ namespace VRSYS.Core.Networking
                 Debug.LogError(e);
                 throw;
             }
+        }
+
+        #endregion
+
+        #region Local Session
+
+        public void StartLocalSession()
+        {
+            
         }
 
         #endregion

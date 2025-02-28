@@ -50,6 +50,7 @@ using Unity.Services.Relay;
 using Unity.Services.Relay.Models;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.Serialization;
 using VRSYS.Core.Logging;
 using VRSYS.Core.ScriptableObjects;
 using Random = UnityEngine.Random;
@@ -72,8 +73,9 @@ namespace VRSYS.Core.Networking
 
         [Header("Lobby Properties")] 
         public LobbySettings lobbySettings;
-        
-        
+
+        [Header("Local Network Settings")] 
+        public LocalNetworkSettings localNetworkSettings;
 
         [Header("Debugging")] 
         [SerializeField] private bool verbose = false;
@@ -82,6 +84,7 @@ namespace VRSYS.Core.Networking
         public UnityEvent onAuthenticated = new UnityEvent();
         public UnityEvent onLobbyCreated = new UnityEvent();
         public UnityEvent onLobbyJoined = new UnityEvent();
+        public UnityEvent onJoinedLocalNetwork = new UnityEvent();
         
         // Connection parameters
         [HideInInspector] public Lobby lobby;
@@ -550,9 +553,32 @@ namespace VRSYS.Core.Networking
 
         #region Local Session
 
-        public void StartLocalSession()
+        public void StartLocalNetworkServer()
         {
-            
+            SetLocalNetworkConnectionData();
+            NetworkManager.Singleton.StartServer();
+            onJoinedLocalNetwork.Invoke();
+        }
+
+        public void StartLocalNetworkHost()
+        {
+            SetLocalNetworkConnectionData();
+            NetworkManager.Singleton.StartHost();
+            onJoinedLocalNetwork.Invoke();
+        }
+
+        public void StartLocalNetworkClient()
+        {
+            SetLocalNetworkConnectionData();
+            NetworkManager.Singleton.StartClient();
+            onJoinedLocalNetwork.Invoke();
+        }
+
+        private void SetLocalNetworkConnectionData()
+        {
+            NetworkManager.Singleton.GetComponent<UnityTransport>().ConnectionData.Address =
+                localNetworkSettings.ipAddress;
+            NetworkManager.Singleton.GetComponent<UnityTransport>().ConnectionData.Port = localNetworkSettings.port;
         }
 
         #endregion

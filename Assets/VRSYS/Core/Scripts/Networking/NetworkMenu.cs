@@ -40,7 +40,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
+using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.InputSystem.HID;
 using UnityEngine.UI;
 using VRSYS.Core.Logging;
 using VRSYS.Core.ScriptableObjects;
@@ -61,6 +63,7 @@ namespace VRSYS.Core.Networking
         [Header("UI Sections")] 
         public GameObject lobbyOverview;
         public GameObject createLobbySection;
+        public GameObject localNetworkSection;
         
         [Header("Interactive UI Elements")] 
         public TMP_InputField userNameInputField;
@@ -72,6 +75,13 @@ namespace VRSYS.Core.Networking
         public Button createLobbyButton;
         public Button backButton;
         public TextMeshProUGUI stateText;
+        public Button localNetworkButton;
+        public TMP_InputField ipAddressInputField;
+        public TMP_InputField portInputField;
+        public Button startServerButton;
+        public Button startHostButton;
+        public Button startClientButton;
+        public Button localNetworkBackButton;
 
         [Header("Lobby Tiles")] 
         public GameObject lobbyTilePrefab;
@@ -86,6 +96,8 @@ namespace VRSYS.Core.Networking
         private NetworkUserSpawnInfo spawnInfo => ConnectionManager.Instance.userSpawnInfo;
 
         private LobbyListUpdater lobbyListUpdater;
+
+        private LocalNetworkSettings localNetworkSettings => ConnectionManager.Instance.localNetworkSettings;
 
         #endregion
 
@@ -147,6 +159,9 @@ namespace VRSYS.Core.Networking
             userColorDropdown.AddOptions(availableUserColors);
             
             spawnInfo.userColor = avatarColors[0].color;
+
+            ipAddressInputField.text = localNetworkSettings.ipAddress;
+            portInputField.text = localNetworkSettings.port.ToString();
         }
 
         private void SetupUIEvents()
@@ -167,12 +182,26 @@ namespace VRSYS.Core.Networking
                 createLobbyButton.onClick.AddListener(CreateLobby);
             if(backButton is not null)
                 backButton.onClick.AddListener(Back);
+            if(localNetworkButton is not null)
+                localNetworkButton.onClick.AddListener(LocalNetwork);
+            if(ipAddressInputField is not null)
+                ipAddressInputField.onValueChanged.AddListener(UpdateIPAddress);
+            if(portInputField is not null)
+                portInputField.onValueChanged.AddListener(UpdatePort);
+            if(startServerButton is not null)
+                startServerButton.onClick.AddListener(StartServer);
+            if(startHostButton is not null)
+                startHostButton.onClick.AddListener(StartHost);
+            if(startClientButton is not null)
+                startClientButton.onClick.AddListener(StartClient);
+            if(localNetworkBackButton is not null)
+                localNetworkBackButton.onClick.AddListener(LocalNetworkBack);
             
             ConnectionManager.Instance.onConnectionStateChange.AddListener(UpdateConnectionState);
 
             if (lobbyListUpdater == null)
             {
-                ExtendedLogger.LogError(GetType().Name, "No LobbyListUpdater present in current scene!");
+                ExtendedLogger.LogWarning(GetType().Name, "No LobbyListUpdater present in current scene!");
             }
             else
             {
@@ -267,6 +296,54 @@ namespace VRSYS.Core.Networking
 
             RectTransform contentTransform = tileParent.GetComponent<RectTransform>();
             contentTransform.sizeDelta = new Vector2(lobbyListUpdater.lobbyList.Count * (lobbyTilePrefab.GetComponent<RectTransform>().rect.height + tileParent.GetComponent<VerticalLayoutGroup>().spacing),contentTransform.rect.width);
+        }
+
+        private void LocalNetwork()
+        {
+            lobbyOverview.SetActive(false);
+            localNetworkSection.SetActive(true);
+        }
+        
+        private void UpdateIPAddress(string arg0)
+        {
+            localNetworkSettings.ipAddress = ipAddressInputField.text;
+        }
+
+        private void UpdatePort(string arg0)
+        {
+            if (ushort.TryParse(portInputField.text, out ushort port))
+            {
+                localNetworkSettings.port = port;
+            }
+            else
+            {
+                ExtendedLogger.LogError(GetType().Name, "No valid input for port.", this);
+            }
+            
+        }
+
+        private void StartServer()
+        {
+            ConnectionManager.Instance.StartLocalNetworkServer();
+            gameObject.SetActive(false);
+        }
+
+        private void StartHost()
+        {
+            ConnectionManager.Instance.StartLocalNetworkHost();
+            gameObject.SetActive(false);
+        }
+
+        private void StartClient()
+        {
+            ConnectionManager.Instance.StartLocalNetworkClient();
+            gameObject.SetActive(false);
+        }
+
+        private void LocalNetworkBack()
+        {
+            lobbyOverview.SetActive(true);
+            localNetworkSection.SetActive(false);
         }
 
         #endregion

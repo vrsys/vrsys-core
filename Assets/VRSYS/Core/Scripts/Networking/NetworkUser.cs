@@ -150,15 +150,6 @@ namespace VRSYS.Core.Networking
             avatarAnatomy.SetColor(userColor.Value);
         }
 
-        public void SetUserName(string name)
-        {
-            if (IsOwner)
-                userName.Value = name;
-            var userNameStr = userName.Value.ToString(); 
-            avatarAnatomy.SetUserName(userNameStr);
-            gameObject.name = userNameStr + (IsOwner ? " [Local]" : " [Remote]");
-        }
-
         private void Update()
         {
             if(disconnectNow)
@@ -168,6 +159,48 @@ namespace VRSYS.Core.Networking
             }
         }
 
+        public override void OnNetworkDespawn()
+        {
+            if(IsOwner)
+                LocalInstance = null;
+            base.OnNetworkDespawn();
+        }
+
+        #endregion
+
+        #region Custom Methods
+        
+        public void SetUserName(string name)
+        {
+            if (!IsOwner)
+            {
+                ExtendedLogger.LogError(GetType().Name, "Only the owner can change the user name. Use SetUserNameRpc instead.");
+                return;
+            }
+                
+            userName.Value = name;
+            var userNameStr = userName.Value.ToString(); 
+            avatarAnatomy.SetUserName(userNameStr);
+            gameObject.name = userNameStr + (IsOwner ? " [Local]" : " [Remote]");
+        }
+
+        private void UpdateUserNameLabel(FixedString32Bytes previousValue, FixedString32Bytes newValue)
+        {
+            var userNameStr = userName.Value.ToString();
+            avatarAnatomy.SetUserName(userNameStr);
+            gameObject.name = userNameStr + (IsOwner ? " [Local]" : " [Remote]");
+        }
+        
+        private void UpdateUserColor(Color previousValue, Color newValue)
+        {
+            avatarAnatomy.SetColor(userColor.Value);
+        }
+
+        public static float CalcLocalHeight()
+        {
+            return LocalInstance.head.localPosition.y;// * LocalInstance.transform.localScale.y;
+        }
+        
         public void RequestDisconnect()
         {
             if (!IsOwner || isDisconnecting)
@@ -187,26 +220,6 @@ namespace VRSYS.Core.Networking
             }
         }
         
-        [ServerRpc]
-        private void RequestDisconnectServerRpc(FixedString64Bytes authPlayerId, ulong clientId)
-        {
-            if(verbose)
-                ExtendedLogger.LogInfo(GetType().Name, "disconnecting player " + authPlayerId + " with clientId " + clientId);
-            ConnectionManager.Instance.KickPlayer(authPlayerId.Value);
-            PerformDisconnectClientRpc(clientId);
-        }
-        
-        [ClientRpc]
-
-        private void PerformDisconnectClientRpc(ulong clientId)
-        {
-            if(clientId != NetworkManager.Singleton.LocalClientId)
-                return;
-            if(verbose)
-                ExtendedLogger.LogInfo(GetType().Name, "disconnecting client " + NetworkManager.Singleton.LocalClientId);
-            FinalizeDisconnect();
-        }
-        
         private void FinalizeDisconnect()
         {
             NetworkManager.Singleton.Shutdown();
@@ -223,32 +236,33 @@ namespace VRSYS.Core.Networking
             }
         }
 
-        public override void OnNetworkDespawn()
-        {
-            if(IsOwner)
-                LocalInstance = null;
-            base.OnNetworkDespawn();
-        }
-
         #endregion
 
-        #region Custom Methods
+        #region RPCs
 
-        private void UpdateUserNameLabel(FixedString32Bytes previousValue, FixedString32Bytes newValue)
+        [ServerRpc]
+        private void RequestDisconnectServerRpc(FixedString64Bytes authPlayerId, ulong clientId)
         {
-            var userNameStr = userName.Value.ToString();
-            avatarAnatomy.SetUserName(userNameStr);
-            gameObject.name = userNameStr + (IsOwner ? " [Local]" : " [Remote]");
+            if(verbose)
+                ExtendedLogger.LogInfo(GetType().Name, "disconnecting player " + authPlayerId + " with clientId " + clientId);
+            ConnectionManager.Instance.KickPlayer(authPlayerId.Value);
+            PerformDisconnectClientRpc(clientId);
         }
         
-        private void UpdateUserColor(Color previousValue, Color newValue)
+        [ClientRpc]
+        private void PerformDisconnectClientRpc(ulong clientId)
         {
-            avatarAnatomy.SetColor(userColor.Value);
+            if(clientId != NetworkManager.Singleton.LocalClientId)
+                return;
+            if(verbose)
+                ExtendedLogger.LogInfo(GetType().Name, "disconnecting client " + NetworkManager.Singleton.LocalClientId);
+            FinalizeDisconnect();
         }
 
-        public static float CalcLocalHeight()
+        [Rpc(SendTo.Owner)]
+        public void SetUserNameRpc(string userName)
         {
-            return LocalInstance.head.localPosition.y;// * LocalInstance.transform.localScale.y;
+            SetUserName(userName);
         }
 
         #endregion

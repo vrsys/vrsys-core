@@ -76,17 +76,17 @@ namespace VRSYS.Core.Logging
         
         public static void LogInfo(string className, string message, Object context = null)
         {
-            Debug.Log($"[<color=green>Info</color>] [{className}] {message}", context);
+            Debug.Log($"<color=white>[<color=green>Info</color>] [{className}] {message}</color>", context);
         }
 
         public static void LogWarning(string className, string message, Object context = null)
         {
-            Debug.Log($"[<color=yellow>Warning</color>] [{className}] {message}", context);
+            Debug.LogWarning($"<color=white>[<color=yellow>Warning</color>] [{className}] {message}</color>", context);
         }
         
         public static void LogError(string className, string message, Object context = null)
         {
-            Debug.Log($"[<color=red>Error</color>] [{className}] {message}", context);
+            Debug.LogError($"<color=white>[<color=red>Error</color>] [{className}] {message}</color>", context);
         }
     }
 }

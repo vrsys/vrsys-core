@@ -75,6 +75,7 @@ namespace VRSYS.Core.Networking
         public LobbySettings lobbySettings;
 
         [Header("Local Network Settings")] 
+        [Tooltip("Set to true, if your app does not require Unity Services. Bypasses Unity Authentication, Relay and Lobby Services.")] public bool offlineSession = false;
         public LocalNetworkSettings localNetworkSettings;
 
         [Header("Debugging")] 
@@ -119,7 +120,7 @@ namespace VRSYS.Core.Networking
 
         private async void Start()
         {
-            if (connectionState == ConnectionState.Offline)
+            if (connectionState == ConnectionState.Offline && !offlineSession)
             {
                 connectionState = ConnectionState.Connecting;
                 onConnectionStateChange.Invoke(connectionState);

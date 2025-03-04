@@ -40,7 +40,7 @@ using UnityEngine;
 
 namespace VRSYS.Core.ScriptableObjects
 {
-    [CreateAssetMenu(menuName = "VRSYS/Core/ScriptableObjects/LocalNetworkSettings")]
+    [CreateAssetMenu(menuName = "VRSYS/Core/Scriptable Objects/LocalNetworkSettings")]
 
     public class LocalNetworkSettings : ScriptableObject
     {

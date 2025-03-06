@@ -62,8 +62,7 @@ namespace VRSYS.Core.Utility
             public List<Behaviour> affectedLocalBehaviours = new ();
             public List<Renderer> affectedRenderers = new ();
             public List<Collider> affectedColliders = new ();
-            [HideInInspector]
-            public string initialName;
+            [HideInInspector] public string initialName;
         }
         
         [SerializeField]
@@ -169,6 +168,14 @@ namespace VRSYS.Core.Utility
                 return;
             }
             
+            if (index < 0 || index >= groups.Count)
+            {
+                ExtendedLogger.LogError(GetType().Name, "index out of range!");
+                return;
+            }
+    
+            activeGroupIndex.Value = index;
+            
             _SetActiveObject(index);
         }
     
@@ -184,14 +191,6 @@ namespace VRSYS.Core.Utility
     
         private void _SetActiveObject(int index)
         {
-            if (index < 0 || index >= groups.Count)
-            {
-                ExtendedLogger.LogError(GetType().Name, "index out of range!");
-                return;
-            }
-    
-            activeGroupIndex.Value = index;
-            
             UpdateEnabledStates();
         }
     }

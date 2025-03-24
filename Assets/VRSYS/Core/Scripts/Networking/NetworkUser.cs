@@ -33,7 +33,7 @@
 // SOFTWARE.
 //-----------------------------------------------------------------
 //   Authors:        Tony Jan Zoeppig, Sebastian Muehlhaus
-//   Date:           2023
+//   Date:           2025
 //-----------------------------------------------------------------
 
 using System.Collections.Generic;
@@ -161,8 +161,20 @@ namespace VRSYS.Core.Networking
 
         public override void OnNetworkDespawn()
         {
-            if(IsOwner)
+            if (!IsOwner)
+            {
+                var networkUserCallbackTargets = FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None).OfType<INetworkUserCallbacks>();
+                foreach (var target in networkUserCallbackTargets)
+                {
+                    target.OnRemoteNetworkUserDisconnect(this);
+                }
+            }
+
+            if (IsOwner)
+            {
+                
                 LocalInstance = null;
+            }
             base.OnNetworkDespawn();
         }
 

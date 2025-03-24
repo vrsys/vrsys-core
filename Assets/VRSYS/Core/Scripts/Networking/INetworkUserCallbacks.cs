@@ -33,7 +33,7 @@
 // SOFTWARE.
 //-----------------------------------------------------------------
 //   Authors:        Tony Zoeppig, Sebastian Muehlhaus
-//   Date:           2023
+//   Date:           2025
 //-----------------------------------------------------------------
 
 namespace VRSYS.Core.Networking
@@ -42,5 +42,13 @@ namespace VRSYS.Core.Networking
     {
         void OnLocalNetworkUserSetup();
         void OnRemoteNetworkUserSetup(NetworkUser user);
+        void OnLocalNetworkUserDisconnect()
+        {
+            // empty default implementation
+        }
+        void OnRemoteNetworkUserDisconnect(NetworkUser user)
+        {
+            // empty default implementation
+        }
     }
 }

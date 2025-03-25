@@ -3449,9 +3449,9 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   userPrefabs:
   - UserRole: 1
-    UserPrefab: {fileID: 7216047633976425198, guid: f89cee06a05d6dd4c94cd0c484e6fc25, type: 3}
+    UserPrefab: {fileID: 5053143018573637247, guid: 2e376f55818917f4195b880d3987bc7e, type: 3}
   - UserRole: 0
-    UserPrefab: {fileID: 8231461269131396514, guid: 27e471b860a738a4eb3deb9954c7af7a, type: 3}
+    UserPrefab: {fileID: 110225706602942093, guid: 27e471b860a738a4eb3deb9954c7af7a, type: 3}
   spawnPoints: []
   verbose: 0
 --- !u!1 &2033452943

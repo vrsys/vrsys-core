@@ -750,6 +750,8 @@ MonoBehaviour:
   startDedicatedServer: 0
   dedicatedServerSettings: {fileID: 0}
   lobbySettings: {fileID: 11400000, guid: b95d6d2553919964f85d993c2bee5221, type: 2}
+  offlineSession: 0
+  localNetworkSettings: {fileID: 0}
   verbose: 0
   onAuthenticated:
     m_PersistentCalls:
@@ -832,6 +834,9 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 1
         m_CallState: 2
+  onJoinedLocalNetwork:
+    m_PersistentCalls:
+      m_Calls: []
   onConnectionStateChange:
     m_PersistentCalls:
       m_Calls: []
@@ -850,9 +855,9 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   userPrefabs:
   - UserRole: 1
-    UserPrefab: {fileID: 7216047633976425198, guid: 8c8455a8b5209b54ca5f8a25011d7565, type: 3}
+    UserPrefab: {fileID: 1757823766449866014, guid: b65067f1e2732024f8569bbc6a1fb1d6, type: 3}
   - UserRole: 0
-    UserPrefab: {fileID: 8231461269131396514, guid: 8875849d906ad3340a4053a93a58507f, type: 3}
+    UserPrefab: {fileID: 7735290717479492329, guid: 9f766c4edec997f4bb5f428a7ab4403b, type: 3}
   spawnPoints:
   - {fileID: 1951133675}
   verbose: 0
@@ -1459,7 +1464,7 @@ AudioSource:
   m_Enabled: 1
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
-  m_audioClip: {fileID: 8300000, guid: f85ae425edab4d04fb51958653890406, type: 3}
+  m_audioClip: {fileID: 0}
   m_Resource: {fileID: 8300000, guid: f85ae425edab4d04fb51958653890406, type: 3}
   m_PlayOnAwake: 0
   m_Volume: 0

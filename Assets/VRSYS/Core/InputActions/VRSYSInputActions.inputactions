@@ -1139,9 +1139,9 @@
                 },
                 {
                     "name": "UI Press Value",
-                    "type": "Value",
+                    "type": "Button",
                     "id": "182c3c7d-e10a-4788-919a-4d959432c3b6",
-                    "expectedControlType": "Axis",
+                    "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": true
@@ -1584,7 +1584,7 @@
                     "name": "Select",
                     "type": "Button",
                     "id": "7fed8a43-b4c5-42fc-8b13-3a98775be493",
-                    "expectedControlType": "Button",
+                    "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
@@ -1620,16 +1620,16 @@
                     "name": "UI Press",
                     "type": "Button",
                     "id": "f3200ff9-4303-435e-bef2-c80b755a21dc",
-                    "expectedControlType": "Button",
+                    "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
                 },
                 {
                     "name": "UI Press Value",
-                    "type": "Value",
+                    "type": "Button",
                     "id": "a7f9b651-8826-4477-bd3b-4ada98c0b979",
-                    "expectedControlType": "Axis",
+                    "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": true

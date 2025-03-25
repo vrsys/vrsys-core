@@ -33,7 +33,7 @@
 // SOFTWARE.
 //-----------------------------------------------------------------
 //   Authors:        Tony Zoeppig, Sebastian Muehlhaus
-//   Date:           2023
+//   Date:           2025
 //-----------------------------------------------------------------
 
 using System;
@@ -52,8 +52,12 @@ namespace VRSYS.Core.Networking
         #region Member Variables
 
         [FormerlySerializedAs("userTypes")] public List<UserRolePrefab> userPrefabs;
-        
-        public List<Transform> spawnPoints;
+
+        [Tooltip("If set to true, user role specific spawn point will be used. If set to false or no user role specific spawn point was configured, spawn point configured below will be used.")]
+        public bool useRoleSpawnPoints = true;
+
+        [Tooltip("This spawn point is used if userRoleSpawnPoint is false, or no SpawnPoint was configured for the selected user role. If null, it will be set to this Transform.")]
+        public Transform spawnPoint;
 
         public bool verbose = false;
 
@@ -65,6 +69,9 @@ namespace VRSYS.Core.Networking
 
         public override void OnNetworkSpawn()
         {
+            if (spawnPoint == null)
+                spawnPoint = transform;
+            
             spawnInfo = ConnectionManager.Instance.userSpawnInfo;
 
             if(!ConnectionManager.Instance.startDedicatedServer)
@@ -91,21 +98,17 @@ namespace VRSYS.Core.Networking
         [ServerRpc(RequireOwnership = false)]
         public void SpawnUserPrefabServerRPC(int prefabIndex, ServerRpcParams serverRpcParams = default)
         {
+            Transform spawn = useRoleSpawnPoints ? userPrefabs[prefabIndex].SpawnPoint : spawnPoint;
+
+            // if useRoleSpawnPoints == true, but roleSpawnPoint == null --> Fallback to default spawn point
+            if (spawn == null)
+                spawn = spawnPoint;
+            
             // Instantiate user prefab
             GameObject user = Instantiate(userPrefabs[prefabIndex].UserPrefab);
-            
-            // Spawn point handling
-            if (spawnPoints.Count == 0)
-            {
-                user.transform.position = transform.position;
-                user.transform.rotation = transform.rotation;
-            }
-            else
-            {
-                int spawnPointIndex = UnityEngine.Random.Range(0, spawnPoints.Count);
-                user.transform.position = spawnPoints[spawnPointIndex].position;
-                user.transform.rotation = spawnPoints[spawnPointIndex].rotation;
-            }
+
+            user.transform.position = spawn.position;
+            user.transform.rotation = spawn.rotation;
 
             // Spawn user prefab
             user.GetComponent<NetworkObject>().SpawnAsPlayerObject(serverRpcParams.Receive.SenderClientId, destroyWithScene: false);
@@ -120,6 +123,7 @@ namespace VRSYS.Core.Networking
         {
             public UserRole UserRole;
             public GameObject UserPrefab;
+            public Transform SpawnPoint;
         }
 
         #endregion

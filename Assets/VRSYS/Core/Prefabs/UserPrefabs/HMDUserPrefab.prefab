@@ -4517,6 +4517,7 @@ GameObject:
   - component: {fileID: 3359338612747561171}
   - component: {fileID: 7757530823559898401}
   - component: {fileID: 6840683655124811897}
+  - component: {fileID: 594239884952932559}
   m_Layer: 0
   m_Name: HMDUserPrefab
   m_TagString: Untagged
@@ -4819,6 +4820,55 @@ MonoBehaviour:
   verticalSteering: 0
   steeringSpeed: 3
   rotationSpeed: 3
+--- !u!114 &594239884952932559
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7216047633976425198}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 13bcb1debe49cb043ab5f83e7b537189, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  leftThumbstick:
+    m_UseReference: 1
+    m_Action:
+      m_Name: Left Thumbstick
+      m_Type: 0
+      m_ExpectedControlType: 
+      m_Id: 315b4b65-0d25-4b27-adc7-f27d25f38e2e
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
+    m_Reference: {fileID: -149696162073543384, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
+  rightThumbstick:
+    m_UseReference: 1
+    m_Action:
+      m_Name: Right Thumbstick
+      m_Type: 0
+      m_ExpectedControlType: 
+      m_Id: bd901aa5-5fd1-463a-a8dc-42b3ffdc82e6
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
+    m_Reference: {fileID: 7234458575745502506, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
+  steeringEnabled: 1
+  steeringTarget: {fileID: 7216047633976425185}
+  steeringHand: 0
+  steeringDirection: 1
+  steeringSpeed: 3
+  verticalSteering: 0
+  rotationEnabled: 1
+  rotationTarget: {fileID: 7216047633976425185}
+  rotationReference: {fileID: 7216047633375872280}
+  rotationMode: 0
+  continuousRotationSpeed: 180
+  snapRotationAmount: 30
+  enableDirectionFlip: 0
 --- !u!1 &7216047634103647853
 GameObject:
   m_ObjectHideFlags: 0

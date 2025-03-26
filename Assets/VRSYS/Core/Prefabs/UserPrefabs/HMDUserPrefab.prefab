@@ -4634,8 +4634,6 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   verbose: 0
   localBehaviours:
-  - {fileID: 0}
-  - {fileID: 0}
   - {fileID: 7216047633375872281}
   - {fileID: 124210279391279872}
   - {fileID: 7216047633375872283}

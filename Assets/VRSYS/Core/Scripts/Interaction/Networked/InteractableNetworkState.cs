@@ -33,7 +33,7 @@
 // SOFTWARE.
 //-----------------------------------------------------------------
 //   Authors:        Tony Jan Zoeppig, Sebastian Muehlhaus, Ephraim Schott
-//   Date:           2023
+//   Date:           2025
 //-----------------------------------------------------------------
 
 using Unity.Netcode;
@@ -48,30 +48,46 @@ namespace VRSYS.Core.Interaction
         [HideInInspector] public NetworkVariable<bool> isGrabbed = new NetworkVariable<bool>(false,
             NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
+        [Header("Debugging")]
+        [SerializeField] private bool getOwnership = false;
+
+        #endregion
+
+        #region MonoBehaviour Callbacks
+
+        private void Update()
+        {
+            if (getOwnership)
+            {
+                SwitchOwnerRpc(NetworkManager.LocalClientId);
+                getOwnership = false;
+            }
+        }
+
         #endregion
 
         #region Custom Methods
 
         public void UpdateIsGrabbed(bool isGrabbed)
         {
-            UpdateIsGrabbedServerRpc(isGrabbed);
+            UpdateIsGrabbedRpc(isGrabbed);
             
             if(!IsOwner)
-                SwitchOwnerServerRpc(NetworkManager.LocalClientId);
+                SwitchOwnerRpc(NetworkManager.LocalClientId);
         }
 
         #endregion
 
         #region RPCs
 
-        [ServerRpc(RequireOwnership = false)]
-        public void UpdateIsGrabbedServerRpc(bool isGrabbed)
+        [Rpc(SendTo.Server)]
+        public void UpdateIsGrabbedRpc(bool isGrabbed)
         {
             this.isGrabbed.Value = isGrabbed;
         }
         
-        [ServerRpc(RequireOwnership = false)]
-        public void SwitchOwnerServerRpc(ulong newOwner)
+        [Rpc(SendTo.Server)]
+        public void SwitchOwnerRpc(ulong newOwner)
         {
             NetworkObject.ChangeOwnership(newOwner);
         }

@@ -4515,7 +4515,6 @@ GameObject:
   - component: {fileID: 5773340341098818946}
   - component: {fileID: 9029850245739658440}
   - component: {fileID: 3359338612747561171}
-  - component: {fileID: 7757530823559898401}
   - component: {fileID: 6840683655124811897}
   - component: {fileID: 594239884952932559}
   m_Layer: 0
@@ -4729,26 +4728,6 @@ MonoBehaviour:
   - {fileID: 4044103621818419516}
   - {fileID: 1249802004885907995}
   recurseChildren: 1
---- !u!114 &7757530823559898401
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7216047633976425198}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f4b64e7312a0fe149b1a949de69b0166, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ShowTopMostFoldoutHeaderGroup: 1
-  handType: 1
-  leftController: {fileID: 0}
-  leftRayInteractor: {fileID: 7233941416511684588}
-  rightController: {fileID: 0}
-  rightRayInteractor: {fileID: 3096149003543549582}
-  previewAvatarPrefab: {fileID: 4663052315973873641, guid: 0bf9acbdcd0452d4aab4c8613509ef05, type: 3}
-  previewAvatarInstance: {fileID: 0}
 --- !u!114 &6840683655124811897
 MonoBehaviour:
   m_ObjectHideFlags: 0

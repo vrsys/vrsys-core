@@ -70,10 +70,10 @@ namespace VRSYS.Core.Interaction
 
         public void UpdateIsGrabbed(bool isGrabbed)
         {
-            UpdateIsGrabbedRpc(isGrabbed);
-            
             if(!IsOwner)
                 SwitchOwnerRpc(NetworkManager.LocalClientId);
+            
+            UpdateIsGrabbedRpc(isGrabbed);
         }
 
         #endregion

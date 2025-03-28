@@ -132,7 +132,25 @@ namespace VRSYS.Core.Interaction
         #endregion
     
         #region MonoBehaviour Callbacks
-        
+
+        private void Update()
+        {
+            if (IsOwner)
+            {
+                RayData newData;
+                if(SerializeRayUpdates(out newData))
+                    rayData.Value = newData;
+            }
+            else
+            {
+                ApplyRayUpdates();
+            }
+        }
+    
+        #endregion
+
+        #region Custom Methods
+
         private bool SerializeRayUpdates(out RayData data)
         {
             data = new RayData();
@@ -190,20 +208,6 @@ namespace VRSYS.Core.Interaction
             }
         }
 
-        private void Update()
-        {
-            if (IsOwner)
-            {
-                RayData newData;
-                if(SerializeRayUpdates(out newData))
-                    rayData.Value = newData;
-            }
-            else
-            {
-                ApplyRayUpdates();
-            }
-        }
-    
         #endregion
     }
 }

@@ -76,7 +76,8 @@ namespace VRSYS.Core.Networking
 
         private void OnDestroy()
         {
-            ConnectionManager.Instance.onConnectionStateChange.RemoveListener(Initialize);
+            if(ConnectionManager.Instance != null)
+                ConnectionManager.Instance.onConnectionStateChange.RemoveListener(Initialize);
         }
 
         #endregion

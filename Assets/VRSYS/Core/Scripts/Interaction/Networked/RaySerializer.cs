@@ -33,7 +33,7 @@
 // SOFTWARE.
 //-----------------------------------------------------------------
 //   Authors:        Tony Jan Zoeppig, Sebastian Muehlhaus, Ephraim Schott
-//   Date:           2023
+//   Date:           2025
 //-----------------------------------------------------------------
 
 using System;

@@ -33,7 +33,7 @@
 // SOFTWARE.
 //-----------------------------------------------------------------
 //   Authors:        Tony Zoeppig
-//   Date:           2023
+//   Date:           2025
 //-----------------------------------------------------------------
 
 using System.Collections.Generic;
@@ -50,13 +50,20 @@ namespace VRSYS.Core.Networking
         #region Member Variables
 
         [Header("Update Parameter")]
+        
+        [Tooltip("If set to true, the list of available lobbies will be queried from the Lobby services.")]
         public bool updateLobbyList = true;
+        [Tooltip("Defines the interval in seconds in which the list of available lobbies will be queried.")]
         public float updateInterval = 10f;
+        
         public List<LobbyData> lobbyList = new List<LobbyData>();
+        [Tooltip("Invoked when list of available lobbies has been updated.")]
         public UnityEvent onLobbyListUpdated;
 
         [Header("Debugging")] 
-        public bool verbose = true;
+        
+        [Tooltip("If set to true, component will also log info logs.")]
+        public bool verbose = false;
         
         #endregion
 
@@ -64,13 +71,24 @@ namespace VRSYS.Core.Networking
 
         private void Start()
         {
-            // start list update
-            InvokeRepeating(nameof(UpdateLobbyList), 5f, updateInterval);
+            ConnectionManager.Instance.onConnectionStateChange.AddListener(Initialize);
+        }
+
+        private void OnDestroy()
+        {
+            ConnectionManager.Instance.onConnectionStateChange.RemoveListener(Initialize);
         }
 
         #endregion
 
         #region Custom Methods
+
+        private void Initialize(ConnectionState state)
+        {
+            // start list update
+            if(state == ConnectionState.Online)
+                InvokeRepeating(nameof(UpdateLobbyList), 5f, updateInterval);
+        }
 
         private async void UpdateLobbyList()
         {

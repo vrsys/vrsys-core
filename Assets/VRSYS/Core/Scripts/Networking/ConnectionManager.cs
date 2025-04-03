@@ -33,7 +33,7 @@
 // SOFTWARE.
 //-----------------------------------------------------------------
 //   Authors:        Tony Zoeppig, Sebastian Muehlhaus
-//   Date:           2023
+//   Date:           2025
 //-----------------------------------------------------------------
 
 using System;
@@ -394,7 +394,7 @@ namespace VRSYS.Core.Networking
                 };
                 
                 // Set Transport data
-                Unity.Netcode.NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData(
+                NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData(
                     joinData.IPv4Address,
                     joinData.Port,
                     joinData.AllocationIDBytes,
@@ -403,7 +403,7 @@ namespace VRSYS.Core.Networking
                     joinData.HostConnectionData);
                 
                 // Start Client
-                Unity.Netcode.NetworkManager.Singleton.StartClient();
+                NetworkManager.Singleton.StartClient();
                 
                 connectionState = ConnectionState.JoinedLobby;
                 onConnectionStateChange.Invoke(connectionState);
@@ -529,7 +529,7 @@ namespace VRSYS.Core.Networking
                 // Relay & Lobby are set
                 
                 // Set Transport data
-                Unity.Netcode.NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData(
+                NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData(
                     hostData.IPv4Address,
                     hostData.Port,
                     hostData.AllocationIDBytes,
@@ -537,7 +537,7 @@ namespace VRSYS.Core.Networking
                     hostData.ConnectionData);
                 
                 // Start Host
-                Unity.Netcode.NetworkManager.Singleton.StartServer();
+                NetworkManager.Singleton.StartServer();
 
                 connectionState = ConnectionState.JoinedLobby;
                 onConnectionStateChange.Invoke(connectionState);

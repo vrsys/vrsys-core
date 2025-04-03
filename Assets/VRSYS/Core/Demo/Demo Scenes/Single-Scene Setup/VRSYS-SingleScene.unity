@@ -1479,7 +1479,7 @@ MonoBehaviour:
   userPrefabs:
   - UserRole: 1
     UserPrefab: {fileID: 7216047633976425198, guid: 809cce775431de842bae2eca7c27e046, type: 3}
-    SpawnPoint: {fileID: 0}
+    SpawnPoint: {fileID: 1951133677}
   - UserRole: 0
     UserPrefab: {fileID: 8231461269131396514, guid: a261985c04347724aae188d2bb71865f, type: 3}
     SpawnPoint: {fileID: 0}
@@ -2515,7 +2515,7 @@ GameObject:
   - component: {fileID: 1196039986}
   - component: {fileID: 1196039984}
   - component: {fileID: 1196039983}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Cube
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4811,6 +4811,11 @@ CanvasRenderer:
 --- !u!1 &1951133672 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 5344907646649013695, guid: 4745978d4eff2cb46a38668f4fdc9ee2, type: 3}
+  m_PrefabInstance: {fileID: 5344907647516899927}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &1951133677 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 5344907646649013692, guid: 4745978d4eff2cb46a38668f4fdc9ee2, type: 3}
   m_PrefabInstance: {fileID: 5344907647516899927}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &2146859657

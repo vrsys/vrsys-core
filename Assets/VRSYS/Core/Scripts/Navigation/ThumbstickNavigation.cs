@@ -45,15 +45,20 @@ using VRSYS.Core.Utility;
 
 namespace VRSYS.Core.Navigation
 {
-    public class ThumbstickSteering : MonoBehaviour
+    public class ThumbstickNavigation : MonoBehaviour
     {
         #region Enums
+
+        public enum NavigationType
+        {
+            Steering,
+            Teleport
+        }
 
         public enum SteeringDirection
         {
             Head,
-            LeftHand,
-            RightHand
+            Hand
         }
 
         public enum RotationMode
@@ -72,26 +77,43 @@ namespace VRSYS.Core.Navigation
         public InputActionProperty leftThumbstick;
         [Tooltip("Expects input as Vector2 from right thumbstick")]
         public InputActionProperty rightThumbstick;
+        
+        
+        [Header("General Movement Configuration")]
+        
+        [Tooltip("This determines which thumbstick is responsible for navigation. The other thumbstick will be used for rotation implicitly.")]
+        public HandType navigationHand = HandType.Left;
+        [Tooltip("This determines which type of navigation is applied.")]
+        public NavigationType navigationType = NavigationType.Steering;
+        
 
         [Header("Steering Configuration")] 
         
-        [Tooltip("This bool can be set to false to disable steering.")]
-        public bool steeringEnabled = true;
         [Tooltip("Transform that gets modified during steering. If not configured the transform is used, that this script is attached to.")]
         public Transform steeringTarget;
-        [Tooltip("This determines which thumbstick is responsible for steering. The other thumbstick will be used for rotation implicitly.")]
-        public HandType steeringHand = HandType.Left;
         [Tooltip("This determines the reference which sets the direction of the steering. LeftHand/RightHand: steering in the direction the respective hand is pointing, Head: steering in the direction the user is looking")]
-        public SteeringDirection steeringDirection = SteeringDirection.LeftHand;
+        public SteeringDirection steeringDirection = SteeringDirection.Hand;
         [Tooltip("Steering speed in m/s.")]
         [Range(0, 10)] public float steeringSpeed = 3f;
         [Tooltip("If set to true, user can also steer up- and down-wards. If set to false, steering is limited to xz-plane.")]
         public bool verticalSteering = false;
 
+
+        [Header("Teleport Configuration")]
+        [Tooltip("Transform that gets modified during teleportation. If not configured the transform is used, that this script is attached to.")]
+        public Transform teleportationTarget;
+        [Tooltip("This line renderer is used as ray during teleportation.")]
+        public LineRenderer ray;
+        [Tooltip("Preview avatar used for teleport.")]
+        public Transform previewAvatar;
+        [Tooltip("This determines the maximum length of the teleportation ray")]
+        public float maxRayLength = 30f;
+        [Tooltip("This layer masks defines which layers the user can teleport on.")]
+        public LayerMask teleportLayerMask;
+        
+        
         [Header("Rotation Configuration")] 
         
-        [Tooltip("This bool can be set to false to disable rotation.")]
-        public bool rotationEnabled = true;
         [Tooltip("Transform that gets modified during rotation. If not configured the transform is used, that this script is attached to.")]
         public Transform rotationTarget;
         [Tooltip("Transform around which the rotation is executed. If not configured the transform is used, that this script is attached to.")]
@@ -108,7 +130,7 @@ namespace VRSYS.Core.Navigation
         // Variables related to initialization
         private bool initialized = false;
         
-        // Variables related to determining steering direction
+        // Variables related to determining steering/teleportation direction
         private Transform head;
         private Transform leftHand;
         private Transform rightHand;
@@ -124,11 +146,8 @@ namespace VRSYS.Core.Navigation
                     case SteeringDirection.Head:
                         indicator = head;
                         break;
-                    case SteeringDirection.LeftHand:
-                        indicator = leftHand;
-                        break;
-                    case SteeringDirection.RightHand:
-                        indicator = rightHand;
+                    case SteeringDirection.Hand:
+                        indicator = navigationHand == HandType.Left ? leftHand : rightHand;
                         break;
                 }
 
@@ -147,11 +166,8 @@ namespace VRSYS.Core.Navigation
                     case SteeringDirection.Head:
                         direction = head.forward;
                         break;
-                    case SteeringDirection.LeftHand:
-                        direction = leftHand.forward;
-                        break;
-                    case SteeringDirection.RightHand:
-                        direction = rightHand.forward;
+                    case SteeringDirection.Hand:
+                        direction = navigationHand == HandType.Left ? leftHand.forward : rightHand.forward;
                         break;
                 }
 
@@ -161,6 +177,10 @@ namespace VRSYS.Core.Navigation
                 return direction;
             }
         }
+        
+        // Variables related to teleportation
+        private float activationThreshold = 0.1f;
+        private float lockThreshold = 0.9f;
 
         // Variables related to rotation
         private float snapThreshold = 0.9f;
@@ -191,7 +211,16 @@ namespace VRSYS.Core.Navigation
                 return;
             }
 
-            ApplySteering();
+            switch (navigationType)
+            {
+                case NavigationType.Steering:
+                    ApplySteering();
+                    break;
+                case NavigationType.Teleport:
+                    ApplyTeleport();
+                    break;
+            }
+            
             ApplyRotation();
         }
 
@@ -212,6 +241,9 @@ namespace VRSYS.Core.Navigation
             if (steeringTarget == null)
                 steeringTarget = transform;
 
+            if (teleportationTarget == null)
+                teleportationTarget = transform;
+
             if (rotationReference == null)
                 rotationReference = transform;
             
@@ -222,9 +254,13 @@ namespace VRSYS.Core.Navigation
             initialized = true;
         }
 
+        #endregion
+
+        #region Steering
+
         private void ApplySteering()
         {
-            Vector2 input = steeringHand == HandType.Left
+            Vector2 input = navigationHand == HandType.Left
                 ? leftThumbstick.action.ReadValue<Vector2>()
                 : rightThumbstick.action.ReadValue<Vector2>();
 
@@ -248,9 +284,26 @@ namespace VRSYS.Core.Navigation
             return direction.normalized;
         }
 
+        #endregion
+
+        #region Teleport
+
+        private void ApplyTeleport()
+        {
+            float input = navigationHand == HandType.Left
+                ? leftThumbstick.action.ReadValue<Vector2>().y
+                : rightThumbstick.action.ReadValue<Vector2>().y;
+            
+            
+        }
+
+        #endregion
+
+        #region Rotation
+
         private void ApplyRotation()
         {
-            Vector2 input = steeringHand == HandType.Left
+            Vector2 input = navigationHand == HandType.Left
                 ? rightThumbstick.action.ReadValue<Vector2>()
                 : leftThumbstick.action.ReadValue<Vector2>();
             

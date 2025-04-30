@@ -67,6 +67,13 @@ namespace VRSYS.Core.Navigation
             Snap
         }
 
+        private enum TeleportState
+        {
+            Idle,
+            Aiming,
+            Locked
+        }
+
         #endregion
         
         #region Member Variables
@@ -105,7 +112,7 @@ namespace VRSYS.Core.Navigation
         [Tooltip("This line renderer is used as ray during teleportation.")]
         public LineRenderer ray;
         [Tooltip("Preview avatar used for teleport.")]
-        public Transform previewAvatar;
+        public TeleportPreviewAvatar previewAvatar;
         [Tooltip("This determines the maximum length of the teleportation ray")]
         public float maxRayLength = 30f;
         [Tooltip("This layer masks defines which layers the user can teleport on.")]
@@ -181,6 +188,7 @@ namespace VRSYS.Core.Navigation
         // Variables related to teleportation
         private float activationThreshold = 0.1f;
         private float lockThreshold = 0.9f;
+        private TeleportState teleportState = TeleportState.Idle;
 
         // Variables related to rotation
         private float snapThreshold = 0.9f;
@@ -290,11 +298,81 @@ namespace VRSYS.Core.Navigation
 
         private void ApplyTeleport()
         {
-            float input = navigationHand == HandType.Left
-                ? leftThumbstick.action.ReadValue<Vector2>().y
-                : rightThumbstick.action.ReadValue<Vector2>().y;
+            InputAction action = navigationHand == HandType.Left ? leftThumbstick.action : rightThumbstick.action;
             
+            float input = action.ReadValue<Vector2>().y;
+
+            if (action.WasReleasedThisFrame() && teleportState == TeleportState.Locked)
+            {
+                PerformTeleport();
+                previewAvatar.Deactivate();
+                teleportState = TeleportState.Idle;
+
+                return;
+            }
+
+            if (input < activationThreshold)
+            {
+                if (teleportState != TeleportState.Idle)
+                {
+                    ray.enabled = false;
+                    previewAvatar.Deactivate();
+                    teleportState = TeleportState.Idle;
+                }
+            }
+            else if (input >= activationThreshold && input < lockThreshold)
+            {
+                if (teleportState != TeleportState.Aiming)
+                {
+                    ray.enabled = true;
+                    previewAvatar.ActivateIndicator();
+                    teleportState = TeleportState.Aiming;
+                }
+
+                UpdateTeleportRay(input);
+            }
+            else if (input >= lockThreshold)
+            {
+                if (teleportState != TeleportState.Locked)
+                {
+                    ray.enabled = true;
+                    previewAvatar.ActivateAvatar();
+                    teleportState = TeleportState.Locked;
+                }
+                
+                UpdateTeleportRay(input);
+            }
+        }
+
+        private void UpdateTeleportRay(float input)
+        {
+            Transform hand = navigationHand == HandType.Left ? leftHand : rightHand;
+            ray.SetPosition(0, hand.position);
             
+            if (Physics.Raycast(hand.position, hand.forward,  out RaycastHit hit, maxRayLength, teleportLayerMask))
+            { 
+                ray.SetPosition(1, hit.point);
+                
+                if(teleportState == TeleportState.Aiming)
+                    previewAvatar.UpdateIndicator(hit.point, input);
+                else if(teleportState == TeleportState.Locked)
+                    previewAvatar.UpdateAvatar(hit.point, head.localPosition.y);
+            }
+            else
+            {
+                ray.SetPosition(1, hand.position + hand.forward);
+            }
+        }
+
+        private void PerformTeleport()
+        {
+            Transform target = previewAvatar.transform;
+
+            Vector3 movement = target.position - head.position;
+            teleportationTarget.Translate(movement, Space.World);
+
+            float angle = Vector3.SignedAngle(head.forward, target.forward, Vector3.up);
+            teleportationTarget.RotateAround(head.position, Vector3.up, angle);
         }
 
         #endregion

@@ -302,17 +302,14 @@ namespace VRSYS.Core.Navigation
             
             float input = action.ReadValue<Vector2>().y;
 
-            if (action.WasReleasedThisFrame() && teleportState == TeleportState.Locked)
-            {
-                PerformTeleport();
-                previewAvatar.Deactivate();
-                teleportState = TeleportState.Idle;
-
-                return;
-            }
-
             if (input < activationThreshold)
             {
+                if (teleportState == TeleportState.Locked)
+                {
+                    PerformTeleport();
+                    return;
+                }
+                
                 if (teleportState != TeleportState.Idle)
                 {
                     ray.enabled = false;
@@ -322,6 +319,12 @@ namespace VRSYS.Core.Navigation
             }
             else if (input >= activationThreshold && input < lockThreshold)
             {
+                if (teleportState == TeleportState.Locked)
+                {
+                    PerformTeleport();
+                    return;
+                }
+                
                 if (teleportState != TeleportState.Aiming)
                 {
                     ray.enabled = true;
@@ -366,13 +369,20 @@ namespace VRSYS.Core.Navigation
 
         private void PerformTeleport()
         {
+            ExtendedLogger.LogInfo(GetType().Name, "Triggered Teleport.", this);
+            
             Transform target = previewAvatar.transform;
 
-            Vector3 movement = target.position - head.position;
+            Vector3 headPos = head.position;
+            headPos.y = transform.position.y;
+            Vector3 movement = target.position - headPos;
             teleportationTarget.Translate(movement, Space.World);
 
             float angle = Vector3.SignedAngle(head.forward, target.forward, Vector3.up);
             teleportationTarget.RotateAround(head.position, Vector3.up, angle);
+            
+            previewAvatar.Deactivate();
+            teleportState = TeleportState.Idle;
         }
 
         #endregion

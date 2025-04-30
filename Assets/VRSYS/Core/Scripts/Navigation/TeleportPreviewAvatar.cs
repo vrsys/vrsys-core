@@ -9,7 +9,7 @@ namespace VRSYS.Core.Navigation
 
         [Header("Preview Avatar Components")]
         [Tooltip("This component represent the visuals to show selected position.")]
-        private GameObject placementIndicatorVisuals;
+        [SerializeField] private GameObject placementIndicatorVisuals;
         [Tooltip("This component indicates progress of position locking.")]
         [SerializeField] private Transform progressIndicator;
         [Tooltip("This component indicates future rotation and height of the user.")]
@@ -38,11 +38,20 @@ namespace VRSYS.Core.Navigation
                 avatarActive.OnValueChanged += OnAvatarActiveChanged;
                 previewAvatarVisuals.SetActive(avatarActive.Value);
             }
+
+            Initialize();
         }
 
         #endregion
 
         #region Custom Methods
+
+
+        private void Initialize()
+        {
+            placementIndicatorVisuals.SetActive(placementIndicatorActive.Value);
+            previewAvatarVisuals.SetActive(avatarActive.Value);
+        }
 
         /// <summary>
         /// Activates placement & progress indicator.
@@ -77,7 +86,7 @@ namespace VRSYS.Core.Navigation
         /// </summary>
         public void UpdateAvatar(Vector3 hitPos, float height)
         {
-            transform.rotation = Quaternion.LookRotation(hitPos - transform.position, Vector3.up);
+            transform.rotation = Quaternion.LookRotation(hitPos - transform.position);
 
             Vector3 newPos = previewAvatar.localPosition;
             newPos.y = height;

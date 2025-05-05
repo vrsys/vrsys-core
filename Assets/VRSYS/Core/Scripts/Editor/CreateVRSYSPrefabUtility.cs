@@ -52,6 +52,12 @@ namespace VRSYS.Core.Editor
             CreatePrefab("VRSYS-LobbyListUpdater");
         }
 
+        [MenuItem("GameObject/VRSYS/Core/XREnableHelper")]
+        public static void CreateXREnableHelper(MenuCommand menuCommand)
+        {
+            CreatePrefab("XR-Enable-Helper");
+        }
+
         #endregion
     }
 }

@@ -37,63 +37,18 @@
 //-----------------------------------------------------------------
 
 using UnityEditor;
-using UnityEditor.SceneManagement;
-using UnityEngine;
+using VRSYS.Core.Editor;
 
-namespace VRSYS.Core.Editor
+namespace VRSYS.MetaAvatar.Editor
 {
-    public static class CreateVRSYSPrefabUtility
+    public static class CreateMetaAvatarPrefabUtility
     {
-        #region Prefab Creation
-
-        public static void CreatePrefab(string path)
-        {
-            GameObject newObject = PrefabUtility.InstantiatePrefab(Resources.Load(path)) as GameObject;
-            Place(newObject);
-        }
-
-        private static void Place(GameObject gameObject)
-        {
-            SceneView lastView = SceneView.lastActiveSceneView;
-            gameObject.transform.position = Vector3.zero;
-            gameObject.transform.rotation = Quaternion.identity;
-            gameObject.transform.localScale = Vector3.one;
-            
-            StageUtility.PlaceGameObjectInCurrentStage(gameObject);
-            GameObjectUtility.EnsureUniqueNameForSibling(gameObject);
-            
-            Undo.RegisterCreatedObjectUndo(gameObject, $"Create Object: {gameObject.name}");
-            Selection.activeGameObject = gameObject;
-
-            EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
-        }
-
-        #endregion
-
         #region Menu Items
 
-        [MenuItem("GameObject/VRSYS/Core/ConnectionManager")]
-        public static void CreateConnectionManager(MenuCommand menuCommand)
+        [MenuItem("GameObject/VRSYS/Meta/Avatars/MetaAvatarManagers")]
+        public static void CreateOVRManager(MenuCommand menuCommand)
         {
-            CreatePrefab("VRSYS-ConnectionManager");
-        }
-        
-        [MenuItem("GameObject/VRSYS/Core/NetworkUserSpawner")]
-        public static void CreateNetworkUserSpawner(MenuCommand menuCommand)
-        {
-            CreatePrefab("VRSYS-NetworkUserSpawner");
-        }
-        
-        [MenuItem("GameObject/VRSYS/Core/LobbyListUpdater")]
-        public static void CreateLobbyListUpdater(MenuCommand menuCommand)
-        {
-            CreatePrefab("VRSYS-LobbyListUpdater");
-        }
-
-        [MenuItem("GameObject/VRSYS/Core/XREnableHelper")]
-        public static void CreateXREnableHelper(MenuCommand menuCommand)
-        {
-            CreatePrefab("XR-Enable-Helper");
+            CreateVRSYSPrefabUtility.CreatePrefab("Prefabs/Meta Avatar Managers");
         }
 
         #endregion

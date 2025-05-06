@@ -3040,7 +3040,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1927c045052a06d49a9b21fdcaa26db6, type: 3}
   m_Name: MetaXRFeature Android
   m_EditorClassIdentifier: 
-  m_enabled: 0
+  m_enabled: 1
   nameUi: Meta XR Feature
   version: 0.0.1
   featureIdInternal: com.meta.openxr.feature.metaxr
@@ -6512,7 +6512,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1927c045052a06d49a9b21fdcaa26db6, type: 3}
   m_Name: MetaXRFeature Standalone
   m_EditorClassIdentifier: 
-  m_enabled: 0
+  m_enabled: 1
   nameUi: Meta XR Feature
   version: 0.0.1
   featureIdInternal: com.meta.openxr.feature.metaxr
@@ -7595,29 +7595,29 @@ MonoBehaviour:
   m_Name: Standalone
   m_EditorClassIdentifier: 
   features:
-  - {fileID: -4293811590910235164}
-  - {fileID: 373906250568750881}
-  - {fileID: -8589849325535128817}
-  - {fileID: 1607770755278863705}
-  - {fileID: -5190656807363085003}
-  - {fileID: -6699909212439410576}
-  - {fileID: -5786711547306652417}
-  - {fileID: -8525957430380024339}
-  - {fileID: -6978690754417185025}
-  - {fileID: 536554225632557963}
-  - {fileID: -8717689889734834684}
+  - {fileID: 9148139852553482063}
+  - {fileID: 3743770102729116634}
+  - {fileID: -2076647290502833273}
+  - {fileID: -4715655877292513368}
+  - {fileID: -1925622613981671549}
+  - {fileID: 8867192047720711532}
+  - {fileID: 3965085310091490665}
+  - {fileID: 5962783792807190676}
+  - {fileID: -7503861385765968861}
+  - {fileID: -6500158435316698633}
+  - {fileID: -7044391832356030757}
   - {fileID: -3559675814238419084}
   - {fileID: 557334286776102634}
   - {fileID: -7395689062836018758}
   - {fileID: 3313069758750293618}
-  - {fileID: 3420787891661839599}
-  - {fileID: 1831065089925104431}
-  - {fileID: 574375274155866282}
-  - {fileID: -5812831139900872962}
-  - {fileID: 7509457082257918978}
-  - {fileID: 6942011283409447085}
-  - {fileID: -6666625382936336124}
-  - {fileID: -2757626531064520786}
+  - {fileID: 3317275970081806113}
+  - {fileID: 8255163768104506973}
+  - {fileID: -1973496419483216470}
+  - {fileID: 2564229239067725522}
+  - {fileID: -7323034124264472907}
+  - {fileID: 600876447481050262}
+  - {fileID: 5907475677616025229}
+  - {fileID: 832573564060130955}
   m_renderMode: 1
   m_autoColorSubmissionMode: 1
   m_colorSubmissionModes:

@@ -16,10 +16,16 @@ To use the package in your project, first include the following packages:
 - Multiplayer Services 1.1.1
 - XR Interaction Toolkit v3.0.7
 - XR Plugin Management v4.5.0
-- [ART DTRACK Plugin v1.1.3](https://github.com/ar-tracking/UnityDTrackPlugin/releases/tag/v1.1.3)
 
 ### If you want to use the 4Players Odin Voice integration:
 - [Odin SDK v1.6.4](https://github.com/4Players/odin-sdk-unity/releases/tag/v1.6.4)
+
+### If you want to use the Meta Avatars integration:
+- Meta XR Core SDK v76.0.0
+- Meta Avatars SDK v35.2.0 (+ Sample scenes)
+
+### If you want to use the projection wall integration:
+- [ART DTRACK Plugin v1.1.3](https://github.com/ar-tracking/UnityDTrackPlugin/releases/tag/v1.1.3)
 
 ## Documentation
 

@@ -23,6 +23,7 @@ To use the package in your project, first include the following packages:
 ### If you want to use the Meta Avatars integration:
 - Meta XR Core SDK v76.0.0
 - Meta Avatars SDK v35.2.0 (+ Sample scenes)
+- Meta XR Movement SDK v76.0.0
 
 ### If you want to use the projection wall integration:
 - [ART DTRACK Plugin v1.1.3](https://github.com/ar-tracking/UnityDTrackPlugin/releases/tag/v1.1.3)

@@ -75,25 +75,25 @@ namespace VRSYS.Core.Editor
         [MenuItem("GameObject/VRSYS/Core/ConnectionManager")]
         public static void CreateConnectionManager(MenuCommand menuCommand)
         {
-            CreatePrefab("VRSYS-ConnectionManager");
+            CreatePrefab("Prefabs/Basic Prefabs/VRSYS-ConnectionManager");
         }
         
         [MenuItem("GameObject/VRSYS/Core/NetworkUserSpawner")]
         public static void CreateNetworkUserSpawner(MenuCommand menuCommand)
         {
-            CreatePrefab("VRSYS-NetworkUserSpawner");
+            CreatePrefab("Prefabs/Basic Prefabs/VRSYS-NetworkUserSpawner");
         }
         
         [MenuItem("GameObject/VRSYS/Core/LobbyListUpdater")]
         public static void CreateLobbyListUpdater(MenuCommand menuCommand)
         {
-            CreatePrefab("VRSYS-LobbyListUpdater");
+            CreatePrefab("Prefabs/Basic Prefabs/VRSYS-LobbyListUpdater");
         }
 
         [MenuItem("GameObject/VRSYS/Core/XREnableHelper")]
         public static void CreateXREnableHelper(MenuCommand menuCommand)
         {
-            CreatePrefab("XR-Enable-Helper");
+            CreatePrefab("Prefabs/Basic Prefabs/XR-Enable-Helper");
         }
 
         #endregion

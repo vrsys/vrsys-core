@@ -538,7 +538,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   listenPort: 5000
-  controllerHost: 
   dTrackCoordinates: 0
 --- !u!1 &411010273
 GameObject:
@@ -1082,6 +1081,7 @@ MonoBehaviour:
   m_RepeatRate: 0.1
   m_TrackedDeviceDragThresholdMultiplier: 1.4
   m_TrackedScrollDeltaMultiplier: 5
+  m_BypassUIToolkitEvents: 0
   m_ActiveInputMode: 0
   m_EnableXRInput: 1
   m_EnableMouseInput: 1
@@ -1475,11 +1475,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
   userPrefabs:
-  - UserRole: 2
+  - UserRole: 0
     UserPrefab: {fileID: 8231461269131396514, guid: a261985c04347724aae188d2bb71865f, type: 3}
-  - UserRole: 5
+    SpawnPoint: {fileID: 0}
+  - UserRole: 1
     UserPrefab: {fileID: 7216047633976425198, guid: fc4e5e855c0fca1469193151cb713b54, type: 3}
-  spawnPoints: []
+    SpawnPoint: {fileID: 0}
+  useRoleSpawnPoints: 1
+  spawnPoint: {fileID: 0}
   verbose: 0
 --- !u!1 &1696237268
 GameObject:

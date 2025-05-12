@@ -200,12 +200,11 @@ MonoBehaviour:
     NetworkIdRecycleDelay: 120
     RpcHashSize: 0
     LoadSceneTimeOut: 120
-    SpawnTimeout: 1
+    SpawnTimeout: 10
     EnableNetworkLogs: 1
     NetworkTopology: 0
     UseCMBService: 0
     AutoSpawnPlayerPrefabClientSide: 1
-    NetworkMessageMetrics: 1
     NetworkProfilingMetrics: 1
     OldPrefabList: []
   RunInBackground: 1
@@ -387,7 +386,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3130830556907145476, guid: 0f874d7acb686f644b6043ba39bba74f, type: 3}
       propertyPath: unavailableUserRoles.Array.size
-      value: 7
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3130830556907145476, guid: 0f874d7acb686f644b6043ba39bba74f, type: 3}
       propertyPath: 'unavailableUserRoles.Array.data[0]'
@@ -681,6 +680,22 @@ PrefabInstance:
       propertyPath: m_OnSelect.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 930568331}
+    - target: {fileID: 4905118393945025986, guid: 0f874d7acb686f644b6043ba39bba74f, type: 3}
+      propertyPath: m_OnSelect.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 930568331}
+    - target: {fileID: 4905118393945025986, guid: 0f874d7acb686f644b6043ba39bba74f, type: 3}
+      propertyPath: m_OnSelect.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgument
+      value: 
+      objectReference: {fileID: 99827748}
+    - target: {fileID: 5386790222240453299, guid: 0f874d7acb686f644b6043ba39bba74f, type: 3}
+      propertyPath: m_OnSelect.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 930568331}
+    - target: {fileID: 5386790222240453299, guid: 0f874d7acb686f644b6043ba39bba74f, type: 3}
+      propertyPath: m_OnSelect.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgument
+      value: 
+      objectReference: {fileID: 99827747}
     - target: {fileID: 5868858066693210406, guid: 0f874d7acb686f644b6043ba39bba74f, type: 3}
       propertyPath: m_SizeDelta.y
       value: 300
@@ -715,6 +730,28 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 3130830556907145480, guid: 0f874d7acb686f644b6043ba39bba74f, type: 3}
   m_PrefabInstance: {fileID: 99827745}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &99827747 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5386790222240453299, guid: 0f874d7acb686f644b6043ba39bba74f, type: 3}
+  m_PrefabInstance: {fileID: 99827745}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2da0c512f12947e489f739169773d7ca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &99827748 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4905118393945025986, guid: 0f874d7acb686f644b6043ba39bba74f, type: 3}
+  m_PrefabInstance: {fileID: 99827745}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2da0c512f12947e489f739169773d7ca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &209320041
 GameObject:
   m_ObjectHideFlags: 0
@@ -1172,6 +1209,8 @@ MonoBehaviour:
   startDedicatedServer: 0
   dedicatedServerSettings: {fileID: 11400000, guid: c7cb59b12ddfb0d42ba4f8c9a3df914c, type: 2}
   lobbySettings: {fileID: 11400000, guid: b95d6d2553919964f85d993c2bee5221, type: 2}
+  offlineSession: 0
+  localNetworkSettings: {fileID: 11400000, guid: e137940bf3ea64e46b176f80a642287a, type: 2}
   verbose: 1
   onAuthenticated:
     m_PersistentCalls:
@@ -1180,6 +1219,9 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   onLobbyJoined:
+    m_PersistentCalls:
+      m_Calls: []
+  onJoinedLocalNetwork:
     m_PersistentCalls:
       m_Calls: []
   onConnectionStateChange:
@@ -1911,6 +1953,7 @@ MonoBehaviour:
   m_RepeatRate: 0.1
   m_TrackedDeviceDragThresholdMultiplier: 1.4
   m_TrackedScrollDeltaMultiplier: 5
+  m_BypassUIToolkitEvents: 0
   m_ActiveInputMode: 0
   m_EnableXRInput: 1
   m_EnableMouseInput: 1

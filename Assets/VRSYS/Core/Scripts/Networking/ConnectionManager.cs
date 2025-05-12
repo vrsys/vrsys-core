@@ -32,7 +32,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //-----------------------------------------------------------------
-//   Authors:        Tony Zoeppig, Sebastian Muehlhaus
+//   Authors:        Tony Zoeppig, Sebastian Muehlhaus, Karoline Brehm
 //   Date:           2025
 //-----------------------------------------------------------------
 
@@ -50,10 +50,10 @@ using Unity.Services.Relay;
 using Unity.Services.Relay.Models;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.Serialization;
 using VRSYS.Core.Logging;
 using VRSYS.Core.ScriptableObjects;
 using Random = UnityEngine.Random;
+
 
 namespace VRSYS.Core.Networking
 {
@@ -321,6 +321,7 @@ namespace VRSYS.Core.Networking
                 // Relay & Lobby are set
                 
                 // Set Transport data
+                // Calling SetRelayServerData should automatically set protocol to "Relay Unity Transport"
                 Unity.Netcode.NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData(
                     hostData.IPv4Address,
                     hostData.Port,
@@ -394,7 +395,7 @@ namespace VRSYS.Core.Networking
                 };
                 
                 // Set Transport data
-                NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData(
+                Unity.Netcode.NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData(
                     joinData.IPv4Address,
                     joinData.Port,
                     joinData.AllocationIDBytes,
@@ -403,7 +404,7 @@ namespace VRSYS.Core.Networking
                     joinData.HostConnectionData);
                 
                 // Start Client
-                NetworkManager.Singleton.StartClient();
+                Unity.Netcode.NetworkManager.Singleton.StartClient();
                 
                 connectionState = ConnectionState.JoinedLobby;
                 onConnectionStateChange.Invoke(connectionState);
@@ -529,7 +530,7 @@ namespace VRSYS.Core.Networking
                 // Relay & Lobby are set
                 
                 // Set Transport data
-                NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData(
+                Unity.Netcode.NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData(
                     hostData.IPv4Address,
                     hostData.Port,
                     hostData.AllocationIDBytes,
@@ -537,7 +538,7 @@ namespace VRSYS.Core.Networking
                     hostData.ConnectionData);
                 
                 // Start Host
-                NetworkManager.Singleton.StartServer();
+                Unity.Netcode.NetworkManager.Singleton.StartServer();
 
                 connectionState = ConnectionState.JoinedLobby;
                 onConnectionStateChange.Invoke(connectionState);
@@ -577,9 +578,8 @@ namespace VRSYS.Core.Networking
 
         private void SetLocalNetworkConnectionData()
         {
-            NetworkManager.Singleton.GetComponent<UnityTransport>().ConnectionData.Address =
-                localNetworkSettings.ipAddress;
-            NetworkManager.Singleton.GetComponent<UnityTransport>().ConnectionData.Port = localNetworkSettings.port;
+            // Calling SetConnectionData automatically sets the protocoll to "Unity Transport"
+            NetworkManager.Singleton.GetComponent<UnityTransport>().SetConnectionData(localNetworkSettings.ipAddress, localNetworkSettings.port);
         }
 
         #endregion

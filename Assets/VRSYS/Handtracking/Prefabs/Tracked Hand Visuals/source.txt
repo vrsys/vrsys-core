@@ -1,0 +1,1 @@
+Hand Visuals copied from XR Interaction Toolkit Handtracking Sample

@@ -1,0 +1,1 @@
+Hand Dither Material copied from Unity VR Multiplayer Template 2.0.6

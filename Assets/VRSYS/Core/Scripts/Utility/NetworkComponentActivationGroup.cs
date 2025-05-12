@@ -43,60 +43,79 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using VRSYS.Core.Logging;
+using VRSYS.HandTracking;
+using UnityEditor;
+using UnityEngine.Serialization;
 
 namespace VRSYS.Core.Utility
 {
     public class NetworkComponentActivationGroup : NetworkBehaviour
     {
         [SerializeField]
-        [Tooltip("The index of the currently activated Group Item. Only set this in the editor pre-runtime (subsequent changes in the editor are not networked). Use SetActiveObject() at runtime instead.")]
-        private NetworkVariable<int> activeGroupIndex = new (0, NetworkVariableReadPermission.Everyone,
+        [Tooltip("The index of the currently activated Group Item. Only set this in the editor pre-runtime " +
+                 "(subsequent changes in the editor are not networked). Use SetActiveObject() at runtime instead.")]
+        private NetworkVariable<int> activeGroupIndex = new(0, NetworkVariableReadPermission.Everyone,
             NetworkVariableWritePermission.Owner);
-        
+
         [Serializable]
         public class GroupItem
         {
             public string name;
-            public GameObject gameObject;
-            public List<Behaviour> affectedBehaviours = new ();
-            public List<Behaviour> affectedLocalBehaviours = new ();
-            public List<Renderer> affectedRenderers = new ();
-            public List<Collider> affectedColliders = new ();
+            [FormerlySerializedAs("gameObject")] public GameObject InteractorRootGameObject;
+            [Header("Interactor Components to Toggle")]
+            public List<Behaviour> affectedBehaviours = new();
+            public List<Renderer> affectedRenderers = new();
+            public List<Collider> affectedColliders = new();
+            [Header("Local Interactor Components to Toggle")]
+            public List<Behaviour> affectedLocalBehaviours = new();
+            public List<Collider> affectedLocalColliders = new();
             [HideInInspector] public string initialName;
         }
-        
-        [SerializeField]
-        private List<GroupItem> groups = new ();
-    
+
+        [SerializeField] private List<GroupItem> groups = new();
+
         [Header("State Change Feedback")]
-        [Tooltip("If set to true the state of the mutex group will be appended to the name of the affected GameObjects.")]
+        [Tooltip(
+            "If set to true the state of the mutex group will be appended to the name of the affected GameObjects.")]
         public bool appendStateToName = true;
 
         [Header("Active State Change (Evaluated only for Owner at Runtime)")]
         [Tooltip("If flipped to true the next object in the list will be activated.")]
         public bool cycleNext = false;
+
         [Tooltip("(Optional) Input Action to cycle to the next object in the list.")]
-        public InputActionProperty cycleNextInput;
-        
-        [Header("State Feedback UI")]
-        public GameObject stateLabel;
+        // public InputActionProperty cycleNextInput;
+        public InputActionReference cycleNextInput;
+
+        [Header("State Feedback UI")] public GameObject stateLabel;
         public string stateLabelHint = "(click joystick to switch)";
         private TextMeshProUGUI stateLabelText;
-        
+
         public override void OnNetworkSpawn()
         {
             foreach (var item in groups)
-                item.initialName = item.gameObject.name;
-            activeGroupIndex.OnValueChanged += OnActiveObjectIndexChanged;
-            if(stateLabel != null)
+                item.initialName = item.InteractorRootGameObject.name;
+            activeGroupIndex.OnValueChanged +=
+                OnActiveObjectIndexChanged; // Down the line is writing to netvar on !owner
+            if (stateLabel != null)
                 stateLabelText = stateLabel.GetComponentInChildren<TextMeshProUGUI>();
             if (!IsOwner)
             {
                 foreach (var item in groups)
+                {
                     item.affectedLocalBehaviours.Clear();
-                if(stateLabel != null)
+                    item.affectedLocalColliders.Clear();
+                }
+                if (stateLabel != null)
                     stateLabel.SetActive(false);
             }
+
+            if (IsOwner)
+            {
+                Debug.Log("Subscribing thumbstick click");
+                cycleNextInput.action.performed += context => cycleNext = true;
+            }
+
             UpdateEnabledStates();
             base.OnNetworkSpawn();
         }
@@ -106,9 +125,9 @@ namespace VRSYS.Core.Utility
             if (!IsOwner)
                 return;
 
-            if (cycleNextInput.action?.WasPressedThisFrame() == true)
-                cycleNext = true;
-            
+            // if (cycleNextInput.action?.WasPressedThisFrame() == true)
+            //     cycleNext = true;
+
             if (cycleNext)
             {
                 SetActiveGroup((activeGroupIndex.Value + 1) % groups.Count);
@@ -120,26 +139,31 @@ namespace VRSYS.Core.Utility
         {
             if (previousValue == newValue)
                 return;
-            
+
             _SetActiveObject(newValue);
         }
-    
+
         private void UpdateEnabledStates()
         {
             for (int idx = 0; idx < groups.Count; idx++)
             {
-                if(idx != activeGroupIndex.Value)
+                if (idx != activeGroupIndex.Value)
                     SetEnabledStates(idx);
             }
-            
+
             SetEnabledStates(activeGroupIndex.Value);
-            
+
+            // Könnte diese Loop nicht ausreichen?
+            // for(int idx = 0; ...)
+            //  SetEnabledStates(idx)
+
             if (stateLabel != null)
             {
-                stateLabelText.text = groups[activeGroupIndex.Value].name + (stateLabelHint.Length > 0 ? " " + stateLabelHint: "");
+                stateLabelText.text = groups[activeGroupIndex.Value].name +
+                                      (stateLabelHint.Length > 0 ? " " + stateLabelHint : "");
             }
         }
-        
+
         private void SetEnabledStates(int idx)
         {
             foreach (var b in groups[idx].affectedBehaviours)
@@ -150,35 +174,39 @@ namespace VRSYS.Core.Utility
                 c.enabled = idx == activeGroupIndex.Value;
             if (IsOwner)
             {
-                foreach(var b in groups[idx].affectedLocalBehaviours)
+                foreach (var b in groups[idx].affectedLocalBehaviours)
+                    b.enabled = idx == activeGroupIndex.Value;
+                foreach (var b in groups[idx].affectedLocalColliders)
                     b.enabled = idx == activeGroupIndex.Value;
             }
+
             if (appendStateToName)
             {
                 var stateLabel = (idx == activeGroupIndex.Value ? " [active]" : " [inactive]");
-                groups[idx].gameObject.name = groups[idx].initialName + stateLabel;
+                groups[idx].InteractorRootGameObject.name = groups[idx].initialName + stateLabel;
             }
         }
-        
+
         public void SetActiveGroup(int index)
         {
-            if(!IsOwner && !IsServer)
+            if (!IsOwner)
             {
-                ExtendedLogger.LogError(GetType().Name, "only the owner & the server can set the active object!");
+                ExtendedLogger.LogError(GetType().Name, "only the owner can set the active object!");
                 return;
             }
-            
+
+            // Check validity on owner before distributing
             if (index < 0 || index >= groups.Count)
             {
                 ExtendedLogger.LogError(GetType().Name, "index out of range!");
                 return;
             }
-    
+
+            // Set activeGroup index here instead of _SetActiveObject
             activeGroupIndex.Value = index;
-            
-            _SetActiveObject(index);
+            // _SetActiveObject(index); // Called through subscription to NetVar on all clients, including owner
         }
-    
+
         public void SetActiveGroup(string objectName)
         {
             SetActiveGroup(groups.FindIndex(item => item.initialName == objectName));
@@ -186,12 +214,70 @@ namespace VRSYS.Core.Utility
 
         public void SetActiveGroup(GameObject go)
         {
-            SetActiveGroup(groups.FindIndex(item => item.gameObject == go));
+            SetActiveGroup(groups.FindIndex(item => item.InteractorRootGameObject == go));
         }
-    
+
         private void _SetActiveObject(int index)
         {
+            // if (index < 0 || index >= groups.Count)
+            // {
+            //     ExtendedLogger.LogError(GetType().Name, "index out of range!");
+            //     return;
+            // }
+
+            // _SetActiveObject is called from OnValueChanged of activeGroupIndex! Will cause writePermission error
+            // activeGroupIndex.Value = index
+            // Instead set NetVar in SetActiveGroup()
+
             UpdateEnabledStates();
+        }
+
+        /// <summary>
+        /// Public Interface for NetworkedInputModalityManager to inform NetworkComponent whether inputmode
+        /// (tracked hands or motion controller) associated with interactors is active or not
+        /// </summary>
+        public void InputModeActive(bool active)
+        {
+            Debug.Log($"Input Mode Active {active}", this);
+            if (active)
+            {
+                SetEnabledStates(activeGroupIndex.Value);
+            }
+            else
+            {
+                DisableAll();
+            }
+
+            if (stateLabel != null)
+            {
+                stateLabel.SetActive(active);
+            }
+        }
+
+        private void DisableAll()
+        {
+            for (int idx = 0; idx < groups.Count; idx++)
+            {
+                foreach (var b in groups[idx].affectedBehaviours)
+                    b.enabled = false;
+                foreach (var r in groups[idx].affectedRenderers)
+                    r.enabled = false;
+                foreach (var c in groups[idx].affectedColliders)
+                    c.enabled = false;
+                if (IsOwner)
+                {
+                    foreach (var b in groups[idx].affectedLocalBehaviours)
+                        b.enabled = false;
+                    foreach (var b in groups[idx].affectedLocalColliders)
+                        b.enabled = false;
+                }
+
+                if (appendStateToName)
+                {
+                    var stateLabel = (idx == activeGroupIndex.Value ? " [active]" : " [inactive]");
+                    groups[idx].InteractorRootGameObject.name = groups[idx].initialName + stateLabel;
+                }
+            }
         }
     }
 }

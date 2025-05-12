@@ -1,0 +1,7 @@
+From XR Hands Samples: 
+HandVisualizer.cs
+
+From Unity VR Multiplayer Template 2.0.6: 
+JointBasedHand.cs
+HandPoseReplicator.cs
+XRINetworkPlayer.cs

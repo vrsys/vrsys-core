@@ -1674,7 +1674,9 @@ PrefabInstance:
       propertyPath: m_Name
       value: Lobby-HMDUser - HandTracking
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 5344907646649013691, guid: f3556cabe3966a34980c6d4369ddf92e, type: 3}
+    - {fileID: 7160690951638065502, guid: f3556cabe3966a34980c6d4369ddf92e, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents:

@@ -50,10 +50,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_InteractionManager: {fileID: 0}
   m_InteractionLayers:
-    m_Bits: 2
-  m_Handedness: 0
+    m_Bits: 4294967295
+  m_Handedness: 2
   m_AttachTransform: {fileID: 0}
-  m_KeepSelectedTargetValid: 0
+  m_KeepSelectedTargetValid: 1
   m_DisableVisualsWhenBlockedInGroup: 1
   m_StartingSelectedInteractable: {fileID: 0}
   m_StartingTargetFilter: {fileID: 0}
@@ -77,7 +77,7 @@ MonoBehaviour:
       m_Name: Select
       m_Type: 1
       m_ExpectedControlType: 
-      m_Id: 0921b48d-6a04-4d4a-a8ee-5be5ba4bca14
+      m_Id: 8c01ba95-854d-45ef-972a-0f6c102b8031
       m_Processors: 
       m_Interactions: 
       m_SingletonActionBindings: []
@@ -86,13 +86,13 @@ MonoBehaviour:
       m_Name: Select Value
       m_Type: 0
       m_ExpectedControlType: Axis
-      m_Id: e9ed6b5f-2436-475a-bc99-a033405d1fdd
+      m_Id: 97527780-eba4-4d23-9f8c-59f0617bd839
       m_Processors: 
       m_Interactions: 
       m_SingletonActionBindings: []
       m_Flags: 0
-    m_InputActionReferencePerformed: {fileID: 0}
-    m_InputActionReferenceValue: {fileID: 0}
+    m_InputActionReferencePerformed: {fileID: 2765326162551541354, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
+    m_InputActionReferenceValue: {fileID: -4155546543039451658, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
     m_ObjectReferenceObject: {fileID: 0}
     m_ManualPerformed: 0
     m_ManualValue: 0
@@ -107,7 +107,7 @@ MonoBehaviour:
       m_Name: Activate
       m_Type: 1
       m_ExpectedControlType: 
-      m_Id: a06d5ffe-bb40-4c0b-9cc6-97117f4249fb
+      m_Id: 068c9025-50d4-4ab0-bae4-1559dd81d75f
       m_Processors: 
       m_Interactions: 
       m_SingletonActionBindings: []
@@ -116,13 +116,13 @@ MonoBehaviour:
       m_Name: Activate Value
       m_Type: 0
       m_ExpectedControlType: Axis
-      m_Id: 3305e456-896c-4c26-8293-04a016d9a8df
+      m_Id: 75f8bb4e-df07-46ea-8cc4-6f3592b37fbf
       m_Processors: 
       m_Interactions: 
       m_SingletonActionBindings: []
       m_Flags: 0
-    m_InputActionReferencePerformed: {fileID: 0}
-    m_InputActionReferenceValue: {fileID: 0}
+    m_InputActionReferencePerformed: {fileID: -4793064481733323908, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
+    m_InputActionReferenceValue: {fileID: 6753368164133236856, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
     m_ObjectReferenceObject: {fileID: 0}
     m_ManualPerformed: 0
     m_ManualValue: 0
@@ -191,7 +191,7 @@ MonoBehaviour:
     m_Bits: 4294967295
   m_RaycastTriggerInteraction: 1
   m_RaycastSnapVolumeInteraction: 1
-  m_HitClosestOnly: 1
+  m_HitClosestOnly: 0
   m_HoverToSelect: 0
   m_HoverTimeToSelect: 0.5
   m_AutoDeselect: 0
@@ -221,7 +221,7 @@ MonoBehaviour:
       m_Name: UI Press
       m_Type: 1
       m_ExpectedControlType: 
-      m_Id: ec764675-bd6d-4937-aca1-2861588fa398
+      m_Id: 3beb94b0-c06f-490e-83d4-216465474229
       m_Processors: 
       m_Interactions: 
       m_SingletonActionBindings: []
@@ -230,13 +230,13 @@ MonoBehaviour:
       m_Name: UI Press Value
       m_Type: 0
       m_ExpectedControlType: Axis
-      m_Id: 5766e35c-c064-4c2c-ae27-9f61038d40b7
+      m_Id: c295c5c8-913a-4d5d-a098-7416286d463d
       m_Processors: 
       m_Interactions: 
       m_SingletonActionBindings: []
       m_Flags: 0
-    m_InputActionReferencePerformed: {fileID: 0}
-    m_InputActionReferenceValue: {fileID: 0}
+    m_InputActionReferencePerformed: {fileID: -5708840798830270438, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
+    m_InputActionReferenceValue: {fileID: -4439333590617490997, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
     m_ObjectReferenceObject: {fileID: 0}
     m_ManualPerformed: 0
     m_ManualValue: 0
@@ -251,7 +251,7 @@ MonoBehaviour:
       m_Name: UI Scroll
       m_Type: 0
       m_ExpectedControlType: Vector2
-      m_Id: edb32a2a-122b-4f0f-ac3a-caabbbdf2b4b
+      m_Id: 61bfd8ec-a8dd-480b-9dd0-e89ca19e5928
       m_Processors: 
       m_Interactions: 
       m_SingletonActionBindings: []
@@ -265,7 +265,7 @@ MonoBehaviour:
       m_Name: Translate Manipulation
       m_Type: 0
       m_ExpectedControlType: Vector2
-      m_Id: 6993b63d-c4db-49f8-81c9-deb641266e88
+      m_Id: 7fd23e5f-247b-4513-a43f-fed95aacd1e7
       m_Processors: 
       m_Interactions: 
       m_SingletonActionBindings: []
@@ -279,7 +279,7 @@ MonoBehaviour:
       m_Name: Rotate Manipulation
       m_Type: 0
       m_ExpectedControlType: Vector2
-      m_Id: 3fddc83c-2d06-4cd9-87ef-c9efa392f437
+      m_Id: b2ea1904-b192-45b6-a552-c8acc9f985bf
       m_Processors: 
       m_Interactions: 
       m_SingletonActionBindings: []
@@ -293,7 +293,7 @@ MonoBehaviour:
       m_Name: Directional Manipulation
       m_Type: 0
       m_ExpectedControlType: Vector2
-      m_Id: 4646be3d-e5a5-4858-8615-e7a35ff17e8b
+      m_Id: ecc6a455-1abf-4de2-8943-e421ee31aac0
       m_Processors: 
       m_Interactions: 
       m_SingletonActionBindings: []
@@ -307,7 +307,7 @@ MonoBehaviour:
       m_Name: Scale Toggle
       m_Type: 1
       m_ExpectedControlType: 
-      m_Id: 97d1bd71-6f09-4f36-99fc-08a8ad8546b9
+      m_Id: 58078e3d-fede-496e-a37e-c208c062c807
       m_Processors: 
       m_Interactions: 
       m_SingletonActionBindings: []
@@ -316,7 +316,7 @@ MonoBehaviour:
       m_Name: Scale Toggle Value
       m_Type: 0
       m_ExpectedControlType: Axis
-      m_Id: 24e9dbd0-4b81-469d-b3f5-c6105096b50c
+      m_Id: 8433a6ac-2415-46ac-b696-f47c14ee2d75
       m_Processors: 
       m_Interactions: 
       m_SingletonActionBindings: []
@@ -337,7 +337,7 @@ MonoBehaviour:
       m_Name: Scale Over Time
       m_Type: 0
       m_ExpectedControlType: Vector2
-      m_Id: 816c24e4-31c6-4105-8f03-de6b61c1369e
+      m_Id: 449d7e5d-bb61-49e9-89ba-88db6dc377de
       m_Processors: 
       m_Interactions: 
       m_SingletonActionBindings: []
@@ -351,7 +351,7 @@ MonoBehaviour:
       m_Name: Scale Distance Delta
       m_Type: 0
       m_ExpectedControlType: Axis
-      m_Id: fb851b98-4738-4190-9f68-5f0e41eeb4eb
+      m_Id: 321cee20-13ab-4f9f-a547-865a8be53d3b
       m_Processors: 
       m_Interactions: 
       m_SingletonActionBindings: []
@@ -1057,33 +1057,36 @@ MonoBehaviour:
     m_InternalValue: 2
   groups:
   - name: Teleport
-    gameObject: {fileID: 674501726540107982}
+    InteractorRootGameObject: {fileID: 674501726540107982}
     affectedBehaviours: []
-    affectedLocalBehaviours:
-    - {fileID: 4215397561373362267}
-    - {fileID: 6263370690449663499}
     affectedRenderers:
     - {fileID: 1538305210724426442}
     affectedColliders: []
+    affectedLocalBehaviours:
+    - {fileID: 4215397561373362267}
+    - {fileID: 6263370690449663499}
+    affectedLocalColliders: []
     initialName: 
   - name: Ray
-    gameObject: {fileID: 6892359143954640790}
+    InteractorRootGameObject: {fileID: 6892359143954640790}
     affectedBehaviours: []
-    affectedLocalBehaviours:
-    - {fileID: 2668044607885705372}
-    - {fileID: 8921640159664959093}
     affectedRenderers:
     - {fileID: 6764990040684965443}
     affectedColliders: []
+    affectedLocalBehaviours:
+    - {fileID: 2668044607885705372}
+    - {fileID: 8921640159664959093}
+    affectedLocalColliders: []
     initialName: 
   - name: Virtual Hand
-    gameObject: {fileID: 4027819319688855958}
+    InteractorRootGameObject: {fileID: 4027819319688855958}
     affectedBehaviours: []
-    affectedLocalBehaviours:
-    - {fileID: 8921789725326544699}
     affectedRenderers: []
     affectedColliders:
     - {fileID: 8216073405361560688}
+    affectedLocalBehaviours:
+    - {fileID: 8921789725326544699}
+    affectedLocalColliders: []
     initialName: 
   appendStateToName: 1
   cycleNext: 0
@@ -1216,7 +1219,7 @@ MonoBehaviour:
   m_InteractionManager: {fileID: 0}
   m_InteractionLayers:
     m_Bits: 4294967295
-  m_Handedness: 0
+  m_Handedness: 2
   m_AttachTransform: {fileID: 0}
   m_KeepSelectedTargetValid: 1
   m_DisableVisualsWhenBlockedInGroup: 1
@@ -1242,7 +1245,7 @@ MonoBehaviour:
       m_Name: Select
       m_Type: 1
       m_ExpectedControlType: 
-      m_Id: ad00368d-2c24-4adf-88f3-66c44eb8654a
+      m_Id: 8c01ba95-854d-45ef-972a-0f6c102b8031
       m_Processors: 
       m_Interactions: 
       m_SingletonActionBindings: []
@@ -1251,13 +1254,13 @@ MonoBehaviour:
       m_Name: Select Value
       m_Type: 0
       m_ExpectedControlType: Axis
-      m_Id: a2550c41-d5c5-442f-9b35-c28904ba9dab
+      m_Id: 97527780-eba4-4d23-9f8c-59f0617bd839
       m_Processors: 
       m_Interactions: 
       m_SingletonActionBindings: []
       m_Flags: 0
-    m_InputActionReferencePerformed: {fileID: 0}
-    m_InputActionReferenceValue: {fileID: 0}
+    m_InputActionReferencePerformed: {fileID: 2765326162551541354, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
+    m_InputActionReferenceValue: {fileID: -4155546543039451658, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
     m_ObjectReferenceObject: {fileID: 0}
     m_ManualPerformed: 0
     m_ManualValue: 0
@@ -1272,7 +1275,7 @@ MonoBehaviour:
       m_Name: Activate
       m_Type: 1
       m_ExpectedControlType: 
-      m_Id: a2e7a5fe-e398-4120-8cf5-ca0a9e0d1085
+      m_Id: 068c9025-50d4-4ab0-bae4-1559dd81d75f
       m_Processors: 
       m_Interactions: 
       m_SingletonActionBindings: []
@@ -1281,13 +1284,13 @@ MonoBehaviour:
       m_Name: Activate Value
       m_Type: 0
       m_ExpectedControlType: Axis
-      m_Id: c87c018d-e2ff-463c-96d0-63baeeaa8fa2
+      m_Id: 75f8bb4e-df07-46ea-8cc4-6f3592b37fbf
       m_Processors: 
       m_Interactions: 
       m_SingletonActionBindings: []
       m_Flags: 0
-    m_InputActionReferencePerformed: {fileID: 0}
-    m_InputActionReferenceValue: {fileID: 0}
+    m_InputActionReferencePerformed: {fileID: -4793064481733323908, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
+    m_InputActionReferenceValue: {fileID: 6753368164133236856, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
     m_ObjectReferenceObject: {fileID: 0}
     m_ManualPerformed: 0
     m_ManualValue: 0
@@ -1386,7 +1389,7 @@ MonoBehaviour:
       m_Name: UI Press
       m_Type: 1
       m_ExpectedControlType: 
-      m_Id: 9e0d88fb-9e20-4243-b8af-073b5603e160
+      m_Id: 3beb94b0-c06f-490e-83d4-216465474229
       m_Processors: 
       m_Interactions: 
       m_SingletonActionBindings: []
@@ -1395,13 +1398,13 @@ MonoBehaviour:
       m_Name: UI Press Value
       m_Type: 0
       m_ExpectedControlType: Axis
-      m_Id: 27f57acc-fdbe-4df0-827b-09501a79ba81
+      m_Id: c295c5c8-913a-4d5d-a098-7416286d463d
       m_Processors: 
       m_Interactions: 
       m_SingletonActionBindings: []
       m_Flags: 0
-    m_InputActionReferencePerformed: {fileID: 0}
-    m_InputActionReferenceValue: {fileID: 0}
+    m_InputActionReferencePerformed: {fileID: -5708840798830270438, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
+    m_InputActionReferenceValue: {fileID: -4439333590617490997, guid: 266f96d8e11535e43a65a15b16b41116, type: 3}
     m_ObjectReferenceObject: {fileID: 0}
     m_ManualPerformed: 0
     m_ManualValue: 0
@@ -1416,7 +1419,7 @@ MonoBehaviour:
       m_Name: UI Scroll
       m_Type: 0
       m_ExpectedControlType: Vector2
-      m_Id: e4345f04-082a-41b4-852a-49b1b4f5668b
+      m_Id: 61bfd8ec-a8dd-480b-9dd0-e89ca19e5928
       m_Processors: 
       m_Interactions: 
       m_SingletonActionBindings: []
@@ -1430,7 +1433,7 @@ MonoBehaviour:
       m_Name: Translate Manipulation
       m_Type: 0
       m_ExpectedControlType: Vector2
-      m_Id: 7ec65a09-b92a-4bc9-bdf1-ffe15c0ac525
+      m_Id: 7fd23e5f-247b-4513-a43f-fed95aacd1e7
       m_Processors: 
       m_Interactions: 
       m_SingletonActionBindings: []
@@ -1444,7 +1447,7 @@ MonoBehaviour:
       m_Name: Rotate Manipulation
       m_Type: 0
       m_ExpectedControlType: Vector2
-      m_Id: cc7f1acb-bc38-4b52-9ece-f6a1782a52a0
+      m_Id: b2ea1904-b192-45b6-a552-c8acc9f985bf
       m_Processors: 
       m_Interactions: 
       m_SingletonActionBindings: []
@@ -1458,7 +1461,7 @@ MonoBehaviour:
       m_Name: Directional Manipulation
       m_Type: 0
       m_ExpectedControlType: Vector2
-      m_Id: ec156a4f-540e-4ca8-8816-03fa642214ac
+      m_Id: ecc6a455-1abf-4de2-8943-e421ee31aac0
       m_Processors: 
       m_Interactions: 
       m_SingletonActionBindings: []
@@ -1472,7 +1475,7 @@ MonoBehaviour:
       m_Name: Scale Toggle
       m_Type: 1
       m_ExpectedControlType: 
-      m_Id: 6f1706a9-3e19-4ba5-997b-2264842a28ae
+      m_Id: 58078e3d-fede-496e-a37e-c208c062c807
       m_Processors: 
       m_Interactions: 
       m_SingletonActionBindings: []
@@ -1481,7 +1484,7 @@ MonoBehaviour:
       m_Name: Scale Toggle Value
       m_Type: 0
       m_ExpectedControlType: Axis
-      m_Id: 81b30e79-8e0c-474f-ab86-199f700545d2
+      m_Id: 8433a6ac-2415-46ac-b696-f47c14ee2d75
       m_Processors: 
       m_Interactions: 
       m_SingletonActionBindings: []
@@ -1502,7 +1505,7 @@ MonoBehaviour:
       m_Name: Scale Over Time
       m_Type: 0
       m_ExpectedControlType: Vector2
-      m_Id: 4aaf2e68-836a-48d2-9c04-192d62512209
+      m_Id: 449d7e5d-bb61-49e9-89ba-88db6dc377de
       m_Processors: 
       m_Interactions: 
       m_SingletonActionBindings: []
@@ -1516,7 +1519,7 @@ MonoBehaviour:
       m_Name: Scale Distance Delta
       m_Type: 0
       m_ExpectedControlType: Axis
-      m_Id: 7f7e2878-e32d-4aec-b9a2-46dabd4cb8c5
+      m_Id: 321cee20-13ab-4f9f-a547-865a8be53d3b
       m_Processors: 
       m_Interactions: 
       m_SingletonActionBindings: []

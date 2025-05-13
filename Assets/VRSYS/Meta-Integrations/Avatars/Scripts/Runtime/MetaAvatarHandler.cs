@@ -59,6 +59,7 @@ public class MetaAvatarHandler : NetworkBehaviour
 
     [Header("Avatar Events")] 
     public UnityEvent onSkeletonLoaded = new UnityEvent();
+    public UnityEvent onAvatarLoaded = new UnityEvent();
 
     [Header("Debug")] 
     public bool verbose = true;
@@ -86,8 +87,10 @@ public class MetaAvatarHandler : NetworkBehaviour
             return;
         }
 
-        localAvatar = Instantiate(localAvatarPrefab, transform);
-        localAvatar.OnSkeletonLoadedEvent.AddListener(OnSkeletonLoaded);
+        localAvatar = GetComponentInChildren<SampleAvatarEntity>();
+        
+        if(localAvatar == null)
+            localAvatar = Instantiate(localAvatarPrefab, transform);
         
         SetupLocalAvatarEntity();
         
@@ -119,18 +122,13 @@ public class MetaAvatarHandler : NetworkBehaviour
         Destroy(facePose.gameObject);
         Destroy(eyePose.gameObject);
     }
-    
-    private void OnSkeletonLoaded(OvrAvatarEntity arg0)
-    {
-        if(verbose)
-            ExtendedLogger.LogInfo(GetType().Name, "Skeleton was loaded.");
-        
-        skeletonLoaded = true;
-        onSkeletonLoaded.Invoke();
-    }
 
     private void SetupLocalAvatarEntity()
     {
+        localAvatar.OnSkeletonLoadedEvent.AddListener(OnSkeletonLoaded);
+        localAvatar.OnDefaultAvatarLoadedEvent.AddListener(OnAvatarLoaded);
+        localAvatar.OnUserAvatarLoadedEvent.AddListener(OnAvatarLoaded);
+        
         if(bodyTracking != null)
             localAvatar.SetBodyTracking(bodyTracking);
         
@@ -142,6 +140,20 @@ public class MetaAvatarHandler : NetworkBehaviour
         
         if(eyePose != null)
             localAvatar.SetEyePoseProvider(eyePose);
+    }
+    
+    private void OnSkeletonLoaded(OvrAvatarEntity arg0)
+    {
+        if(verbose)
+            ExtendedLogger.LogInfo(GetType().Name, "Skeleton was loaded.");
+        
+        skeletonLoaded = true;
+        onSkeletonLoaded.Invoke();
+    }
+    
+    private void OnAvatarLoaded(OvrAvatarEntity arg0)
+    {
+        onAvatarLoaded.Invoke();
     }
 
     #endregion

@@ -54,7 +54,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7216047633976425198, guid: 809cce775431de842bae2eca7c27e046, type: 3}
       propertyPath: m_Name
-      value: HMDUserPrefab-Platform 1
+      value: HMDUserPrefab-Platform
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

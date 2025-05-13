@@ -56,7 +56,7 @@ MonoBehaviour:
       loadRigZipFromGlb: 1
       reserved: 0000000000000000000000000000000000000000000000000000000000000000
   _validateCache: 1
-  _activeView: 1
+  _activeView: 2
   _activeManifestation: 2
   _activeSubMeshes: -1
   _activeSubMeshesIncludeUntyped: 1
@@ -126,7 +126,7 @@ MonoBehaviour:
   _customRigPrefab: {fileID: 0}
   _customAnimationOnly: 0
   _enableStaticAnimationOptimization: 0
-  _enableLocalAnimationPlayback: 0
+  _enableLocalAnimationPlayback: 1
   _enableRotationalTrackingOffset: 0
   _inputBlended: 1
   _leftArmBlendFactor: 1

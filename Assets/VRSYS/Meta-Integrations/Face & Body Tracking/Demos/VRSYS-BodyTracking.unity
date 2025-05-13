@@ -944,7 +944,7 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   userPrefabs:
   - UserRole: 1
-    UserPrefab: {fileID: 3173937473048046106, guid: 57466ec997410c24fbf634bd3cba0695, type: 3}
+    UserPrefab: {fileID: 3173937473048046106, guid: 5b90914da16adcf4eaa3dc48ab42e0a0, type: 3}
     SpawnPoint: {fileID: 0}
   - UserRole: 0
     UserPrefab: {fileID: 8231461269131396514, guid: a261985c04347724aae188d2bb71865f, type: 3}
@@ -1099,7 +1099,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2208944429903453863, guid: 94ff287d16d5f634997f94548b2be4b2, type: 3}
       propertyPath: _skinningType
-      value: 8
+      value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 2721624839805295144, guid: 94ff287d16d5f634997f94548b2be4b2, type: 3}
       propertyPath: m_Name

@@ -71,9 +71,10 @@ namespace VRSYS.Core.Utility
         // Collider of direct interactor that gets toggled on and off.
         private Collider directInteractorCollider;
 
-        
-        [Header("Raycast Configuration")] 
-        
+
+        [Header("Raycast Configuration")]
+        [Tooltip("If set to true, configured ray origin will be overwritten by ray origin configured on ray interactor. If this is null, raycast origin will be used as fallback.")]
+        public bool useInteractorRayOrigin = false;
         [Tooltip("Transform that defines origin and forward direction of raycast.")]
         public Transform raycastOrigin;
         [Tooltip("If set to true, configured raycast distance will be overwritten by raycast distance configured on ray interactor.")]
@@ -127,6 +128,9 @@ namespace VRSYS.Core.Utility
             directInteractorCollider = virtualHand.GetComponent<Collider>();
 
             // setup raycast configuration
+            if (useInteractorRayOrigin && rayInteractor.rayOriginTransform != null)
+                raycastOrigin = rayInteractor.rayOriginTransform;
+            
             if (useInteractorDistance)
                 raycastDistance = rayInteractor.maxRaycastDistance;
 

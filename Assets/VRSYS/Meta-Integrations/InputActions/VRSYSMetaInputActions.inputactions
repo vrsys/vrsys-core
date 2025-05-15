@@ -1,0 +1,190 @@
+{
+    "name": "VRSYSMetaInputActions",
+    "maps": [
+        {
+            "name": "Right Hand Interactions",
+            "id": "064d84dc-14f8-4748-9457-8b3f1e3d5cdd",
+            "actions": [
+                {
+                    "name": "Select",
+                    "type": "Button",
+                    "id": "852d8c0f-0f04-436a-a71f-09cff39c646d",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "UI Select",
+                    "type": "Button",
+                    "id": "c88d7a22-aa11-41b9-9ddb-cdbd0a2caca8",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "9cff6917-a6c0-42ba-bdf1-1d9a516e42bd",
+                    "path": "<XRController>{RightHand}/gripButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Select",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "cd0d8456-f176-4e02-932b-de764963b965",
+                    "path": "<XRController>{RightHand}/graspFirm",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Select",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "6053289d-c008-45d2-b927-2f8e649b3c3e",
+                    "path": "<XRController>{RightHand}/pinchReady",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Select",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "52af258e-c151-4cd7-8008-d40fed2d4309",
+                    "path": "<XRController>{RightHand}/primaryButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "UI Select",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "a9ce5b52-f591-47f2-9f24-bb2fe8dd0fb0",
+                    "path": "<XRController>{RightHand}/triggerButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "UI Select",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "32d44565-e5b1-4d8d-8d9a-6dc01aac427d",
+                    "path": "<XRController>{RightHand}/pinchReady",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "UI Select",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        },
+        {
+            "name": "Left Hand Interactions",
+            "id": "7f2c0ff9-876c-4df8-acf6-3d9dc42b966c",
+            "actions": [
+                {
+                    "name": "Select",
+                    "type": "Button",
+                    "id": "d8f16135-8827-4e16-80e7-078fe910641f",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "UI Select",
+                    "type": "Button",
+                    "id": "56ec9659-234e-4a46-a0e9-c3bb4c43da36",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "6bb74ca3-5a7b-4161-949b-6eeac21da69c",
+                    "path": "<XRController>{LeftHand}/gripButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Select",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "4cba1d74-2a0e-4a8e-b08b-c35177848ebb",
+                    "path": "<XRController>{LeftHand}/graspFirm",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Select",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "b36b65b6-bffd-47df-b93e-c3e890d77de6",
+                    "path": "<XRController>{LeftHand}/pinchReady",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Select",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "19c9c42c-4c61-4e74-83c8-acc5c503180e",
+                    "path": "<XRController>{LeftHand}/primaryButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "UI Select",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "06b1b0a9-a404-4939-a72d-7d65c81cf8ee",
+                    "path": "<XRController>{LeftHand}/triggerButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "UI Select",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "d81854dd-bf0c-44e9-abfe-db205d09d7c7",
+                    "path": "<XRController>{LeftHand}/pinchReady",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "UI Select",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}

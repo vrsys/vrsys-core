@@ -154,7 +154,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8231461269131396515}
   - component: {fileID: 8231461269131396512}
-  - component: {fileID: 8231461269131396574}
+  - component: {fileID: 1838196664191547906}
   - component: {fileID: 8231461269131396575}
   - component: {fileID: 7797834381806960285}
   - component: {fileID: 7801684577953255646}
@@ -209,7 +209,7 @@ MonoBehaviour:
   AutoObjectParentSync: 1
   SyncOwnerTransformWhenParented: 1
   AllowOwnerToParent: 0
---- !u!114 &8231461269131396574
+--- !u!114 &1838196664191547906
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -218,11 +218,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 8231461269131396514}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c1175d4c69579d54faa82ae10441d03c, type: 3}
+  m_Script: {fileID: 11500000, guid: e96cb6065543e43c4a752faaa1468eb1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
-  NetworkTransformExpanded: 1
+  NetworkTransformExpanded: 0
   AuthorityMode: 1
   TickSyncChildren: 0
   UseUnreliableDeltas: 0
@@ -475,7 +475,7 @@ GameObject:
   - component: {fileID: 8231461269484759695}
   - component: {fileID: 8231461269484759693}
   - component: {fileID: 8231461269484759692}
-  - component: {fileID: 2658984521771375480}
+  - component: {fileID: 3383339077830640375}
   - component: {fileID: 7099846468232419450}
   m_Layer: 0
   m_Name: MainCamera
@@ -561,7 +561,7 @@ AudioListener:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8231461269484759694}
   m_Enabled: 1
---- !u!114 &2658984521771375480
+--- !u!114 &3383339077830640375
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -570,11 +570,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 8231461269484759694}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c1175d4c69579d54faa82ae10441d03c, type: 3}
+  m_Script: {fileID: 11500000, guid: e96cb6065543e43c4a752faaa1468eb1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
-  NetworkTransformExpanded: 1
+  NetworkTransformExpanded: 0
   AuthorityMode: 1
   TickSyncChildren: 0
   UseUnreliableDeltas: 0

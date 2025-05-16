@@ -98,7 +98,7 @@ namespace VRSYS.Core.Utility
         private void Start()
         {
             if(GetComponentInParent<NetworkObject>() != null)
-                if (!GetComponent<NetworkObject>().IsOwner)
+                if (!GetComponentInParent<NetworkObject>().IsOwner)
                 {
                     Destroy(this);
                     return;

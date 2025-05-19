@@ -201,8 +201,8 @@ namespace VRSYS.Core.Navigation
 
         private void Start()
         {
-            if(GetComponent<NetworkObject>() != null)
-                if (!GetComponent<NetworkObject>().IsOwner)
+            if(GetComponentInParent<NetworkObject>() != null)
+                if (!GetComponentInParent<NetworkObject>().IsOwner)
                 {
                     Destroy(this);
                     return;

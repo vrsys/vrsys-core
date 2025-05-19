@@ -1,7 +1,7 @@
 # VRSYS Core
 
 VRSYS Core offers a framework that allows to quick setup a Unity3D project for XR developments.
-The framework is build on Unity version 2021.3.26f1 and should also allow to be used with later versions.
+The framework is build on Unity version 6000.0.35f1 and should also allow to be used with later versions.
 
 ## Discord
 If you need help with using the package, you want to participate in further developments of the framework or just want to stay up to date with the latest releases, join our official VRSYS Core Discord server: https://discord.gg/sZ3YxqZZEJ
@@ -10,18 +10,18 @@ If you need help with using the package, you want to participate in further deve
 To use the package in your project, first include the following packages:
 
 ### If you use VRSYS Core only:
-- Authentication v3.4.0
+- Authentication v3.4.1
 - Input System v1.11.2
-- Netcode for GameObjects v2.2.0
-- Multiplayer Services 1.1.1
-- XR Interaction Toolkit v3.0.7
-- XR Plugin Management v4.5.0
+- Netcode for GameObjects v2.3.2
+- Multiplayer Services 1.1.3
+- XR Interaction Toolkit v3.0.8
+- XR Plugin Management v4.5.1
 
 ### If you want to use the 4Players Odin Voice integration:
 - [Odin SDK v1.6.4](https://github.com/4Players/odin-sdk-unity/releases/tag/v1.6.4)
 
 ### If you want to use the Meta Avatars integration:
-- Meta XR Core SDK v76.0.0
+- Meta XR Core SDK v76.0.1
 - Meta Avatars SDK v35.2.0 (+ Sample scenes)
 - Meta XR Movement SDK v76.0.0
 

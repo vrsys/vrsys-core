@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 38b9bcb87f8f20d419b3b936e8b4d55d, type: 3}
   m_Name: Local Network Settings
   m_EditorClassIdentifier: 
-  ipAddress: 192.168.178.26
+  ipAddress: 127.0.0.1
   port: 7777

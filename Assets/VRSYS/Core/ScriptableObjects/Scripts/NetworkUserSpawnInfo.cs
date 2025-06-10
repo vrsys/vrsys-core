@@ -6,7 +6,7 @@ namespace VRSYS.Core.ScriptableObjects
     [CreateAssetMenu(menuName = "VRSYS/Core/Scriptable Objects/NetworkUserSpawnInfo")]
     public class NetworkUserSpawnInfo : ScriptableObject
     {
-        public UserRole userRole = UserRole.HMD;
+        public UserRole userRole;
         public string userName;
         public Color userColor;
         

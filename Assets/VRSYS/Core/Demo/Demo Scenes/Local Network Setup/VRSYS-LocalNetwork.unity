@@ -480,6 +480,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
   NetworkTransformExpanded: 0
+  AutoOwnerAuthorityTickOffset: 1
+  PositionInterpolationType: 0
+  RotationInterpolationType: 0
+  ScaleInterpolationType: 0
+  PositionLerpSmoothing: 1
+  PositionMaxInterpolationTime: 0.1
+  RotationLerpSmoothing: 1
+  RotationMaxInterpolationTime: 0.1
+  ScaleLerpSmoothing: 1
+  ScaleMaxInterpolationTime: 0.1
   AuthorityMode: 0
   TickSyncChildren: 0
   UseUnreliableDeltas: 0
@@ -656,6 +666,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
   NetworkTransformExpanded: 0
+  AutoOwnerAuthorityTickOffset: 1
+  PositionInterpolationType: 0
+  RotationInterpolationType: 0
+  ScaleInterpolationType: 0
+  PositionLerpSmoothing: 1
+  PositionMaxInterpolationTime: 0.1
+  RotationLerpSmoothing: 1
+  RotationMaxInterpolationTime: 0.1
+  ScaleLerpSmoothing: 1
+  ScaleMaxInterpolationTime: 0.1
   AuthorityMode: 0
   TickSyncChildren: 0
   UseUnreliableDeltas: 0
@@ -1069,6 +1089,7 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   isGrabbed:
     m_InternalValue: 0
+  getOwnership: 0
 --- !u!114 &1196039985
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1201,6 +1222,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
   NetworkTransformExpanded: 0
+  AutoOwnerAuthorityTickOffset: 1
+  PositionInterpolationType: 0
+  RotationInterpolationType: 0
+  ScaleInterpolationType: 0
+  PositionLerpSmoothing: 1
+  PositionMaxInterpolationTime: 0.1
+  RotationLerpSmoothing: 1
+  RotationMaxInterpolationTime: 0.1
+  ScaleLerpSmoothing: 1
+  ScaleMaxInterpolationTime: 0.1
   AuthorityMode: 0
   TickSyncChildren: 0
   UseUnreliableDeltas: 0
@@ -1799,6 +1830,10 @@ PrefabInstance:
       value: 1783838861
       objectReference: {fileID: 0}
     - target: {fileID: 6294951967490542898, guid: b8a9590d6dc70a8468106d09c025c654, type: 3}
+      propertyPath: userRoleList
+      value: 
+      objectReference: {fileID: 11400000, guid: 89a925e795665a045a6c163e829a20a6, type: 2}
+    - target: {fileID: 6294951967490542898, guid: b8a9590d6dc70a8468106d09c025c654, type: 3}
       propertyPath: onLobbyCreated.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 1951133672}
@@ -2313,6 +2348,14 @@ PrefabInstance:
       propertyPath: 'spawnPoints.Array.data[0]'
       value: 
       objectReference: {fileID: 1951133675}
+    - target: {fileID: 6081028906002393513, guid: 1c4b8e4515038a249a5b0c479fd0c4c8, type: 3}
+      propertyPath: userPrefabs.Array.data[0].UserRole
+      value: 
+      objectReference: {fileID: 11400000, guid: 4139bd1ba83848143964fe42a30a732a, type: 2}
+    - target: {fileID: 6081028906002393513, guid: 1c4b8e4515038a249a5b0c479fd0c4c8, type: 3}
+      propertyPath: userPrefabs.Array.data[1].UserRole
+      value: 
+      objectReference: {fileID: 11400000, guid: b7bd5f0441a114148b1f41a480c809d5, type: 2}
     - target: {fileID: 8715944625018654086, guid: 1c4b8e4515038a249a5b0c479fd0c4c8, type: 3}
       propertyPath: GlobalObjectIdHash
       value: 1346199104

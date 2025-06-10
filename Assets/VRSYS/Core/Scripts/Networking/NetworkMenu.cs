@@ -133,11 +133,15 @@ namespace VRSYS.Core.Networking
 
             userRoleDropdown.AddOptions(userRoles);
 
-            int index = userRoleDropdown.options.FindIndex(
-                s => s.text.Equals(spawnInfo.userRole.Name));
-            index = index == -1 ? 0 : index;
+            if (spawnInfo.userRole != null)
+            {
+                int index = userRoleDropdown.options.FindIndex(
+                    s => s.text.Equals(spawnInfo.userRole.Name));
+                index = index == -1 ? 0 : index;
             
-            userRoleDropdown.value = index;
+                userRoleDropdown.value = index;
+            }
+            
             UpdateUserRole(); // secure that the user role is set consistent between ui and manager
 
             // Setup user color dropdown

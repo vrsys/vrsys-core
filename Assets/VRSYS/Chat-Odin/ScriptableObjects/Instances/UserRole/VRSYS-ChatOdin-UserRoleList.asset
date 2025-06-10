@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b02e8a6c3d820e8449836e2d2772f430, type: 3}
+  m_Name: VRSYS-ChatOdin-UserRoleList
+  m_EditorClassIdentifier: 
+  userRoles:
+  - {fileID: 11400000, guid: 3c7ae5384effef64b947441d461c01af, type: 2}
+  - {fileID: 11400000, guid: 12abec15c9ef8ce44b339acc24bd1db0, type: 2}

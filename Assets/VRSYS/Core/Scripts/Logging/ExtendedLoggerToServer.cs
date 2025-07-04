@@ -32,63 +32,94 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //-----------------------------------------------------------------
-//   Authors:        Sebastian Muehlhaus
-//   Date:           2023
+//   Authors:        Tony Jan Zoeppig
+//   Date:           2025
 //-----------------------------------------------------------------
 
 using Unity.Netcode;
+using UnityEngine;
+using VRSYS.Core.Logging;
+using VRSYS.Core.Networking;
+using LogLevel = VRSYS.Core.Logging.LogLevel;
 
-namespace VRSYS.Core.Logging
+public class ExtendedLoggerToServer : NetworkBehaviour
 {
+    #region Member Variables
 
-    public class ExtendedNetworkLogger : NetworkBehaviour
+    [SerializeField] private LogLevel _logLevel;
+
+    private string logTag
     {
-        private string logTag => (string.IsNullOrEmpty(name) ? "<empty>" : name) + "[" + GetInstanceID() + "]." + GetType().Name;
-        
-        public bool suppressInfoLogs = false;
-        
-        public bool suppressWarningLogs = false;
-        
-        public bool suppressErrorLogs = false;
-        
-        private void Awake() => LogInfo(" Awake() called");
+        get
+        {
+            if (NetworkUser.LocalInstance != null)
+                return "[" + NetworkUser.LocalInstance.userName.Value + "]";
 
-        private void Start() => LogInfo(" Start() called");
-
-        public override void OnDestroy()
-        {
-            LogInfo(" OnDestroy() called");
-            base.OnDestroy();
-        } 
-
-        public override void OnNetworkSpawn()
-        {
-            LogInfo(" OnNetworkSpawn() called");
-            base.OnNetworkSpawn();
-        }
-
-        public override void OnNetworkDespawn()
-        {
-            LogInfo(" OnNetworkDespawn() called");
-            base.OnNetworkDespawn();
-        }
-
-        public void LogInfo(string message)
-        {
-            if(!suppressInfoLogs)
-                ExtendedLogger.LogInfo(logTag, message, this);
-        }
-        
-        public void LogWarning(string message)
-        {
-            if(!suppressWarningLogs)
-                ExtendedLogger.LogWarning(logTag, message, this);
-        }
-        
-        public void LogError(string message)
-        {
-            if(!suppressErrorLogs)
-                ExtendedLogger.LogError(logTag, message, this);
+            return "[Client" + NetworkManager.LocalClientId + "]";
         }
     }
+
+    #endregion
+
+    #region Mono- & NetworkBehaviour Callbacks
+
+    public override void OnNetworkSpawn()
+    {
+        ExtendedLogger.OnInfoLog.AddListener(LogInfo);
+        ExtendedLogger.OnWarningLog.AddListener(LogWarning);
+        ExtendedLogger.OnErrorLog.AddListener(LogError);
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        ExtendedLogger.OnInfoLog.RemoveListener(LogInfo);
+        ExtendedLogger.OnWarningLog.RemoveListener(LogWarning);
+        ExtendedLogger.OnErrorLog.RemoveListener(LogError);
+    }
+
+    #endregion
+
+    #region Private Methods
+
+    private void LogInfo(string message)
+    {
+        if (_logLevel < LogLevel.Warning)
+        {
+            string log = logTag + message;
+            LogInfoRpc(log);
+        }
+    }
+    
+    private void LogWarning(string message)
+    {
+        if (_logLevel < LogLevel.Error)
+        {
+            string log = logTag + message;
+            LogWarningRpc(log);
+        }
+    }
+    
+    private void LogError(string message)
+    {
+        if (_logLevel < LogLevel.None)
+        {
+            string log = logTag + message;
+            LogErrorRpc(log);
+        }
+    }
+
+    #endregion
+
+    #region RPCs
+
+    [Rpc(SendTo.Server)]
+    private void LogInfoRpc(string message) => Debug.Log(message);
+    
+    [Rpc(SendTo.Server)]
+    private void LogWarningRpc(string message) => Debug.LogWarning(message);
+    
+    [Rpc(SendTo.Server)]
+    private void LogErrorRpc(string message) => Debug.LogError(message);
+
+    #endregion
 }

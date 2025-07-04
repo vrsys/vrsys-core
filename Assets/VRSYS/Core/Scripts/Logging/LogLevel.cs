@@ -32,51 +32,17 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //-----------------------------------------------------------------
-//   Authors:        Tony Jan Zoeppig, Sebastian Muehlhaus
-//   Date:           2023
+//   Authors:        Tony Jan Zoeppig
+//   Date:           2025
 //-----------------------------------------------------------------
-
-using UnityEngine;
-using UnityEngine.Events;
 
 namespace VRSYS.Core.Logging
 {
-    public class ExtendedLogger
+    public enum LogLevel
     {
-        #region Events
-
-        public static UnityEvent<string> OnInfoLog;
-        public static UnityEvent<string> OnWarningLog;
-        public static UnityEvent<string> OnErrorLog;
-
-        #endregion
-        
-        #region Static Methods
-
-        public static void LogInfo(string className, string message, Object context = null)
-        {
-            string log = $"<color=white>[<color=green>Info</color>] [{className}] {message}</color>";
-            Debug.Log(log, context);
-            
-            OnInfoLog.Invoke(log);
-        }
-
-        public static void LogWarning(string className, string message, Object context = null)
-        {
-            string log = $"<color=white>[<color=yellow>Warning</color>] [{className}] {message}</color>";
-            Debug.LogWarning(log, context);
-            
-            OnWarningLog.Invoke(log);
-        }
-        
-        public static void LogError(string className, string message, Object context = null)
-        {
-            string log = $"<color=white>[<color=red>Error</color>] [{className}] {message}</color>";
-            Debug.LogError(log, context);
-            
-            OnErrorLog.Invoke(log);
-        }
-
-        #endregion
+        Info,
+        Warning,
+        Error,
+        None
     }
 }

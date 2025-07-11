@@ -38,88 +38,89 @@
 
 using Unity.Netcode;
 using UnityEngine;
-using VRSYS.Core.Logging;
 using VRSYS.Core.Networking;
-using LogLevel = VRSYS.Core.Logging.LogLevel;
 
-public class ExtendedLoggerToServer : NetworkBehaviour
+namespace VRSYS.Core.Logging
 {
-    #region Member Variables
-
-    [SerializeField] private LogLevel _logLevel;
-
-    private string logTag
+    public class ExtendedLoggerToServer : NetworkBehaviour
     {
-        get
+        #region Member Variables
+
+        [SerializeField] private LogLevel _logLevel;
+
+        private string logTag
         {
-            if (NetworkUser.LocalInstance != null)
-                return "[" + NetworkUser.LocalInstance.userName.Value + "]";
+            get
+            {
+                if (NetworkUser.LocalInstance != null)
+                    return "[" + NetworkUser.LocalInstance.userName.Value + "]";
 
-            return "[Client" + NetworkManager.LocalClientId + "]";
+                return "[Client" + NetworkManager.LocalClientId + "]";
+            }
         }
-    }
 
-    #endregion
+        #endregion
 
-    #region Mono- & NetworkBehaviour Callbacks
+        #region Mono- & NetworkBehaviour Callbacks
 
-    public override void OnNetworkSpawn()
-    {
-        ExtendedLogger.OnInfoLog.AddListener(LogInfo);
-        ExtendedLogger.OnWarningLog.AddListener(LogWarning);
-        ExtendedLogger.OnErrorLog.AddListener(LogError);
-    }
-
-    public override void OnNetworkDespawn()
-    {
-        ExtendedLogger.OnInfoLog.RemoveListener(LogInfo);
-        ExtendedLogger.OnWarningLog.RemoveListener(LogWarning);
-        ExtendedLogger.OnErrorLog.RemoveListener(LogError);
-    }
-
-    #endregion
-
-    #region Private Methods
-
-    private void LogInfo(string message)
-    {
-        if (_logLevel < LogLevel.Warning)
+        public override void OnNetworkSpawn()
         {
-            string log = logTag + message;
-            LogInfoRpc(log);
+            ExtendedLogger.OnInfoLog.AddListener(LogInfo);
+            ExtendedLogger.OnWarningLog.AddListener(LogWarning);
+            ExtendedLogger.OnErrorLog.AddListener(LogError);
         }
-    }
-    
-    private void LogWarning(string message)
-    {
-        if (_logLevel < LogLevel.Error)
+
+        public override void OnNetworkDespawn()
         {
-            string log = logTag + message;
-            LogWarningRpc(log);
+            ExtendedLogger.OnInfoLog.RemoveListener(LogInfo);
+            ExtendedLogger.OnWarningLog.RemoveListener(LogWarning);
+            ExtendedLogger.OnErrorLog.RemoveListener(LogError);
         }
-    }
-    
-    private void LogError(string message)
-    {
-        if (_logLevel < LogLevel.None)
+
+        #endregion
+
+        #region Private Methods
+
+        private void LogInfo(ExtendedLoggerLogInformation logInfo)
         {
-            string log = logTag + message;
-            LogErrorRpc(log);
+            if (_logLevel < LogLevel.Warning)
+            {
+                string log = logTag + logInfo.FormattedMessage;
+                LogInfoRpc(log);
+            }
         }
+
+        private void LogWarning(ExtendedLoggerLogInformation logInfo)
+        {
+            if (_logLevel < LogLevel.Error)
+            {
+                string log = logTag + logInfo.FormattedMessage;
+                LogWarningRpc(log);
+            }
+        }
+
+        private void LogError(ExtendedLoggerLogInformation logInfo)
+        {
+            if (_logLevel < LogLevel.None)
+            {
+                string log = logTag + logInfo.FormattedMessage;
+                LogErrorRpc(log);
+            }
+        }
+
+        #endregion
+
+        #region RPCs
+
+        [Rpc(SendTo.Server)]
+        private void LogInfoRpc(string message) => Debug.Log(message);
+
+        [Rpc(SendTo.Server)]
+        private void LogWarningRpc(string message) => Debug.LogWarning(message);
+
+        [Rpc(SendTo.Server)]
+        private void LogErrorRpc(string message) => Debug.LogError(message);
+
+        #endregion
     }
-
-    #endregion
-
-    #region RPCs
-
-    [Rpc(SendTo.Server)]
-    private void LogInfoRpc(string message) => Debug.Log(message);
-    
-    [Rpc(SendTo.Server)]
-    private void LogWarningRpc(string message) => Debug.LogWarning(message);
-    
-    [Rpc(SendTo.Server)]
-    private void LogErrorRpc(string message) => Debug.LogError(message);
-
-    #endregion
 }

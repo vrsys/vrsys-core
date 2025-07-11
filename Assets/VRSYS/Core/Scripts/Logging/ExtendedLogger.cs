@@ -41,13 +41,25 @@ using UnityEngine.Events;
 
 namespace VRSYS.Core.Logging
 {
+    public class ExtendedLoggerLogInformation
+    {
+        public string FormattedMessage; // including color formatting for unity debug console
+        public string ClearMessage; // log message without formatting 
+
+        public ExtendedLoggerLogInformation(string formattedMessage, string clearMessage)
+        {
+            FormattedMessage = formattedMessage;
+            ClearMessage = clearMessage;
+        }
+    }
+    
     public class ExtendedLogger
     {
         #region Events
 
-        public static UnityEvent<string> OnInfoLog;
-        public static UnityEvent<string> OnWarningLog;
-        public static UnityEvent<string> OnErrorLog;
+        public static UnityEvent<ExtendedLoggerLogInformation> OnInfoLog;
+        public static UnityEvent<ExtendedLoggerLogInformation> OnWarningLog;
+        public static UnityEvent<ExtendedLoggerLogInformation> OnErrorLog;
 
         #endregion
         
@@ -55,26 +67,32 @@ namespace VRSYS.Core.Logging
 
         public static void LogInfo(string className, string message, Object context = null)
         {
-            string log = $"<color=white>[<color=green>Info</color>] [{className}] {message}</color>";
-            Debug.Log(log, context);
+            string formattedMessage = $"<color=white>[<color=green>Info</color>] [{className}] {message}</color>";
+            Debug.Log(formattedMessage, context);
+
+            string clearMessage = $"[{className}] {message}";
             
-            OnInfoLog.Invoke(log);
+            OnInfoLog.Invoke(new ExtendedLoggerLogInformation(formattedMessage, clearMessage));
         }
 
         public static void LogWarning(string className, string message, Object context = null)
         {
-            string log = $"<color=white>[<color=yellow>Warning</color>] [{className}] {message}</color>";
-            Debug.LogWarning(log, context);
+            string formattedMessage = $"<color=white>[<color=yellow>Warning</color>] [{className}] {message}</color>";
+            Debug.LogWarning(formattedMessage, context);
             
-            OnWarningLog.Invoke(log);
+            string clearMessage = $"[{className}] {message}";
+            
+            OnWarningLog.Invoke(new ExtendedLoggerLogInformation(formattedMessage, clearMessage));
         }
         
         public static void LogError(string className, string message, Object context = null)
         {
-            string log = $"<color=white>[<color=red>Error</color>] [{className}] {message}</color>";
-            Debug.LogError(log, context);
+            string formattedMessage = $"<color=white>[<color=red>Error</color>] [{className}] {message}</color>";
+            Debug.LogError(formattedMessage, context);
             
-            OnErrorLog.Invoke(log);
+            string clearMessage = $"[{className}] {message}";
+            
+            OnErrorLog.Invoke(new ExtendedLoggerLogInformation(formattedMessage, clearMessage));
         }
 
         #endregion

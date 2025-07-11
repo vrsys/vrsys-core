@@ -36,8 +36,11 @@
 //   Date:           2025
 //-----------------------------------------------------------------
 
+using System;
+
 namespace VRSYS.Core.Logging
 {
+    [Serializable]
     public enum LogLevel
     {
         Info,

@@ -96,6 +96,18 @@ namespace VRSYS.Core.Editor
             CreatePrefab("Prefabs/Basic Prefabs/XR-Enable-Helper");
         }
 
+        [MenuItem("GameObject/VRSYS/Core/ExtendedLoggerToServer")]
+        public static void CreateExtendedLoggerToServer(MenuCommand menuCommand)
+        {
+            CreatePrefab("Prefabs/Basic Prefabs/VRSYS-ExtendedLoggerToServer");
+        }
+        
+        [MenuItem("GameObject/VRSYS/Core/ExtendedLoggerToWeb")]
+        public static void CreateExtendedLoggerToWeb(MenuCommand menuCommand)
+        {
+            CreatePrefab("Prefabs/Basic Prefabs/VRSYS-ExtendedLoggerToWeb");
+        }
+
         #endregion
     }
 }

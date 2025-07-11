@@ -65,6 +65,9 @@ namespace VRSYS.Core.Logging
 
         public override void OnNetworkSpawn()
         {
+            if (IsServer)
+                return;
+            
             ExtendedLogger.OnInfoLog.AddListener(LogInfo);
             ExtendedLogger.OnWarningLog.AddListener(LogWarning);
             ExtendedLogger.OnErrorLog.AddListener(LogError);
@@ -72,6 +75,9 @@ namespace VRSYS.Core.Logging
 
         public override void OnNetworkDespawn()
         {
+            if(IsServer)
+                return;
+            
             ExtendedLogger.OnInfoLog.RemoveListener(LogInfo);
             ExtendedLogger.OnWarningLog.RemoveListener(LogWarning);
             ExtendedLogger.OnErrorLog.RemoveListener(LogError);

@@ -57,9 +57,9 @@ namespace VRSYS.Core.Logging
     {
         #region Events
 
-        public static UnityEvent<ExtendedLoggerLogInformation> OnInfoLog;
-        public static UnityEvent<ExtendedLoggerLogInformation> OnWarningLog;
-        public static UnityEvent<ExtendedLoggerLogInformation> OnErrorLog;
+        public static UnityEvent<ExtendedLoggerLogInformation> OnInfoLog = new UnityEvent<ExtendedLoggerLogInformation>();
+        public static UnityEvent<ExtendedLoggerLogInformation> OnWarningLog = new UnityEvent<ExtendedLoggerLogInformation>();
+        public static UnityEvent<ExtendedLoggerLogInformation> OnErrorLog = new UnityEvent<ExtendedLoggerLogInformation>();
 
         #endregion
         

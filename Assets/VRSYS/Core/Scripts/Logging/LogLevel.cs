@@ -43,9 +43,9 @@ namespace VRSYS.Core.Logging
     [Serializable]
     public enum LogLevel
     {
-        Info,
-        Warning,
-        Error,
-        None
+        Info = 0,
+        Warning = 1,
+        Error = 2,
+        None = 3
     }
 }

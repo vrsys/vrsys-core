@@ -51,16 +51,16 @@ namespace VRSYS.Core.Logging
         public string user_name;
         public string device_id;
         public string status;
-        public LogLevel logLevel;
+        public LogLevel code;
 
-        public ServerLogInformation(string appName, string status, ulong userID, string userName, string deviceId, LogLevel logLevel)
+        public ServerLogInformation(string appName, string status, ulong userID, string userName, string deviceId, LogLevel code)
         {
             app_name = appName;
             this.status = status;
             user_id = userID;
             user_name = userName;
             device_id = deviceId;
-            this.logLevel = logLevel;
+            this.code = code;
         }
     }
     
@@ -71,9 +71,21 @@ namespace VRSYS.Core.Logging
         private static ulong _userId = 0;
 
         [Tooltip("Server URL logs get send to. Use https.")]
-        public string serverUrl = "https://domain/api/app_usage";
+        public string serverUrl = "https://foo.vrsys.org/api/app_usage";
 
         public LogLevel logLevel = LogLevel.Info;
+
+        private string _userName
+        {
+            get
+            {
+                string s = NetworkUser.LocalInstance != null
+                    ? NetworkUser.LocalInstance.userName.Value.ToString()
+                    : "unknown";
+
+                return s;
+            }
+        }
 
         #endregion
 
@@ -101,14 +113,14 @@ namespace VRSYS.Core.Logging
 
         #endregion
 
-        #region LOg Methods
+        #region Log Methods
 
         private void LogInfo(ExtendedLoggerLogInformation logInfo)
         {
             if (logLevel < LogLevel.Warning)
             {
                 ServerLogInformation serverLog = new ServerLogInformation(Application.productName, logInfo.ClearMessage, _userId,
-                    NetworkUser.LocalInstance.userName.Value.ToString(), SystemInfo.deviceUniqueIdentifier, LogLevel.Info);
+                    _userName, SystemInfo.deviceUniqueIdentifier, LogLevel.Info);
 
                 StartCoroutine(LogToServer(serverLog));
             }
@@ -119,7 +131,7 @@ namespace VRSYS.Core.Logging
             if (logLevel < LogLevel.Error)
             {
                 ServerLogInformation serverLog = new ServerLogInformation(Application.productName, logInfo.ClearMessage, _userId,
-                    NetworkUser.LocalInstance.userName.Value.ToString(), SystemInfo.deviceUniqueIdentifier, LogLevel.Warning);
+                    _userName, SystemInfo.deviceUniqueIdentifier, LogLevel.Warning);
 
                 StartCoroutine(LogToServer(serverLog));
             }
@@ -130,7 +142,7 @@ namespace VRSYS.Core.Logging
             if (logLevel < LogLevel.None)
             {
                 ServerLogInformation serverLog = new ServerLogInformation(Application.productName, logInfo.ClearMessage, _userId,
-                    NetworkUser.LocalInstance.userName.Value.ToString(), SystemInfo.deviceUniqueIdentifier, LogLevel.Error);
+                    _userName, SystemInfo.deviceUniqueIdentifier, LogLevel.Error);
 
                 StartCoroutine(LogToServer(serverLog));
             }

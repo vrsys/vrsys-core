@@ -77,6 +77,8 @@ namespace VRSYS.Core.Networking
 
         [HideInInspector] public UserRole userRole;
 
+        [HideInInspector] public ulong userID = 0;
+
         // events
         public UnityEvent onLocalUserSetup = new UnityEvent();
 
@@ -200,6 +202,11 @@ namespace VRSYS.Core.Networking
             var userNameStr = userName.Value.ToString(); 
             avatarAnatomy.SetUserName(userNameStr);
             gameObject.name = userNameStr + (IsOwner ? " [Local]" : " [Remote]");
+        }
+
+        public void SetUserId(ulong id)
+        {
+            userID = id;
         }
 
         private void UpdateUserNameLabel(FixedString32Bytes previousValue, FixedString32Bytes newValue)

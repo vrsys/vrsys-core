@@ -68,8 +68,6 @@ namespace VRSYS.Core.Logging
     {
         #region Member Variables
 
-        private static ulong _userId = 0;
-
         [Tooltip("Server URL logs get send to. Use https.")]
         public string serverUrl = "https://foo.vrsys.org/api/app_usage";
 
@@ -84,6 +82,15 @@ namespace VRSYS.Core.Logging
                     : "unknown";
 
                 return s;
+            }
+        }
+
+        private ulong _userId
+        {
+            get
+            {
+                ulong u = NetworkUser.LocalInstance != null ? NetworkUser.LocalInstance.userID : 0;
+                return u;
             }
         }
 
@@ -104,12 +111,6 @@ namespace VRSYS.Core.Logging
             ExtendedLogger.OnWarningLog.RemoveListener(LogWarning);
             ExtendedLogger.OnErrorLog.RemoveListener(LogError);
         }
-
-        #endregion
-
-        #region Static Methods
-
-        public void SetUserId(ulong userId) => _userId = userId;
 
         #endregion
 

@@ -89,9 +89,6 @@ namespace VRSYS.Core.Networking
         
         [Header("Selectable Setup Options")]
         public List<NamedColor> avatarColors;
-
-        public List<UserRole> unavailableUserRoles;
-        private List<UserRole> userRoles;
         
         private NetworkUserSpawnInfo spawnInfo => ConnectionManager.Instance.userSpawnInfo;
 
@@ -105,10 +102,6 @@ namespace VRSYS.Core.Networking
 
         private void Start()
         {
-            userRoles = Enum.GetValues(typeof(UserRole)).Cast<UserRole>().ToList();
-            foreach (var unavailableUserRole in unavailableUserRoles)
-                userRoles.Remove(unavailableUserRole);
-
             if (ConnectionManager.Instance.lobbySettings.autoStart)
             {
                 gameObject.SetActive(false);
@@ -133,18 +126,22 @@ namespace VRSYS.Core.Networking
             // Setup user role dropdown
             userRoleDropdown.options.Clear();
 
-            List<string> userRoleStr = new List<string>();
+            List<string> userRoles = new List<string>();
             
-            foreach (var userRole in userRoles)
-                userRoleStr.Add(userRole.ToString());
+            foreach (var userRole in ConnectionManager.Instance.userRoleList.GetUserRoles())
+                userRoles.Add(userRole.Name);
 
-            userRoleDropdown.AddOptions(userRoleStr);
+            userRoleDropdown.AddOptions(userRoles);
 
-            int index = userRoleDropdown.options.FindIndex(
-                s => s.text.Equals(spawnInfo.userRole.ToString()));
-            index = index == -1 ? 0 : index;
+            if (spawnInfo.userRole != null)
+            {
+                int index = userRoleDropdown.options.FindIndex(
+                    s => s.text.Equals(spawnInfo.userRole.Name));
+                index = index == -1 ? 0 : index;
             
-            userRoleDropdown.value = index;
+                userRoleDropdown.value = index;
+            }
+            
             UpdateUserRole(); // secure that the user role is set consistent between ui and manager
 
             // Setup user color dropdown
@@ -216,12 +213,12 @@ namespace VRSYS.Core.Networking
         
         private void UpdateUserRole(int arg0)
         {
-            Enum.TryParse(userRoleDropdown.options[userRoleDropdown.value].text, out spawnInfo.userRole);
+            UpdateUserRole();
         }
         
         private void UpdateUserRole()
         {
-            Enum.TryParse(userRoleDropdown.options[userRoleDropdown.value].text, out spawnInfo.userRole);
+            spawnInfo.userRole = ConnectionManager.Instance.userRoleList.GetUserRole(userRoleDropdown.value);
         }
 
         public void UpdateUserColor(int arg0)

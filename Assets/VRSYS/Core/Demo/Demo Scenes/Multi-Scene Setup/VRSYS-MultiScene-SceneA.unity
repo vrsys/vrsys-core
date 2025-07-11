@@ -350,6 +350,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
   NetworkTransformExpanded: 0
+  AutoOwnerAuthorityTickOffset: 1
+  PositionInterpolationType: 0
+  RotationInterpolationType: 0
+  ScaleInterpolationType: 0
+  PositionLerpSmoothing: 1
+  PositionMaxInterpolationTime: 0.1
+  RotationLerpSmoothing: 1
+  RotationMaxInterpolationTime: 0.1
+  ScaleLerpSmoothing: 1
+  ScaleMaxInterpolationTime: 0.1
   AuthorityMode: 0
   TickSyncChildren: 0
   UseUnreliableDeltas: 0
@@ -538,6 +548,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   listenPort: 5000
+  controllerHost: 
   dTrackCoordinates: 0
 --- !u!1 &411010273
 GameObject:
@@ -572,6 +583,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
   NetworkTransformExpanded: 0
+  AutoOwnerAuthorityTickOffset: 1
+  PositionInterpolationType: 0
+  RotationInterpolationType: 0
+  ScaleInterpolationType: 0
+  PositionLerpSmoothing: 1
+  PositionMaxInterpolationTime: 0.1
+  RotationLerpSmoothing: 1
+  RotationMaxInterpolationTime: 0.1
+  ScaleLerpSmoothing: 1
+  ScaleMaxInterpolationTime: 0.1
   AuthorityMode: 0
   TickSyncChildren: 0
   UseUnreliableDeltas: 0
@@ -1450,11 +1471,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
   userPrefabs:
-  - UserRole: 1
-    UserPrefab: {fileID: 7216047633976425198, guid: 809cce775431de842bae2eca7c27e046, type: 3}
-  - UserRole: 0
-    UserPrefab: {fileID: 8231461269131396514, guid: a261985c04347724aae188d2bb71865f, type: 3}
-  spawnPoints: []
+  - UserRole: {fileID: 11400000, guid: 4139bd1ba83848143964fe42a30a732a, type: 2}
+    SpawnPoint: {fileID: 0}
+  - UserRole: {fileID: 11400000, guid: b7bd5f0441a114148b1f41a480c809d5, type: 2}
+    SpawnPoint: {fileID: 0}
+  useRoleSpawnPoints: 1
+  spawnPoint: {fileID: 0}
   verbose: 0
 --- !u!1 &1696237268
 GameObject:

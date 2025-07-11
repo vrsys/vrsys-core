@@ -38,12 +38,12 @@
 
 namespace VRSYS.Core.Networking
 {
-    public enum UserRole
-    {
-        Desktop,
-        HMD,
-        AR,
-        Agent,
-        ProjectionWall
-    }
+    // public enum UserRole
+    // {
+    //     Desktop,
+    //     HMD,
+    //     AR,
+    //     Agent,
+    //     ProjectionWall
+    // }
 }

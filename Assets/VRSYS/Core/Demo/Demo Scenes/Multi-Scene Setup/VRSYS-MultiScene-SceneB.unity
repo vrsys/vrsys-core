@@ -879,6 +879,7 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   isGrabbed:
     m_InternalValue: 0
+  getOwnership: 0
 --- !u!114 &285670425
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -942,6 +943,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
   NetworkTransformExpanded: 0
+  AutoOwnerAuthorityTickOffset: 1
+  PositionInterpolationType: 0
+  RotationInterpolationType: 0
+  ScaleInterpolationType: 0
+  PositionLerpSmoothing: 1
+  PositionMaxInterpolationTime: 0.1
+  RotationLerpSmoothing: 1
+  RotationMaxInterpolationTime: 0.1
+  ScaleLerpSmoothing: 1
+  ScaleMaxInterpolationTime: 0.1
   AuthorityMode: 0
   TickSyncChildren: 0
   UseUnreliableDeltas: 0
@@ -1135,6 +1146,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
   NetworkTransformExpanded: 0
+  AutoOwnerAuthorityTickOffset: 1
+  PositionInterpolationType: 0
+  RotationInterpolationType: 0
+  ScaleInterpolationType: 0
+  PositionLerpSmoothing: 1
+  PositionMaxInterpolationTime: 0.1
+  RotationLerpSmoothing: 1
+  RotationMaxInterpolationTime: 0.1
+  ScaleLerpSmoothing: 1
+  ScaleMaxInterpolationTime: 0.1
   AuthorityMode: 0
   TickSyncChildren: 0
   UseUnreliableDeltas: 0
@@ -1233,6 +1254,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
   NetworkTransformExpanded: 0
+  AutoOwnerAuthorityTickOffset: 1
+  PositionInterpolationType: 0
+  RotationInterpolationType: 0
+  ScaleInterpolationType: 0
+  PositionLerpSmoothing: 1
+  PositionMaxInterpolationTime: 0.1
+  RotationLerpSmoothing: 1
+  RotationMaxInterpolationTime: 0.1
+  ScaleLerpSmoothing: 1
+  ScaleMaxInterpolationTime: 0.1
   AuthorityMode: 0
   TickSyncChildren: 0
   UseUnreliableDeltas: 0
@@ -1951,6 +1982,7 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   isGrabbed:
     m_InternalValue: 0
+  getOwnership: 0
 --- !u!114 &1196039985
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2153,6 +2185,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
   NetworkTransformExpanded: 0
+  AutoOwnerAuthorityTickOffset: 1
+  PositionInterpolationType: 0
+  RotationInterpolationType: 0
+  ScaleInterpolationType: 0
+  PositionLerpSmoothing: 1
+  PositionMaxInterpolationTime: 0.1
+  RotationLerpSmoothing: 1
+  RotationMaxInterpolationTime: 0.1
+  ScaleLerpSmoothing: 1
+  ScaleMaxInterpolationTime: 0.1
   AuthorityMode: 0
   TickSyncChildren: 0
   UseUnreliableDeltas: 0
@@ -3448,11 +3490,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
   userPrefabs:
-  - UserRole: 1
-    UserPrefab: {fileID: 5053143018573637247, guid: 2e376f55818917f4195b880d3987bc7e, type: 3}
-  - UserRole: 0
-    UserPrefab: {fileID: 110225706602942093, guid: 27e471b860a738a4eb3deb9954c7af7a, type: 3}
-  spawnPoints: []
+  - UserRole: {fileID: 11400000, guid: 4139bd1ba83848143964fe42a30a732a, type: 2}
+    SpawnPoint: {fileID: 0}
+  - UserRole: {fileID: 11400000, guid: b7bd5f0441a114148b1f41a480c809d5, type: 2}
+    SpawnPoint: {fileID: 0}
+  useRoleSpawnPoints: 1
+  spawnPoint: {fileID: 0}
   verbose: 0
 --- !u!1 &2033452943
 GameObject:

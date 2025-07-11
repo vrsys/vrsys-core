@@ -72,8 +72,10 @@ namespace VRSYS.Core.Networking
         [HideInInspector] public NetworkVariable<FixedString32Bytes> userName = new (default, 
             NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
         
-        [HideInInspector] public NetworkVariable<UserRole> userRole = new(default, NetworkVariableReadPermission.Everyone,
+        private NetworkVariable<int> userRoleIdx = new(-1, NetworkVariableReadPermission.Everyone,
             NetworkVariableWritePermission.Owner);
+
+        [HideInInspector] public UserRole userRole;
 
         // events
         public UnityEvent onLocalUserSetup = new UnityEvent();
@@ -116,7 +118,8 @@ namespace VRSYS.Core.Networking
                 userColor.Value = spawnInfo.userColor;
                 
                 // handle user role workflow
-                userRole.Value = spawnInfo.userRole;
+                userRole = spawnInfo.userRole;
+                userRoleIdx.Value = ConnectionManager.Instance.userRoleList.GetUserRoleIdx(userRole);
 
                 onLocalUserSetup.Invoke();
 
@@ -131,6 +134,9 @@ namespace VRSYS.Core.Networking
                 
                 // register user color changed event
                 userColor.OnValueChanged += UpdateUserColor;
+                
+                // register user role idx changed event
+                userRoleIdx.OnValueChanged += UpdateUserRole;
                 
                 // Remove unnecessary local components such as tracking
                 while(localBehaviours.Count > 0)
@@ -206,6 +212,11 @@ namespace VRSYS.Core.Networking
         private void UpdateUserColor(Color previousValue, Color newValue)
         {
             avatarAnatomy.SetColor(userColor.Value);
+        }
+        
+        private void UpdateUserRole(int previousValue, int newValue)
+        {
+            userRole = ConnectionManager.Instance.userRoleList.GetUserRole(newValue);
         }
 
         public static float CalcLocalHeight()

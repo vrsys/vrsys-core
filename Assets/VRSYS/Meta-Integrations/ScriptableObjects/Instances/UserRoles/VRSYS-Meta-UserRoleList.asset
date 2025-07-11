@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b02e8a6c3d820e8449836e2d2772f430, type: 3}
+  m_Name: VRSYS-Meta-UserRoleList
+  m_EditorClassIdentifier: 
+  userRoles:
+  - {fileID: 11400000, guid: ceb4d8d7583577042b14026f648aaa45, type: 2}
+  - {fileID: 11400000, guid: 4d0b9246f6ad7414ba717e03b05f13fa, type: 2}
+  - {fileID: 11400000, guid: 6d839305509012d4288279663d686f68, type: 2}
+  - {fileID: 11400000, guid: 4139bd1ba83848143964fe42a30a732a, type: 2}

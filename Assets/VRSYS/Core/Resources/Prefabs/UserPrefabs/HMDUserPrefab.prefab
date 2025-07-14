@@ -3527,6 +3527,7 @@ MonoBehaviour:
         byte0028: 0
         byte0029: 0
   userRole: {fileID: 0}
+  userID: 0
   onLocalUserSetup:
     m_PersistentCalls:
       m_Calls: []

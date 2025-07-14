@@ -88,7 +88,7 @@ namespace VRSYS.Meta.Avatars
         public void LoadAvatarByCdn(ulong userId)
         {
             if(verbose)
-                ExtendedLogger.LogInfo(GetType().Name, $"Triggered loading avatar for cdn: {_userId}", this);
+                ExtendedLogger.LogInfo(GetType().Name, $"Triggered loading avatar for cdn: {userId}", this);
 
             _userId = userId;
             StartCoroutine(LoadAvatar());

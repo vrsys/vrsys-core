@@ -111,7 +111,9 @@ namespace VRSYS.Core.Networking
             user.transform.rotation = spawn.rotation;
             
             // Spawn user prefab
-            user.GetComponent<NetworkObject>().SpawnAsPlayerObject(serverRpcParams.Receive.SenderClientId, destroyWithScene: false);
+            NetworkObject netObj = user.GetComponent<NetworkObject>();
+            netObj.SpawnWithOwnership(serverRpcParams.Receive.SenderClientId);
+            //user.GetComponent<NetworkObject>().SpawnAsPlayerObject(serverRpcParams.Receive.SenderClientId, destroyWithScene: false);
         }
 
         #endregion

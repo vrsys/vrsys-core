@@ -109,7 +109,7 @@ namespace VRSYS.Core.Networking
 
             user.transform.position = spawn.position;
             user.transform.rotation = spawn.rotation;
-
+            
             // Spawn user prefab
             user.GetComponent<NetworkObject>().SpawnAsPlayerObject(serverRpcParams.Receive.SenderClientId, destroyWithScene: false);
         }

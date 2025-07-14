@@ -41,6 +41,7 @@ using Oculus.Avatar2;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Events;
+using VRSYS.Core.Logging;
 using VRSYS.Meta.General;
 
 namespace VRSYS.Meta.Avatars
@@ -80,6 +81,9 @@ namespace VRSYS.Meta.Avatars
 
         [Header("Networking")] 
         [SerializeField] private float _remoteAvatarUpdateInterval = 0.08f;
+
+        [Header("Debug")] 
+        [SerializeField] private bool _verbose = false;
 
         #endregion
 
@@ -162,7 +166,7 @@ namespace VRSYS.Meta.Avatars
                 if (VrsysOvrPlatformInitializer.Instance.Initialized && _skeletonIsLoaded)
                 {
                     var data = _localAvatar.RecordStreamData(_localAvatar.activeStreamLod);
-                    SendAvatarDataRpc(data, VrsysOvrPlatformInitializer.Instance.LocalUserId);
+                    SendAvatarDataRpc(data, _userId);
                 }
 
                 yield return new WaitForSeconds(_remoteAvatarUpdateInterval);
@@ -176,6 +180,9 @@ namespace VRSYS.Meta.Avatars
         [Rpc(SendTo.NotMe)]
         private void SendAvatarDataRpc(byte[] data, ulong userId)
         {
+            if(_verbose)
+                ExtendedLogger.LogInfo(GetType().Name, $"Received data for user cdn: {userId}", this);
+            
             if (!_remoteAvatarIsLoaded && userId != 0)
             {
                 _remoteAvatar.LoadAvatarByCdn(userId);

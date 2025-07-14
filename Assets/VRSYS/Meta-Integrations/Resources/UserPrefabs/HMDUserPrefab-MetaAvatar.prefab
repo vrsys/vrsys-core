@@ -145,6 +145,10 @@ PrefabInstance:
       value: MetaAvatar Components
       objectReference: {fileID: 0}
     - target: {fileID: 2734856810554406299, guid: 6d8ea93ef6cfe964082a234aae0da680, type: 3}
+      propertyPath: _verbose
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2734856810554406299, guid: 6d8ea93ef6cfe964082a234aae0da680, type: 3}
       propertyPath: _localAvatarPrefab
       value: 
       objectReference: {fileID: 2013052365752006283, guid: d1b3ebcdcf24ee343ad7dec761c79a9f, type: 3}

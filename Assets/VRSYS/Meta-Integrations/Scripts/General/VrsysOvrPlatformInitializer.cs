@@ -36,32 +36,94 @@
 //   Date:           2025
 //-----------------------------------------------------------------
 
-using UnityEditor;
+using System.Collections;
+using Oculus.Platform;
 using UnityEngine;
-using VRSYS.Core.Editor;
+using UnityEngine.Events;
+using VRSYS.Core.Logging;
 
-namespace VRSYS.Meta.Editor
+namespace VRSYS.Meta.General
 {
-    public static class CreateMetaPrefabUtility
+    public class VrsysOvrPlatformInitializer : MonoBehaviour
     {
-        #region Menu Items
+        #region Singleton
 
-        [MenuItem("GameObject/VRSYS/Meta/General/OVRManager")]
-        public static void CreateOVRManager(MenuCommand menuCommand)
+        public static VrsysOvrPlatformInitializer Instance;
+
+        #endregion
+
+        #region Member Variables
+
+        [HideInInspector] public bool Initialized = false;
+        [HideInInspector] public ulong LocalUserId = 0;
+
+        #endregion
+
+        #region Events
+
+        public UnityEvent<ulong> OnLocalUserIdRetrieved = new UnityEvent<ulong>();
+
+        #endregion
+
+        #region MonoBehaviour Callbacks
+
+        private void Awake()
         {
-            CreateVRSYSPrefabUtility.CreatePrefab("Prefabs/OVR Manager");
-        }
-        
-        [MenuItem("GameObject/VRSYS/Meta/Avatars/MetaAvatarManagers")]
-        public static void CreateMetaAvatarManager(MenuCommand menuCommand)
-        {
-            CreateVRSYSPrefabUtility.CreatePrefab("Prefabs/Meta Avatar Managers");
+            if (Instance != null)
+            {
+                Destroy(this);
+                return;
+            }
+
+            Instance = this;
         }
 
-        [MenuItem("GameObject/VRSYS/Meta/General/OVRPlatformInitializer")]
-        public static void VreatOVRPlatformInitializer(MenuCommand menuCommand)
+        private void Start()
         {
-            CreateVRSYSPrefabUtility.CreatePrefab("Prefabs/VRSYS-OVRPlatformInitializer");
+            StartCoroutine(Initialize());
+        }
+
+        #endregion
+
+        #region Coroutines
+
+        private IEnumerator Initialize()
+        {
+            if(OvrPlatformInit.status == OvrPlatformInitStatus.NotStarted)
+                OvrPlatformInit.InitializeOvrPlatform();
+
+            while (OvrPlatformInit.status != OvrPlatformInitStatus.Succeeded)
+            {
+                if (OvrPlatformInit.status == OvrPlatformInitStatus.Failed)
+                {
+                    ExtendedLogger.LogError(GetType().Name, "Error initializing OvrPlatform.", this);
+                    yield break;
+                }
+
+                yield return null;
+            }
+
+            bool getUserIdComplete = false;
+
+            Users.GetLoggedInUser().OnComplete(message =>
+            {
+                if (!message.IsError)
+                {
+                    LocalUserId = message.Data.ID;
+                    OnLocalUserIdRetrieved.Invoke(LocalUserId);
+
+                    Initialized = true;
+                }
+                else
+                {
+                    ExtendedLogger.LogError(GetType().Name, $"Error loading user ID: {message.GetError().Message}", this);
+                }
+
+                getUserIdComplete = true;
+            });
+
+            while (!getUserIdComplete)
+                yield return null;
         }
 
         #endregion

@@ -9,9 +9,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7308934417998580719}
-  - component: {fileID: 367459126308421948}
+  - component: {fileID: 2013052365752006283}
   - component: {fileID: 8394805586120842175}
-  - component: {fileID: 1667421200507800834}
   m_Layer: 0
   m_Name: LocalMetaAvatarEntity
   m_TagString: Untagged
@@ -34,7 +33,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &367459126308421948
+--- !u!114 &2013052365752006283
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -43,11 +42,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 8021943137256348795}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f775fcfeef42d0543abbd1e03dfe74fb, type: 3}
+  m_Script: {fileID: 11500000, guid: fd7e45b6d8f25784695d600f59aa51eb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   _creationInfo:
-    features: 374
+    features: 1398
     renderFilters:
       lodFlags: 31
       manifestationFlags: 2
@@ -57,7 +56,7 @@ MonoBehaviour:
       loadRigZipFromGlb: 1
       reserved: 0000000000000000000000000000000000000000000000000000000000000000
   _validateCache: 1
-  _activeView: 2
+  _activeView: 1
   _activeManifestation: 2
   _activeSubMeshes: -1
   _activeSubMeshesIncludeUntyped: 1
@@ -102,16 +101,8 @@ MonoBehaviour:
   _hidden: 0
   useRenderLods: 1
   _isLocal: 1
-  _loadUserFromCdn: 1
-  _cdnUserID: 0
-  _style2DropdownIndex: 0
-  _deferLoading: 0
-  _assets: []
-  _underscorePostfix: 1
-  _overridePostfix: 
-  _autoCdnRetry: 0
-  _enablePollingForAvatarCreation: 1
-  _changeCheckInterval: 8
+  autoLoadOnStart: 1
+  verbose: 0
 --- !u!114 &8394805586120842175
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -154,33 +145,3 @@ MonoBehaviour:
     rightAnkleJoint:
       enableOverride: 0
       overrideTransform: {fileID: 0}
---- !u!114 &1667421200507800834
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8021943137256348795}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d4f4e3d7f9ce9764e97403016ca3083e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  enableDebugTrigger: 1
-  debugTrigger:
-    m_Name: Debug Trigger
-    m_Type: 0
-    m_ExpectedControlType: 
-    m_Id: 6b539819-bf8b-4ffd-9b7b-6adc6241db55
-    m_Processors: 
-    m_Interactions: 
-    m_SingletonActionBindings:
-    - m_Name: 
-      m_Id: e574704b-898f-49d3-a2eb-bf274f14a17c
-      m_Path: <Keyboard>/c
-      m_Interactions: 
-      m_Processors: 
-      m_Groups: 
-      m_Action: Debug Trigger
-      m_Flags: 0
-    m_Flags: 0

@@ -41,156 +41,151 @@ using Oculus.Avatar2;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Events;
+using VRSYS.Meta.General;
 
-public class MetaAvatarHandler : NetworkBehaviour
+namespace VRSYS.Meta.Avatars
 {
-    #region Member Variables
-
-    [Header("Avatar Prefabs")]
-    [SerializeField] private SampleAvatarEntity localAvatarPrefab;
-    [SerializeField] private SampleAvatarEntity remoteAvatarPrefab;
-
-    [Header("Avatar Components")]
-    [SerializeField] private SampleInputManager bodyTracking;
-    [SerializeField] private OvrAvatarLipSyncBehavior lipSync;
-    [SerializeField] private OvrAvatarFacePoseBehavior facePose;
-    [SerializeField] private OvrAvatarEyePoseBehavior eyePose;
-
-    [Header("Avatar Events")]
-    public UnityEvent<SampleAvatarEntity> onLocalAvatarEntitySpawned = new UnityEvent<SampleAvatarEntity>();
-    public UnityEvent onSkeletonLoaded = new UnityEvent();
-    public UnityEvent onAvatarLoaded = new UnityEvent();
-
-    private SampleAvatarEntity localAvatar;
-    private SampleAvatarEntity remoteAvatar;
-    private bool remoteAvatarIsLoaded = false;
-    private bool skeletonLoaded = false;
-
-    private ulong userId; // Oculus user id
-    private WaitForSeconds waitTime = new WaitForSeconds(.08f); // avatar update rate
-
-    #endregion
-
-    #region Mono- & NetworkBehaviour Callbacks
-
-    public override void OnNetworkSpawn()
+    public class MetaAvatarHandler : NetworkBehaviour
     {
-        if (!IsOwner)
-        {
-            // Instantiate remote avatar for remote clients
-            remoteAvatar = Instantiate(remoteAvatarPrefab, transform);
+        #region Member Variables
 
-            ClearComponentsOnRemote();
-            return;
-        }
+        [Header("Avatar Prefabs")] 
+        [SerializeField] private VRSYSMetaAvatarEntity _localAvatarPrefab;
+        [SerializeField] private VRSYSMetaAvatarEntity _remoteAvatarPrefab;
 
-        localAvatar = GetComponentInChildren<SampleAvatarEntity>();
+        [Header("AvatarComponents")] 
+        [SerializeField] private OvrAvatarInputManager _bodyTracking;
+        [SerializeField] private OvrAvatarLipSyncBehavior _lipSync;
+        [SerializeField] private OvrAvatarFacePoseBehavior _facePose;
+        [SerializeField] private OvrAvatarEyePoseBehavior _eyePose;
         
-        if(localAvatar == null)
-            localAvatar = Instantiate(localAvatarPrefab, transform);
-        
-        onLocalAvatarEntitySpawned.Invoke(localAvatar);
-        
-        SetupLocalAvatarEntity();
-        
-        // Get oculus user id
-        OvrPlatformInit.InitializeOvrPlatform();
-        Oculus.Platform.Users.GetLoggedInUser().OnComplete(message =>
+        [Header("Avatar Events")]
+        public UnityEvent<VRSYSMetaAvatarEntity> onLocalAvatarEntitySpawned = new UnityEvent<VRSYSMetaAvatarEntity>();
+        public UnityEvent onSkeletonLoaded = new UnityEvent();
+        public UnityEvent onAvatarLoaded = new UnityEvent();
+
+        private ulong _userId
         {
-            if (!message.IsError)
-                userId = message.Data.ID;
-            else
+            get
             {
-                var e = message.GetError();
-                OvrAvatarLog.LogError($"Error loading CDN avatar: {e.Message}. Falling back to local avatar");
+                return VrsysOvrPlatformInitializer.Instance.LocalUserId;
             }
-        });
-        
-        // Start streaming avatar data
-        StartCoroutine(StreamAvatarData());
-    }
-
-    #endregion
-
-    #region Custom Methods
-
-    private void ClearComponentsOnRemote()
-    {
-        Destroy(bodyTracking.gameObject);
-        Destroy(lipSync.gameObject);
-        Destroy(facePose.gameObject);
-        Destroy(eyePose.gameObject);
-    }
-
-    private void SetupLocalAvatarEntity()
-    {
-        localAvatar.OnSkeletonLoadedEvent.AddListener(OnSkeletonLoaded);
-        localAvatar.OnDefaultAvatarLoadedEvent.AddListener(OnAvatarLoaded);
-        localAvatar.OnUserAvatarLoadedEvent.AddListener(OnAvatarLoaded);
-        
-        if(bodyTracking != null)
-            localAvatar.SetBodyTracking(bodyTracking);
-        
-        if(lipSync != null)
-            localAvatar.SetLipSync(lipSync);
-        
-        if(facePose != null)
-            localAvatar.SetFacePoseProvider(facePose);
-        
-        if(eyePose != null)
-            localAvatar.SetEyePoseProvider(eyePose);
-    }
-    
-    private void OnSkeletonLoaded(OvrAvatarEntity arg0)
-    {
-        skeletonLoaded = true;
-        onSkeletonLoaded.Invoke();
-    }
-    
-    private void OnAvatarLoaded(OvrAvatarEntity arg0)
-    {
-        onAvatarLoaded.Invoke();
-    }
-
-    public SampleAvatarEntity GetLocalAvatarEntity()
-    {
-        return localAvatar;
-    }
-
-    #endregion
-
-    #region RPCs
-
-    [Rpc(SendTo.NotMe)]
-    private void SendAvatarDataRpc(byte[] data, ulong userId)
-    {
-        if (!remoteAvatarIsLoaded && userId != 0)
-        {
-            remoteAvatar.LoadRemoteUserCdnAvatar(userId);
-            remoteAvatarIsLoaded = true;
         }
+        
+        private VRSYSMetaAvatarEntity _localAvatar;
+        private VRSYSMetaAvatarEntity _remoteAvatar;
 
-        if(remoteAvatarIsLoaded)
-            remoteAvatar.ApplyStreamData(data);
-    }
+        private bool _remoteAvatarIsLoaded;
+        private bool _skeletonIsLoaded;
 
-    #endregion
+        [Header("Networking")] 
+        [SerializeField] private float _remoteAvatarUpdateInterval = 0.08f;
 
-    #region Coroutines
+        #endregion
 
-    private IEnumerator StreamAvatarData()
-    {
-        while (true)
+        #region Mono- & NEtworkBehaviour Callbacks
+
+        public override void OnNetworkSpawn()
         {
-            if (skeletonLoaded)
+            if (!IsOwner)
             {
-                var data = localAvatar.RecordStreamData(localAvatar.activeStreamLod);
-                SendAvatarDataRpc(data, userId);
+                _remoteAvatar = Instantiate(_remoteAvatarPrefab, transform);
+
+                ClearComponentsOnRemote();
+
+                return;
             }
+
+            _localAvatar = GetComponentInChildren<VRSYSMetaAvatarEntity>();
+
+            if (_localAvatar == null)
+                _localAvatar = Instantiate(_localAvatarPrefab, transform);
             
-            yield return waitTime;
-        }
-    }
+            onLocalAvatarEntitySpawned.Invoke(_localAvatar);
 
-    #endregion
+            SetupLocalAvatarEntity();
+            
+            StartCoroutine(StreamAvatarData());
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        private void ClearComponentsOnRemote()
+        {
+            Destroy(_bodyTracking.gameObject);
+            Destroy(_lipSync.gameObject);
+            Destroy(_facePose.gameObject);
+            Destroy(_eyePose.gameObject);
+        }
+        
+        private void SetupLocalAvatarEntity()
+        {
+            _localAvatar.OnSkeletonLoadedEvent.AddListener(OnSkeletonLoaded);
+            _localAvatar.OnDefaultAvatarLoadedEvent.AddListener(OnAvatarLoaded);
+            _localAvatar.OnUserAvatarLoadedEvent.AddListener(OnAvatarLoaded);
+
+            if (_bodyTracking != null)
+                _localAvatar.SetBodyTracking(_bodyTracking);
+
+            if (_lipSync != null)
+                _localAvatar.SetLipSync(_lipSync);
+
+            if (_facePose != null)
+                _localAvatar.SetFacePoseProvider(_facePose);
+
+            if (_eyePose != null)
+                _localAvatar.SetEyePoseProvider(_eyePose);
+        }
+
+        #endregion
+
+        #region Event Callbacks
+
+        private void OnSkeletonLoaded(OvrAvatarEntity arg0)
+        {
+            _skeletonIsLoaded = true;
+            onSkeletonLoaded.Invoke();
+        }
+        
+        private void OnAvatarLoaded(OvrAvatarEntity arg0) => onAvatarLoaded.Invoke();
+
+        #endregion
+
+        #region Coroutines
+
+        private IEnumerator StreamAvatarData()
+        {
+            while (true)
+            {
+                if (VrsysOvrPlatformInitializer.Instance.Initialized && _skeletonIsLoaded)
+                {
+                    var data = _localAvatar.RecordStreamData(_localAvatar.activeStreamLod);
+                    SendAvatarDataRpc(data, _userId);
+                }
+
+                yield return new WaitForSeconds(_remoteAvatarUpdateInterval);
+            }
+        }
+
+        #endregion
+
+        #region RPCs
+
+        [Rpc(SendTo.NotMe)]
+        private void SendAvatarDataRpc(byte[] data, ulong userId)
+        {
+            if (!_remoteAvatarIsLoaded && userId != 0)
+            {
+                _remoteAvatar.LoadAvatarByCdn(userId);
+                _remoteAvatarIsLoaded = true;
+            }
+
+            if (_remoteAvatarIsLoaded)
+                _remoteAvatar.ApplyStreamData(data);
+        }
+
+        #endregion
+    }
 }

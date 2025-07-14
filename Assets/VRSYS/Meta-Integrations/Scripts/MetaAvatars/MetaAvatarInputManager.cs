@@ -36,32 +36,68 @@
 //   Date:           2025
 //-----------------------------------------------------------------
 
-using UnityEditor;
+using System.Reflection;
+using Oculus.Avatar2;
 using UnityEngine;
-using VRSYS.Core.Editor;
+using VRSYS.Core.Logging;
 
-namespace VRSYS.Meta.Editor
+namespace VRSYS.Meta.Avatars
 {
-    public static class CreateMetaPrefabUtility
+    public class MetaAvatarInputManager : OvrAvatarInputManager
     {
-        #region Menu Items
+        #region Member Variables
 
-        [MenuItem("GameObject/VRSYS/Meta/General/OVRManager")]
-        public static void CreateOVRManager(MenuCommand menuCommand)
+        [SerializeField] private OVRCameraRig _ovrCameraRig;
+
+        public OvrAvatarBodyTrackingMode BodyTrackingMode
         {
-            CreateVRSYSPrefabUtility.CreatePrefab("Prefabs/OVR Manager");
-        }
-        
-        [MenuItem("GameObject/VRSYS/Meta/Avatars/MetaAvatarManagers")]
-        public static void CreateMetaAvatarManager(MenuCommand menuCommand)
-        {
-            CreateVRSYSPrefabUtility.CreatePrefab("Prefabs/Meta Avatar Managers");
+            get => _bodyTrackingMode;
+            set
+            {
+                _bodyTrackingMode = value;
+                InitializeBodyTracking();
+            }
         }
 
-        [MenuItem("GameObject/VRSYS/Meta/General/OVRPlatformInitializer")]
-        public static void VreatOVRPlatformInitializer(MenuCommand menuCommand)
+        #endregion
+
+        #region MonoBehaviour Callbacks
+
+        private void Awake()
         {
-            CreateVRSYSPrefabUtility.CreatePrefab("Prefabs/VRSYS-OVRPlatformInitializer");
+            if (_ovrCameraRig == null)
+                _ovrCameraRig = GetComponentInParent<OVRCameraRig>();
+        }
+
+        #endregion
+
+        #region Input Manager Callbacks
+
+        protected override void OnTrackingInitialized()
+        {
+            if (_ovrCameraRig == null)
+            {
+                ExtendedLogger.LogError(GetType().Name, "No OVRCameraRig configured.", this);
+                return;
+            }
+
+            OvrPluginInvoke("StartFaceTracking");
+            OvrPluginInvoke("StartEyeTracking");
+
+            IOvrAvatarInputTrackingDelegate inputTrackingDelegate = new VRSYSMetaInputTrackingDelegate(_ovrCameraRig);
+            var inputControlDelegate = new VRSYSMetaInputControlDelegate();
+
+            _inputTrackingProvider = new OvrAvatarInputTrackingDelegatedProvider(inputTrackingDelegate);
+            _inputControlProvider = new OvrAvatarInputControlDelegatedProvider(inputControlDelegate);
+        }
+
+        #endregion
+
+        #region Custom Methods
+
+        private static void OvrPluginInvoke(string method, params object[] args)
+        {
+            typeof(OVRPlugin).GetMethod(method, BindingFlags.Public | BindingFlags.Static)?.Invoke(null, args);
         }
 
         #endregion

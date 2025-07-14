@@ -36,16 +36,55 @@
 //   Date:           2025
 //-----------------------------------------------------------------
 
-using UnityEditor;
-using VRSYS.Core.Editor;
+using Oculus.Avatar2;
 
-namespace VRSYS.MetaAvatar.Editor
+namespace VRSYS.Meta.Avatars
 {
-    public static class CreateMetaAvatarPrefabUtility
+    public class VRSYSMetaInputTrackingDelegate : OvrAvatarInputTrackingDelegate
     {
-        #region Menu Items
+        #region Member Variables
 
-        
+        private OVRCameraRig _ovrCameraRig;
+
+        #endregion
+
+        #region Constructor
+
+        public VRSYSMetaInputTrackingDelegate(OVRCameraRig ovrCameraRig)
+        {
+            _ovrCameraRig = ovrCameraRig;
+        }
+
+        #endregion
+
+        #region OvrAvatarInputTrackingDelegate Methods
+
+        public override bool GetRawInputTrackingState(out OvrAvatarInputTrackingState inputTrackingState)
+        {
+            inputTrackingState = default;
+
+            if (_ovrCameraRig == null)
+                return false;
+
+            bool leftControllerActive = false;
+            bool rightControllerActive = false;
+
+            if (OVRInput.GetActiveController() != OVRInput.Controller.Hands)
+            {
+                leftControllerActive = OVRInput.GetControllerOrientationTracked(OVRInput.Controller.LTouch);
+                rightControllerActive = OVRInput.GetControllerOrientationTracked(OVRInput.Controller.RTouch);
+            }
+
+            inputTrackingState.headsetActive = true;
+            inputTrackingState.leftControllerActive = leftControllerActive;
+            inputTrackingState.rightControllerActive = rightControllerActive;
+            inputTrackingState.leftControllerVisible = false;
+            inputTrackingState.rightControllerVisible = false;
+            inputTrackingState.headset = (CAPI.ovrAvatar2Transform)_ovrCameraRig.centerEyeAnchor;
+            inputTrackingState.leftController = (CAPI.ovrAvatar2Transform)_ovrCameraRig.leftHandAnchor;
+            inputTrackingState.rightController = (CAPI.ovrAvatar2Transform)_ovrCameraRig.rightHandAnchor;
+            return true;
+        }
 
         #endregion
     }

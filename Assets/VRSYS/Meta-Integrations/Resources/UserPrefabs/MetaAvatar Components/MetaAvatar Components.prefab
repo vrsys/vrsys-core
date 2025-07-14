@@ -49,16 +49,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
-  localAvatarPrefab: {fileID: 367459126308421948, guid: d1b3ebcdcf24ee343ad7dec761c79a9f, type: 3}
-  remoteAvatarPrefab: {fileID: 7941167888277020795, guid: c6e2d20a9bf7d4f49b8b968404dc762d, type: 3}
-  bodyTracking: {fileID: 1303566445511839770}
-  lipSync: {fileID: 7702689235823450816}
-  facePose: {fileID: 12236669650670039}
-  eyePose: {fileID: 8219706776399697330}
+  _localAvatarPrefab: {fileID: 2013052365752006283, guid: d1b3ebcdcf24ee343ad7dec761c79a9f, type: 3}
+  _remoteAvatarPrefab: {fileID: 990836585505981012, guid: c6e2d20a9bf7d4f49b8b968404dc762d, type: 3}
+  _bodyTracking: {fileID: 8698056989120346823}
+  _lipSync: {fileID: 7702689235823450816}
+  _facePose: {fileID: 12236669650670039}
+  _eyePose: {fileID: 8219706776399697330}
+  onLocalAvatarEntitySpawned:
+    m_PersistentCalls:
+      m_Calls: []
   onSkeletonLoaded:
     m_PersistentCalls:
       m_Calls: []
-  verbose: 1
+  onAvatarLoaded:
+    m_PersistentCalls:
+      m_Calls: []
+  _remoteAvatarUpdateInterval: 0.08
 --- !u!1 &4448715740635919507
 GameObject:
   m_ObjectHideFlags: 0
@@ -324,7 +330,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6650503393677897131}
-  - component: {fileID: 1303566445511839770}
+  - component: {fileID: 8698056989120346823}
   m_Layer: 0
   m_Name: Tracking Input
   m_TagString: Untagged
@@ -347,7 +353,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 88654698467222753}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1303566445511839770
+--- !u!114 &8698056989120346823
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -356,13 +362,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 8984463130245505858}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6937544d08e2ba34da6ff4ab90cbfd84, type: 3}
+  m_Script: {fileID: 11500000, guid: 5c8a666d63fa40548bfccb787a2802a1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   _bodyTrackingMode: 0
   _useAsyncBodySolver: 0
   _enableHipLock: 0
   _ovrCameraRig: {fileID: 0}
-  _debugDrawTrackingLocations: 0
-  HeadsetInputSimulator: {fileID: 0}
-  disableSampleSceneLocomotion: 0

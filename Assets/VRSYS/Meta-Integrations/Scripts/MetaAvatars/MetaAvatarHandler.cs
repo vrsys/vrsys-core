@@ -75,8 +75,8 @@ namespace VRSYS.Meta.Avatars
         private VRSYSMetaAvatarEntity _localAvatar;
         private VRSYSMetaAvatarEntity _remoteAvatar;
 
-        private bool _remoteAvatarIsLoaded;
-        private bool _skeletonIsLoaded;
+        private bool _remoteAvatarIsLoaded = false;
+        private bool _skeletonIsLoaded = false;
 
         [Header("Networking")] 
         [SerializeField] private float _remoteAvatarUpdateInterval = 0.08f;
@@ -162,7 +162,7 @@ namespace VRSYS.Meta.Avatars
                 if (VrsysOvrPlatformInitializer.Instance.Initialized && _skeletonIsLoaded)
                 {
                     var data = _localAvatar.RecordStreamData(_localAvatar.activeStreamLod);
-                    SendAvatarDataRpc(data, _userId);
+                    SendAvatarDataRpc(data, VrsysOvrPlatformInitializer.Instance.LocalUserId);
                 }
 
                 yield return new WaitForSeconds(_remoteAvatarUpdateInterval);

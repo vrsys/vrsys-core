@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7e246273c0618914f81db5889cdd9f45, type: 3}
   m_Name: Network User Spawn Info
   m_EditorClassIdentifier: 
-  userRole: {fileID: 11400000, guid: b7bd5f0441a114148b1f41a480c809d5, type: 2}
+  userRole: {fileID: 11400000, guid: 4139bd1ba83848143964fe42a30a732a, type: 2}
   userName: 
   userColor: {r: 0, g: 0, b: 0, a: 1}

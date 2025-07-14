@@ -36,6 +36,7 @@
 //   Date:           2025
 //-----------------------------------------------------------------
 
+using System;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -62,22 +63,16 @@ namespace VRSYS.Core.Navigation
         private NetworkVariable<bool> avatarActive = new NetworkVariable<bool>(false,
             NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
 
+        private bool initialized = false;
+
         #endregion
 
         #region Mono- & NetworkBehaviour Callbacks
 
-        public override void OnNetworkSpawn()
+        private void Update()
         {
-            if (IsOwner)
-            {
-                placementIndicatorActive.OnValueChanged += OnIndicatorActiveChanged;
-                placementIndicatorVisuals.SetActive(placementIndicatorActive.Value);
-
-                avatarActive.OnValueChanged += OnAvatarActiveChanged;
-                previewAvatarVisuals.SetActive(avatarActive.Value);
-            }
-
-            Initialize();
+            if(!initialized)
+                Initialize();
         }
 
         #endregion
@@ -87,8 +82,16 @@ namespace VRSYS.Core.Navigation
 
         private void Initialize()
         {
+            if (IsOwner)
+            {
+                placementIndicatorActive.OnValueChanged += OnIndicatorActiveChanged;
+                avatarActive.OnValueChanged += OnAvatarActiveChanged;
+            }
+            
             placementIndicatorVisuals.SetActive(placementIndicatorActive.Value);
             previewAvatarVisuals.SetActive(avatarActive.Value);
+
+            initialized = true;
         }
 
         /// <summary>

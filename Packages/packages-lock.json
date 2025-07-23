@@ -523,6 +523,20 @@
       },
       "url": "https://packages.unity.com"
     },
+    "com.vrsys.core": {
+      "version": "file:com.vrsys.core",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {
+        "com.unity.netcode.gameobjects": "2.3.2",
+        "com.unity.services.authentication": "3.4.1",
+        "com.unity.services.multiplayer": "1.1.3",
+        "com.unity.xr.interaction.toolkit": "3.0.8",
+        "com.unity.xr.management": "4.5.1",
+        "com.unity.xr.openxr": "1.14.3",
+        "com.unity.ugui": "2.0.0"
+      }
+    },
     "io.fourplayers.odin": {
       "version": "file:io.fourplayers.odin",
       "depth": 0,

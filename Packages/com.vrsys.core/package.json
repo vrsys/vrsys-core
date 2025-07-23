@@ -1,0 +1,27 @@
+{
+  "name" : "com.vrsys.core",
+  "version" : "1.0.0",
+  "displayName" : "VRSYS Core",
+  "description": "Core elements of VRSYS framework.",
+  "documentationUrl" : "https://vrsys.gitbook.io/vrsys",
+  "dependencies": {
+    "com.unity.netcode.gameobjects": "2.3.2",
+    "com.unity.services.authentication": "3.4.1",
+    "com.unity.services.multiplayer": "1.1.3",
+    "com.unity.xr.interaction.toolkit": "3.0.8",
+    "com.unity.xr.management": "4.5.1",
+    "com.unity.xr.openxr": "1.14.3",
+    "com.unity.ugui": "2.0.0"
+  },
+  "samples": [
+    {
+      "displayName": "Sample Scene Setups",
+      "description": "Contains sample scenes that show how to setup basic scenes with VRSYS-Core.",
+      "path": "Samples~/Sample Scene Setups"
+    }
+  ],
+  "author": {
+    "name": "VRSYS",
+    "url": "https://www.uni-weimar.de/vr"
+  }
+}

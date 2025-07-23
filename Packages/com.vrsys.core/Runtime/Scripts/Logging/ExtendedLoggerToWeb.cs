@@ -89,7 +89,7 @@ namespace VRSYS.Core.Logging
         {
             get
             {
-                ulong u = NetworkUser.LocalInstance != null ? NetworkUser.LocalInstance.userID : 0;
+                ulong u = NetworkUser.LocalInstance != null ? NetworkUser.LocalInstance.userId.Value : 0;
                 return u;
             }
         }

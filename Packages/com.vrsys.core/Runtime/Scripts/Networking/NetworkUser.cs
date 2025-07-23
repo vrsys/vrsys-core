@@ -51,84 +51,109 @@ namespace VRSYS.Core.Networking
     [RequireComponent(typeof(NetworkObject), typeof(AvatarAnatomy))]
     public class NetworkUser : NetworkBehaviour
     {
-        #region Member Variables
+        #region Local Instance
 
-        // Local User Instance
         public static NetworkUser LocalInstance;
+
+        #endregion
+
+        #region Static Events
+
+        // Connected Events
+        public static UnityEvent LocalNetworkUserConnected = new UnityEvent();
+        public static UnityEvent<NetworkUser> RemoteNetworkUserConnected = new UnityEvent<NetworkUser>();
+        
+        // Disconnected Events
+        public static UnityEvent LocalNetworkUserDisconnected = new UnityEvent();
+        public static UnityEvent<NetworkUser> RemoteNetworkUserDisconnected = new UnityEvent<NetworkUser>();
+
+        #endregion
+        
+        #region Member Variables
         
         public AvatarAnatomy avatarAnatomy { get; private set; }
         
         public Transform head => avatarAnatomy.head;
 
-        public bool verbose = false;
-
+        [HideInInspector] public UserRole userRole;
+        
         [Tooltip("Local components, which are destroyed on remote user instances (e.g. Camera, Audio Listener, Tracking, ...)")]
         public List<Behaviour> localBehaviours = new List<Behaviour>();
+
+        [Header("Local Connection Management")]
+        public bool disconnectNow = false;
+        
+        [Header("Debug")]
+        public bool verbose = false;
+        
+        private bool _isDisconnecting = false;
+
+        private NetworkUserSpawnInfo _spawnInfo;
+        
+        #endregion
+
+        #region Network Variables
 
         [HideInInspector] public NetworkVariable<Color> userColor = new(default, NetworkVariableReadPermission.Everyone,
             NetworkVariableWritePermission.Owner);
         
         [HideInInspector] public NetworkVariable<FixedString32Bytes> userName = new (default, 
             NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+
+        [HideInInspector] public NetworkVariable<ulong> userId = new NetworkVariable<ulong>(0,
+            NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
         
-        private NetworkVariable<int> userRoleIdx = new(-1, NetworkVariableReadPermission.Everyone,
+        private NetworkVariable<int> _userRoleIdx = new(-1, NetworkVariableReadPermission.Everyone,
             NetworkVariableWritePermission.Owner);
 
-        [HideInInspector] public UserRole userRole;
-
-        [HideInInspector] public ulong userID = 0;
-
-        // events
-        public UnityEvent onLocalUserSetup = new UnityEvent();
-
-        [Header("Local Connection Management")]
-        public bool disconnectNow = false;
+        private NetworkVariable<bool> _initialized = new NetworkVariable<bool>(false,
+            NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
         
-        private bool isDisconnecting = false;
 
-        private NetworkUserSpawnInfo spawnInfo;
-        
         #endregion
 
         #region MonoBehaviour Callbacks
 
-        private void Start()
+        public override void OnNetworkSpawn()
         {
             avatarAnatomy = GetComponent<AvatarAnatomy>();
             
             NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
 
-            spawnInfo = ConnectionManager.Instance.userSpawnInfo;
-
+            _spawnInfo = ConnectionManager.Instance.userSpawnInfo;
+            
             if (IsOwner)
             {
                 // Set local user instance
                 LocalInstance = this;
                 
                 // handle user name workflow
-                if (spawnInfo.userName.Equals(""))
+                if (_spawnInfo.userName.Equals(""))
                 {
                     userName.Value = "Player_" + Random.Range(0, 1000);
                 }
                 else
                 {
-                    userName.Value = spawnInfo.userName;
+                    userName.Value = _spawnInfo.userName;
                 }
                 
                 // handle user color workflow
-                userColor.Value = spawnInfo.userColor;
+                userColor.Value = _spawnInfo.userColor;
                 
                 // handle user role workflow
-                userRole = spawnInfo.userRole;
-                userRoleIdx.Value = ConnectionManager.Instance.userRoleList.GetUserRoleIdx(userRole);
+                userRole = _spawnInfo.userRole;
+                _userRoleIdx.Value = ConnectionManager.Instance.userRoleList.GetUserRoleIdx(userRole);
+                
+                // mark user as initialized
+                _initialized.Value = true;
 
-                onLocalUserSetup.Invoke();
-
-                var networkUserLifecycleCallbackTargets = FindObjectsOfType<MonoBehaviour>(true).OfType<INetworkUserCallbacks>();
-                foreach (var target in networkUserLifecycleCallbackTargets)
-                    target.OnLocalNetworkUserSetup();
+                BroadcastLocalUserConnected();
             }
-            else
+        }
+
+        private void Start()
+        {
+            if(!IsOwner)
             {
                 // register user name changed event
                 userName.OnValueChanged += UpdateUserNameLabel;
@@ -137,7 +162,7 @@ namespace VRSYS.Core.Networking
                 userColor.OnValueChanged += UpdateUserColor;
                 
                 // register user role idx changed event
-                userRoleIdx.OnValueChanged += UpdateUserRole;
+                _userRoleIdx.OnValueChanged += UpdateUserRole;
                 
                 // Remove unnecessary local components such as tracking
                 while(localBehaviours.Count > 0)
@@ -145,10 +170,15 @@ namespace VRSYS.Core.Networking
                     DestroyImmediate(localBehaviours[0]);
                     localBehaviours.RemoveAt(0);
                 }
-                
-                var networkUserCallbackTargets = FindObjectsOfType<MonoBehaviour>(true).OfType<INetworkUserCallbacks>();
-                foreach (var target in networkUserCallbackTargets)
-                    target.OnRemoteNetworkUserSetup(this);
+
+                if (_initialized.Value)
+                {
+                    BroadcastRemoteUserConnected();
+                }
+                else
+                {
+                    _initialized.OnValueChanged += OnUserInitialized;
+                }
             }
             
             var userNameStr = userName.Value.ToString(); 
@@ -179,10 +209,8 @@ namespace VRSYS.Core.Networking
 
             if (IsOwner)
             {
-                
                 LocalInstance = null;
             }
-            base.OnNetworkDespawn();
         }
 
         #endregion
@@ -193,7 +221,7 @@ namespace VRSYS.Core.Networking
         {
             if (!IsOwner)
             {
-                ExtendedLogger.LogError(GetType().Name, "Only the owner can change the user name. Use SetUserNameRpc instead.");
+                ExtendedLogger.LogError(GetType().Name, $"Only the owner can change the user name. Use {nameof(SetUserNameRpc)} instead.");
                 return;
             }
                 
@@ -205,7 +233,13 @@ namespace VRSYS.Core.Networking
 
         public void SetUserId(ulong id)
         {
-            userID = id;
+            if (!IsOwner)
+            {
+                ExtendedLogger.LogError(GetType().Name, "Only the owner can change the user id. Use SetUserNameRpc instead.");
+                return;
+            }
+            
+            userId.Value = id;
         }
 
         private void UpdateUserNameLabel(FixedString32Bytes previousValue, FixedString32Bytes newValue)
@@ -232,9 +266,9 @@ namespace VRSYS.Core.Networking
         
         public void RequestDisconnect()
         {
-            if (!IsOwner || isDisconnecting)
+            if (!IsOwner || _isDisconnecting)
                 return;
-            isDisconnecting = true;
+            _isDisconnecting = true;
             if (!IsServer)
             {
                 if(verbose)
@@ -264,6 +298,31 @@ namespace VRSYS.Core.Networking
                 FinalizeDisconnect();
             }
         }
+        
+        private void OnUserInitialized(bool previousValue, bool newValue)
+        {
+            BroadcastRemoteUserConnected();
+
+            _initialized.OnValueChanged -= OnUserInitialized;
+        }
+
+        private void BroadcastLocalUserConnected()
+        {
+            LocalNetworkUserConnected.Invoke();
+
+            var networkUserLifecycleCallbackTargets = FindObjectsOfType<MonoBehaviour>(true).OfType<INetworkUserCallbacks>();
+            foreach (var target in networkUserLifecycleCallbackTargets)
+                target.OnLocalNetworkUserSetup();
+        }
+
+        private void BroadcastRemoteUserConnected()
+        {
+            RemoteNetworkUserConnected.Invoke(this);
+                    
+            var networkUserCallbackTargets = FindObjectsOfType<MonoBehaviour>(true).OfType<INetworkUserCallbacks>();
+            foreach (var target in networkUserCallbackTargets)
+                target.OnRemoteNetworkUserSetup(this);
+        }
 
         #endregion
 
@@ -292,6 +351,12 @@ namespace VRSYS.Core.Networking
         public void SetUserNameRpc(string userName)
         {
             SetUserName(userName);
+        }
+
+        [Rpc(SendTo.Owner)]
+        public void SetUserIdRpc(ulong id)
+        {
+            SetUserId(id);
         }
 
         #endregion

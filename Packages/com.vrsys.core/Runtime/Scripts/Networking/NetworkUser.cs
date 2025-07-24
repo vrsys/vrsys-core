@@ -112,7 +112,7 @@ namespace VRSYS.Core.Networking
 
         #endregion
 
-        #region MonoBehaviour Callbacks
+        #region Mono- & NetworkBehaviour Callbacks
 
         public override void OnNetworkSpawn()
         {
@@ -156,13 +156,13 @@ namespace VRSYS.Core.Networking
             if(!IsOwner)
             {
                 // register user name changed event
-                userName.OnValueChanged += UpdateUserNameLabel;
+                userName.OnValueChanged += OnUserNameChanged;
                 
                 // register user color changed event
-                userColor.OnValueChanged += UpdateUserColor;
+                userColor.OnValueChanged += OnUserColorChanged;
                 
                 // register user role idx changed event
-                _userRoleIdx.OnValueChanged += UpdateUserRole;
+                _userRoleIdx.OnValueChanged += OnUserRoleChanged;
                 
                 // Remove unnecessary local components such as tracking
                 while(localBehaviours.Count > 0)
@@ -181,9 +181,7 @@ namespace VRSYS.Core.Networking
                 }
             }
             
-            var userNameStr = userName.Value.ToString(); 
-            avatarAnatomy.SetUserName(userNameStr);
-            gameObject.name = userNameStr + (IsOwner ? " [Local]" : " [Remote]");
+            UpdateObjectName();
             avatarAnatomy.SetColor(userColor.Value);
         }
 
@@ -215,53 +213,40 @@ namespace VRSYS.Core.Networking
 
         #endregion
 
-        #region Custom Methods
-        
+        #region Public Methods
+
         public void SetUserName(string name)
         {
             if (!IsOwner)
             {
-                ExtendedLogger.LogError(GetType().Name, $"Only the owner can change the user name. Use {nameof(SetUserNameRpc)} instead.");
+                SetUserNameRpc(name);
                 return;
             }
                 
             userName.Value = name;
-            var userNameStr = userName.Value.ToString(); 
-            avatarAnatomy.SetUserName(userNameStr);
-            gameObject.name = userNameStr + (IsOwner ? " [Local]" : " [Remote]");
+            UpdateObjectName();
         }
-
+        
         public void SetUserId(ulong id)
         {
             if (!IsOwner)
             {
-                ExtendedLogger.LogError(GetType().Name, "Only the owner can change the user id. Use SetUserNameRpc instead.");
+                SetUserIdRpc(id);
                 return;
             }
             
             userId.Value = id;
         }
 
-        private void UpdateUserNameLabel(FixedString32Bytes previousValue, FixedString32Bytes newValue)
+        public void SetUserColor(Color color)
         {
-            var userNameStr = userName.Value.ToString();
-            avatarAnatomy.SetUserName(userNameStr);
-            gameObject.name = userNameStr + (IsOwner ? " [Local]" : " [Remote]");
-        }
-        
-        private void UpdateUserColor(Color previousValue, Color newValue)
-        {
-            avatarAnatomy.SetColor(userColor.Value);
-        }
-        
-        private void UpdateUserRole(int previousValue, int newValue)
-        {
-            userRole = ConnectionManager.Instance.userRoleList.GetUserRole(newValue);
-        }
+            if (!IsOwner)
+            {
+                SetUserColorRpc(color);
+                return;
+            }
 
-        public static float CalcLocalHeight()
-        {
-            return LocalInstance.head.localPosition.y;// * LocalInstance.transform.localScale.y;
+            userColor.Value = color;
         }
         
         public void RequestDisconnect()
@@ -282,28 +267,15 @@ namespace VRSYS.Core.Networking
                 FinalizeDisconnect();
             }
         }
+
+        #endregion
+
+        #region Private Methods
         
         private void FinalizeDisconnect()
         {
             NetworkManager.Singleton.Shutdown();
             Destroy(NetworkManager.Singleton.gameObject);
-        }
-        
-        private void OnClientDisconnected(ulong clientId)
-        {
-            if (!IsServer && clientId == NetworkManager.ServerClientId)
-            {
-                if(verbose)
-                    ExtendedLogger.LogInfo(GetType().Name, "server shutting down");
-                FinalizeDisconnect();
-            }
-        }
-        
-        private void OnUserInitialized(bool previousValue, bool newValue)
-        {
-            BroadcastRemoteUserConnected();
-
-            _initialized.OnValueChanged -= OnUserInitialized;
         }
 
         private void BroadcastLocalUserConnected()
@@ -322,6 +294,45 @@ namespace VRSYS.Core.Networking
             var networkUserCallbackTargets = FindObjectsOfType<MonoBehaviour>(true).OfType<INetworkUserCallbacks>();
             foreach (var target in networkUserCallbackTargets)
                 target.OnRemoteNetworkUserSetup(this);
+        }
+
+        private void UpdateObjectName()
+        {
+            gameObject.name = userName.Value + (IsOwner ? " [Local]" : " [Remote]");
+        }
+
+        #endregion
+
+        #region Event Callbacks
+
+        private void OnUserNameChanged(FixedString32Bytes previousValue, FixedString32Bytes newValue) =>
+            UpdateObjectName();
+        
+        private void OnUserColorChanged(Color previousValue, Color newValue)
+        {
+            avatarAnatomy.SetColor(userColor.Value);
+        }
+        
+        private void OnUserRoleChanged(int previousValue, int newValue)
+        {
+            userRole = ConnectionManager.Instance.userRoleList.GetUserRole(newValue);
+        }
+        
+        private void OnClientDisconnected(ulong clientId)
+        {
+            if (!IsServer && clientId == NetworkManager.ServerClientId)
+            {
+                if(verbose)
+                    ExtendedLogger.LogInfo(GetType().Name, "server shutting down");
+                FinalizeDisconnect();
+            }
+        }
+        
+        private void OnUserInitialized(bool previousValue, bool newValue)
+        {
+            BroadcastRemoteUserConnected();
+
+            _initialized.OnValueChanged -= OnUserInitialized;
         }
 
         #endregion
@@ -348,16 +359,13 @@ namespace VRSYS.Core.Networking
         }
 
         [Rpc(SendTo.Owner)]
-        public void SetUserNameRpc(string userName)
-        {
-            SetUserName(userName);
-        }
+        private void SetUserNameRpc(string userName)=> SetUserName(userName);
 
         [Rpc(SendTo.Owner)]
-        public void SetUserIdRpc(ulong id)
-        {
-            SetUserId(id);
-        }
+        private void SetUserIdRpc(ulong id) => SetUserId(id);
+
+        [Rpc(SendTo.Owner)]
+        private void SetUserColorRpc(Color color) => SetUserColor(color);
 
         #endregion
     }    

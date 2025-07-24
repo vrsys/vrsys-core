@@ -44,8 +44,6 @@ namespace VRSYS.Core.Avatar
 {
     public class AvatarAnatomy : MonoBehaviour
     {
-        [SerializeField] private TextMeshProUGUI userNameLabel;
-        
         public List<Renderer> colorableParts = new List<Renderer>();
 
         public Transform head;
@@ -54,12 +52,6 @@ namespace VRSYS.Core.Avatar
         {
             foreach (var r in colorableParts)
                 r.material.color = clr;
-        }
-
-        public void SetUserName(string name)
-        {
-            if(userNameLabel != null)
-                userNameLabel.text = name;
         }
     }
 

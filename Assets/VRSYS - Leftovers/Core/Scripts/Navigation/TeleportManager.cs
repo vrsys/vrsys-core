@@ -307,7 +307,7 @@ namespace VRSYS.Core.Navigation
             previewAvatarInstance.transform.rotation = Quaternion.FromToRotation(headTransform.up, hit.normal) * headTransform.rotation;
             previewAvatarInstance.transform.position = hit.point;
             previewAvatarInstance.transform.localScale = transform.localScale;
-            previewAvatarInstance.head.transform.localPosition = NetworkUser.CalcLocalHeight() * Vector3.up;
+            previewAvatarInstance.head.transform.localPosition = NetworkUser.LocalInstance.head.localPosition.y * Vector3.up;
             previewAvatarInstance.gameObject.SetActive(true);
             previewProgress?.SetProgress(currentTriggerProgress);
         }
@@ -328,7 +328,7 @@ namespace VRSYS.Core.Navigation
 
             previewAvatarInstance.transform.rotation = Quaternion.LookRotation(forward, up);
             previewAvatarInstance.transform.localScale = transform.localScale;
-            previewAvatarInstance.head.transform.localPosition = NetworkUser.CalcLocalHeight() * Vector3.up;
+            previewAvatarInstance.head.transform.localPosition = NetworkUser.LocalInstance.head.localPosition.y * Vector3.up;
             previewProgress?.SetProgress(currentTriggerProgress);
         }
 

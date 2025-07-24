@@ -3816,6 +3816,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 11400000, guid: 89a925e795665a045a6c163e829a20a6, type: 2}
     - target: {fileID: 6294951967490542898, guid: b8a9590d6dc70a8468106d09c025c654, type: 3}
+      propertyPath: lobbySettings
+      value: 
+      objectReference: {fileID: 11400000, guid: 2b05f1930838ce24286c675eeb80705a, type: 2}
+    - target: {fileID: 6294951967490542898, guid: b8a9590d6dc70a8468106d09c025c654, type: 3}
       propertyPath: onLobbyJoined.m_PersistentCalls.m_Calls.Array.size
       value: 2
       objectReference: {fileID: 0}
@@ -5121,7 +5125,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3130830557821445414, guid: 0f874d7acb686f644b6043ba39bba74f, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 16.99997
+      value: 17.00003
       objectReference: {fileID: 0}
     - target: {fileID: 3130830557849588012, guid: 0f874d7acb686f644b6043ba39bba74f, type: 3}
       propertyPath: m_AnchorMax.x

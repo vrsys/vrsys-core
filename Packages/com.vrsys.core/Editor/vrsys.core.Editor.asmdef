@@ -1,3 +1,4 @@
 {
-	"name": "vrsys.core.Editor"
+	"name": "vrsys.core.Editor",
+	"references":[ "GUID:9d44f9d7f3932da4c84af6164f11d5e5" ]
 }

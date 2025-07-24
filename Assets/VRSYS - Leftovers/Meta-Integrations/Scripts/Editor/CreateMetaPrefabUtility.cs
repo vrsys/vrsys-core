@@ -37,7 +37,6 @@
 //-----------------------------------------------------------------
 
 using UnityEditor;
-using UnityEngine;
 using VRSYS.Core.Editor;
 
 namespace VRSYS.Meta.Editor

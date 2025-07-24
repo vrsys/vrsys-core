@@ -523,6 +523,15 @@
       },
       "url": "https://packages.unity.com"
     },
+    "com.vrsys.chat-odin": {
+      "version": "file:com.vrsys.chat-odin",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {
+        "com.vrsys.core": "1.0.0",
+        "io.fourplayers.odin": "https://github.com/4Players/odin-sdk-unity.git"
+      }
+    },
     "com.vrsys.core": {
       "version": "file:com.vrsys.core",
       "depth": 0,
@@ -538,10 +547,11 @@
       }
     },
     "io.fourplayers.odin": {
-      "version": "file:io.fourplayers.odin",
+      "version": "https://github.com/4Players/odin-sdk-unity.git",
       "depth": 0,
-      "source": "embedded",
-      "dependencies": {}
+      "source": "git",
+      "dependencies": {},
+      "hash": "e94c443b3c991b06558a89bc69b868e017e32118"
     },
     "com.unity.modules.accessibility": {
       "version": "1.0.0",

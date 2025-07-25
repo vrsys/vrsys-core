@@ -746,7 +746,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b9426972c937cb143ad20aa7c942bcb6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  userRoleList: {fileID: 11400000, guid: 15ce867171c95d146b06206cbb4cd03a, type: 2}
   userSpawnInfo: {fileID: 11400000, guid: a778df6808f49064f9eb2e51ea7630e2, type: 2}
   startDedicatedServer: 0
   dedicatedServerSettings: {fileID: 0}
@@ -855,9 +854,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
   userPrefabs:
-  - UserRole: {fileID: 11400000, guid: 3c7ae5384effef64b947441d461c01af, type: 2}
+  - UserRole:
+      Name: HMD
+    Prefab: {fileID: 0}
     SpawnPoint: {fileID: 0}
-  - UserRole: {fileID: 11400000, guid: 12abec15c9ef8ce44b339acc24bd1db0, type: 2}
+  - UserRole:
+      Name: Desktop
+    Prefab: {fileID: 0}
     SpawnPoint: {fileID: 1951133675}
   useRoleSpawnPoints: 1
   spawnPoint: {fileID: 0}
@@ -4547,7 +4550,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3130830557821445414, guid: 0f874d7acb686f644b6043ba39bba74f, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 16.999939
+      value: 17
       objectReference: {fileID: 0}
     - target: {fileID: 3130830557849588012, guid: 0f874d7acb686f644b6043ba39bba74f, type: 3}
       propertyPath: m_AnchorMax.y
@@ -4685,6 +4688,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: MicrophoneSelectionMenu
       objectReference: {fileID: 0}
+    - target: {fileID: 4128958318073309436, guid: a82c3be06d0385e4e99be59738f64d0e, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4128958318073309437, guid: a82c3be06d0385e4e99be59738f64d0e, type: 3}
       propertyPath: m_Pivot.x
       value: 0
@@ -4767,6 +4774,38 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4128958318073309437, guid: a82c3be06d0385e4e99be59738f64d0e, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4128958318740536710, guid: a82c3be06d0385e4e99be59738f64d0e, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4128958318740536710, guid: a82c3be06d0385e4e99be59738f64d0e, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4128958318740536710, guid: a82c3be06d0385e4e99be59738f64d0e, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4128958318740536710, guid: a82c3be06d0385e4e99be59738f64d0e, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4128958318800229405, guid: a82c3be06d0385e4e99be59738f64d0e, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4128958318800229405, guid: a82c3be06d0385e4e99be59738f64d0e, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4128958318800229405, guid: a82c3be06d0385e4e99be59738f64d0e, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4128958318800229405, guid: a82c3be06d0385e4e99be59738f64d0e, type: 3}
+      propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []

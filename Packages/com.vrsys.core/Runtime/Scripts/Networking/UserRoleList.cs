@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using UnityEditor;
 using UnityEngine;
-using VRSYS.Core.Logging;
 
 namespace VRSYS.Core.Networking
 {
@@ -8,35 +10,71 @@ namespace VRSYS.Core.Networking
 
     public class UserRoleList : ScriptableObject
     {
-        #region Member Variables
+        #region Singleton
 
-        [SerializeField] private List<UserRole> userRoles;
+        public static UserRoleList Instance;
+
+        #endregion
+        
+        #region Public Members
+
+        public List<UserRoleEntry> Roles = new List<UserRoleEntry>();
 
         #endregion
 
-        #region Custom Methods
+        #region Scriptable Object Callbacks
 
-        public List<UserRole> GetUserRoles()
+        private void Awake()
         {
-            return userRoles;
-        }
+            if (Instance != null)
+            {
+                Debug.LogError($"UserRoleList already has been created under: {AssetDatabase.GetAssetPath(Instance)}");
+                return;
+            }
 
-        public int GetUserRoleIdx(UserRole userRole)
-        {
-            int idx = userRoles.FindIndex(a => a == userRole);
-
-            if (idx == -1)
-                ExtendedLogger.LogError(GetType().Name, $"User role {userRole.name} not configured in UserRoleList!",
-                    this);
-
-            return idx;
-        }
-
-        public UserRole GetUserRole(int idx)
-        {
-            return userRoles[idx];
+            Instance = this;
         }
 
         #endregion
+    }
+    
+    public class UserRoleSelectorAttribute : PropertyAttribute { }
+    
+    [CustomPropertyDrawer(typeof(UserRoleSelectorAttribute))]
+    public class UserRoleSelectorDrawer : PropertyDrawer
+    {
+        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+        {
+            SerializedProperty roleNameProperty = property.FindPropertyRelative("Name");
+            
+            UserRoleList roleList = UserRoleList.Instance;
+
+            if (roleList == null)
+            {
+                EditorGUI.LabelField(position, "No UserRoleList created in project.");
+                return;
+            }
+
+            var roles = roleList.Roles;
+            if (roles == null)
+            {
+                EditorGUI.LabelField(position, "No user roles defined.");
+                return;
+            }
+
+            string currentValue = roleNameProperty.stringValue;
+            string[] roleNames = roles.Select(r => r.Name).ToArray();
+            int index = Array.IndexOf(roleNames, currentValue);
+
+            if (index < 0)
+                index = 0;
+
+            index = EditorGUI.Popup(position, label.text, index, roleNames);
+
+            if (index >= 0 && index < roleNames.Length)
+                roleNameProperty.stringValue = roleNames[index];
+
+
+        }
     }
 }

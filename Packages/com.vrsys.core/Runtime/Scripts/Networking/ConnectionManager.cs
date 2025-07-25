@@ -63,8 +63,7 @@ namespace VRSYS.Core.Networking
         // Singleton
         public static ConnectionManager Instance;
 
-        [Header("Network User Spawn Info")] 
-        public UserRoleList userRoleList;
+        [Header("Network User Spawn Info")]
         public NetworkUserSpawnInfo userSpawnInfo;
 
         [Header("Dedicated Server Properties")]

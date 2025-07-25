@@ -74,8 +74,6 @@ namespace VRSYS.Core.Networking
         public AvatarAnatomy avatarAnatomy { get; private set; }
         
         public Transform head => avatarAnatomy.head;
-
-        [HideInInspector] public UserRole userRole;
         
         [Tooltip("Local components, which are destroyed on remote user instances (e.g. Camera, Audio Listener, Tracking, ...)")]
         public List<Behaviour> localBehaviours = new List<Behaviour>();
@@ -103,7 +101,7 @@ namespace VRSYS.Core.Networking
         [HideInInspector] public NetworkVariable<ulong> userId = new NetworkVariable<ulong>(0,
             NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
         
-        private NetworkVariable<int> _userRoleIdx = new(-1, NetworkVariableReadPermission.Everyone,
+        private NetworkVariable<UserRole> _userRole = new(default, NetworkVariableReadPermission.Everyone,
             NetworkVariableWritePermission.Owner);
 
         private NetworkVariable<bool> _initialized = new NetworkVariable<bool>(false,
@@ -141,8 +139,7 @@ namespace VRSYS.Core.Networking
                 userColor.Value = _spawnInfo.userColor;
                 
                 // handle user role workflow
-                userRole = _spawnInfo.userRole;
-                _userRoleIdx.Value = ConnectionManager.Instance.userRoleList.GetUserRoleIdx(userRole);
+                _userRole.Value = _spawnInfo.userRole;
                 
                 // mark user as initialized
                 _initialized.Value = true;
@@ -160,9 +157,6 @@ namespace VRSYS.Core.Networking
                 
                 // register user color changed event
                 userColor.OnValueChanged += OnUserColorChanged;
-                
-                // register user role idx changed event
-                _userRoleIdx.OnValueChanged += OnUserRoleChanged;
                 
                 // Remove unnecessary local components such as tracking
                 while(localBehaviours.Count > 0)
@@ -311,11 +305,6 @@ namespace VRSYS.Core.Networking
         private void OnUserColorChanged(Color previousValue, Color newValue)
         {
             avatarAnatomy.SetColor(userColor.Value);
-        }
-        
-        private void OnUserRoleChanged(int previousValue, int newValue)
-        {
-            userRole = ConnectionManager.Instance.userRoleList.GetUserRole(newValue);
         }
         
         private void OnClientDisconnected(ulong clientId)

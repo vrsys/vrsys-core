@@ -104,7 +104,7 @@ namespace VRSYS.Core.Networking
                 spawn = spawnPoint;
             
             // Instantiate user prefab
-            GameObject user = Instantiate(userPrefabs[prefabIndex].UserRole.Prefab);
+            GameObject user = Instantiate(userPrefabs[prefabIndex].Prefab);
 
             user.transform.position = spawn.position;
             user.transform.rotation = spawn.rotation;
@@ -122,7 +122,9 @@ namespace VRSYS.Core.Networking
         [Serializable]
         public struct UserRolePrefab
         {
+            [UserRoleSelector]
             public UserRole UserRole;
+            public GameObject Prefab;
             public Transform SpawnPoint;
         }
 

@@ -128,7 +128,7 @@ namespace VRSYS.Core.Networking
 
             List<string> userRoles = new List<string>();
             
-            foreach (var userRole in ConnectionManager.Instance.userRoleList.GetUserRoles())
+            foreach (var userRole in UserRoleList.Instance.Roles)
                 userRoles.Add(userRole.Name);
 
             userRoleDropdown.AddOptions(userRoles);
@@ -218,7 +218,7 @@ namespace VRSYS.Core.Networking
         
         private void UpdateUserRole()
         {
-            spawnInfo.userRole = ConnectionManager.Instance.userRoleList.GetUserRole(userRoleDropdown.value);
+            spawnInfo.userRole = new UserRole(userRoleDropdown.options[userRoleDropdown.value].text);
         }
 
         public void UpdateUserColor(int arg0)

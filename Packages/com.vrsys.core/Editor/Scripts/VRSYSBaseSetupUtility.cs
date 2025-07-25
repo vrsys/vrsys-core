@@ -37,7 +37,9 @@
 //-----------------------------------------------------------------
 
 using UnityEditor;
+using UnityEngine;
 using VRSYS.Core.Logging;
+using VRSYS.Core.Networking;
 
 namespace VRSYS.Core.Editor
 {
@@ -46,13 +48,15 @@ namespace VRSYS.Core.Editor
         #region Variables
 
         private static string _logTag = "VRSYSBaseSetupUtility";
+        
+        private const string userRoleListAssetPath = "Assets/UserRoleList.asset";
 
         #endregion
 
         #region MenuItems
 
-        [MenuItem("VRSYS/Core/Setup project")]
-        public static void SetupProject(MenuCommand menuCommand)
+        [MenuItem("VRSYS/Core/Setup/Default Layers")]
+        public static void SetupLayers(MenuCommand menuCommand)
         {
             // Create CameraIgnore layer (Idx: 3)
             CreateLayer(3, "CameraIgnore");
@@ -60,7 +64,30 @@ namespace VRSYS.Core.Editor
             // Create Interactable layer (Idx: 6)
             CreateLayer(6, "Interactable");
         }
+        
+        [MenuItem("VRSYS/Core/Setup/User Role List")]
+        public static void SetupUserRoleList()
+        {
+            var existingAssets = AssetDatabase.FindAssets($"t:{typeof(UserRoleList)}");
+            if (existingAssets.Length > 0)
+            {
+                string path = AssetDatabase.GUIDToAssetPath(existingAssets[0]);
+                EditorUtility.FocusProjectWindow();
+                Object asset = AssetDatabase.LoadAssetAtPath<UserRoleList>(path);
+                Selection.activeObject = asset;
+                
+                ExtendedLogger.LogWarning(_logTag, "UserRoleList already exists at: " + path);
+                return;
+            }
 
+            UserRoleList userRoleList = ScriptableObject.CreateInstance<UserRoleList>();
+            AssetDatabase.CreateAsset(userRoleList, userRoleListAssetPath);
+            AssetDatabase.SaveAssets();
+            
+            EditorUtility.FocusProjectWindow();
+            Selection.activeObject = userRoleList;
+        }
+        
         #endregion
 
         #region Private Methdos

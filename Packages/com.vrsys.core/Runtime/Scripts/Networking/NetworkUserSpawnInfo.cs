@@ -5,6 +5,7 @@ namespace VRSYS.Core.Networking
     [CreateAssetMenu(menuName = "VRSYS/Core/Scriptable Objects/NetworkUserSpawnInfo")]
     public class NetworkUserSpawnInfo : ScriptableObject
     {
+        [UserRoleSelector]
         public UserRole userRole = null;
         public string userName;
         public Color userColor;

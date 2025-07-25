@@ -12,28 +12,30 @@ namespace VRSYS.Core.Networking
     {
         #region Singleton
 
-        public static UserRoleList Instance;
+        private static UserRoleList _instance;
+
+        public static UserRoleList Instance
+        {
+            get
+            {
+                if (_instance == null)
+                {
+                    var assets = AssetDatabase.FindAssets($"t: {typeof(UserRoleList)}");
+                    if (assets.Length == 0) 
+                        return null;
+                    string path = AssetDatabase.GUIDToAssetPath(assets[0]);
+                    _instance = AssetDatabase.LoadAssetAtPath<UserRoleList>(path);
+                }
+
+                return _instance;
+            }
+        }
 
         #endregion
         
         #region Public Members
 
         public List<UserRoleEntry> Roles = new List<UserRoleEntry>();
-
-        #endregion
-
-        #region Scriptable Object Callbacks
-
-        private void Awake()
-        {
-            if (Instance != null)
-            {
-                Debug.LogError($"UserRoleList already has been created under: {AssetDatabase.GetAssetPath(Instance)}");
-                return;
-            }
-
-            Instance = this;
-        }
 
         #endregion
     }

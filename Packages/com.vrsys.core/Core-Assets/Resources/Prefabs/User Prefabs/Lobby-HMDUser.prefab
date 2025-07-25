@@ -156,7 +156,6 @@ GameObject:
   - component: {fileID: 5344907646649013692}
   - component: {fileID: 5344907646649013693}
   - component: {fileID: 5344907646649013691}
-  - component: {fileID: 7160690951638065502}
   - component: {fileID: 3792537738683720537}
   m_Layer: 0
   m_Name: Lobby-HMDUser
@@ -267,23 +266,6 @@ MonoBehaviour:
   verticalSteering: 0
   steeringSpeed: 3
   rotationSpeed: 30
---- !u!114 &7160690951638065502
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5344907646649013695}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 54a499e23559ac94184762cd24e79b03, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  headTransform: {fileID: 5344907647326446382}
-  handType: 1
-  leftController: {fileID: 0}
-  rightController: {fileID: 0}
-  previewAvatarPrefab: {fileID: 4663052315973873641, guid: 0bf9acbdcd0452d4aab4c8613509ef05, type: 3}
 --- !u!114 &3792537738683720537
 MonoBehaviour:
   m_ObjectHideFlags: 0

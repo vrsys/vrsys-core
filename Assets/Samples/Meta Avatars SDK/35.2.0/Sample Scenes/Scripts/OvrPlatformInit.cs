@@ -30,7 +30,6 @@ using System;
 using Oculus.Avatar2;
 using Oculus.Platform;
 using Oculus.Platform.Models;
-using UnityEngine;
 
 public enum OvrPlatformInitStatus
 {

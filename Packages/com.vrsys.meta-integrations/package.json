@@ -1,0 +1,23 @@
+{
+  "name" : "com.vrsys.meta-integrations",
+  "version" : "1.0.0",
+  "displayName" : "VRSYS Meta",
+  "description": "Integration of Meta features with VRSYS framework.",
+  "documentationUrl" : "https://vrsys.gitbook.io/vrsys",
+  "dependencies": {
+    "com.vrsys.core": "1.0.0",
+    "com.meta.xr.sdk.avatars": "35.2.0",
+    "com.meta.xr.sdk.core": "76.0.1"
+  },
+  "samples": [
+    {
+      "displayName": "Meta Avatar Samples",
+      "description": "Contains sample scene that shows how to setup meta avatars with VRSYS-Core.",
+      "path": "Samples/Meta Avatar Samples"
+    }
+  ],
+  "author": {
+    "name": "VRSYS",
+    "url": "https://www.uni-weimar.de/vr"
+  }
+}

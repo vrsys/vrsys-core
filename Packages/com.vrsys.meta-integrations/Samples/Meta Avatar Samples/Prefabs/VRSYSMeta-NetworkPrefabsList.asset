@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e651dbb3fbac04af2b8f5abf007ddc23, type: 3}
-  m_Name: VRSYSMetaUserPrefabs
+  m_Name: VRSYSMeta-NetworkPrefabsList
   m_EditorClassIdentifier: 
   IsDefault: 0
   List:

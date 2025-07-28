@@ -546,6 +546,16 @@
         "com.unity.ugui": "2.0.0"
       }
     },
+    "com.vrsys.meta-integrations": {
+      "version": "file:com.vrsys.meta-integrations",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {
+        "com.vrsys.core": "1.0.0",
+        "com.meta.xr.sdk.avatars": "35.2.0",
+        "com.meta.xr.sdk.core": "76.0.1"
+      }
+    },
     "io.fourplayers.odin": {
       "version": "https://github.com/4Players/odin-sdk-unity.git",
       "depth": 0,

@@ -1,0 +1,16 @@
+{
+    "name": "vrsys.meta-integrations.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:ac01565a04399734bb677048f126c135"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

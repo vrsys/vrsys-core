@@ -37,64 +37,72 @@
 //-----------------------------------------------------------------
 
 using System.Collections;
-using Oculus.Platform;
+using Oculus.Avatar2;
 using UnityEngine;
-using UnityEngine.Events;
 using VRSYS.Core.Logging;
+using VRSYS.Meta.General;
 
-namespace VRSYS.Meta.General
+namespace VRSYS.Meta.Avatars
 {
-    public class VrsysOvrPlatformInitializer : MonoBehaviour
+    public class VRSYSMetaAvatarEntity : OvrAvatarEntity
     {
-        #region Singleton
-
-        public static VrsysOvrPlatformInitializer Instance;
-
-        #endregion
-
         #region Member Variables
 
-        [HideInInspector] public bool Initialized = false;
-        [HideInInspector] public ulong LocalUserId = 0;
+        [Header("VRSYS Avatar Entity")] 
+        public bool autoLoadOnStart = false;
 
-        #endregion
-
-        #region Events
-
-        public UnityEvent<ulong> OnLocalUserIdRetrieved = new UnityEvent<ulong>();
+        [Header("VRSYS Debug")] 
+        public bool verbose = false; 
 
         #endregion
 
         #region MonoBehaviour Callbacks
 
-        private void Awake()
-        {
-            if (Instance != null)
-            {
-                Destroy(this);
-                return;
-            }
-
-            Instance = this;
-        }
-
         private void Start()
         {
-            StartCoroutine(Initialize());
+            if (IsLocal)
+            {
+                if(!VrsysOvrPlatformInitializer.Instance.Initialized)
+                    VrsysOvrPlatformInitializer.Instance.OnLocalUserIdRetrieved.AddListener(OnLocalUserIdRetrieved);
+                else if (autoLoadOnStart)
+                {
+                    _userId = VrsysOvrPlatformInitializer.Instance.LocalUserId;
+                    StartCoroutine(LoadAvatar());
+                }
+            }
         }
 
         #endregion
 
-        #region Coroutines
+        #region Public Methods
 
-        private IEnumerator Initialize()
+        public void LoadLocalAvatar()
         {
-            if(OvrPlatformInit.status == OvrPlatformInitStatus.NotStarted)
-                OvrPlatformInit.InitializeOvrPlatform();
+            if(verbose)
+                ExtendedLogger.LogInfo(GetType().Name, "Starting loading lcoal avatar...", this);
 
-            while (OvrPlatformInit.status != OvrPlatformInitStatus.Succeeded)
+            _userId = VrsysOvrPlatformInitializer.Instance.LocalUserId;
+            StartCoroutine(LoadAvatar());
+        }
+
+        public void LoadAvatarByCdn(ulong userId)
+        {
+            if(verbose)
+                ExtendedLogger.LogInfo(GetType().Name, $"Triggered loading avatar for cdn: {userId}", this);
+
+            _userId = userId;
+            StartCoroutine(LoadAvatar());
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        private IEnumerator LoadAvatar()
+        {
+            while (VrsysOvrPlatformInitializer.status != VrsysOvrPlatformInitializer.OvrPlatformInitStatus.Succeeded)
             {
-                if (OvrPlatformInit.status == OvrPlatformInitStatus.Failed)
+                if (VrsysOvrPlatformInitializer.status == VrsysOvrPlatformInitializer.OvrPlatformInitStatus.Failed)
                 {
                     ExtendedLogger.LogError(GetType().Name, "Error initializing OvrPlatform.", this);
                     yield break;
@@ -102,28 +110,23 @@ namespace VRSYS.Meta.General
 
                 yield return null;
             }
+            
+            if(verbose)
+                ExtendedLogger.LogInfo(GetType().Name, $"Loading avatar for cdn: {_userId}", this);
+            
+            LoadUser();
+        }
 
-            bool getUserIdComplete = false;
+        #endregion
 
-            Users.GetLoggedInUser().OnComplete(message =>
-            {
-                if (!message.IsError)
-                {
-                    LocalUserId = message.Data.ID;
-                    OnLocalUserIdRetrieved.Invoke(LocalUserId);
+        #region Event Callbacks
 
-                    Initialized = true;
-                }
-                else
-                {
-                    ExtendedLogger.LogError(GetType().Name, $"Error loading user ID: {message.GetError().Message}", this);
-                }
-
-                getUserIdComplete = true;
-            });
-
-            while (!getUserIdComplete)
-                yield return null;
+        private void OnLocalUserIdRetrieved(ulong userID)
+        {
+            _userId = userID;
+            
+            if (autoLoadOnStart)
+                StartCoroutine(LoadAvatar());
         }
 
         #endregion

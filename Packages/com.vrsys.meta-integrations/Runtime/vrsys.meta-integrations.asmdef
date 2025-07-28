@@ -1,0 +1,21 @@
+{
+    "name": "vrsys.meta-integrations",
+    "rootNamespace": "",
+    "references": [
+        "GUID:1491147abca9d7d4bb7105af628b223e",
+        "GUID:9d44f9d7f3932da4c84af6164f11d5e5",
+        "GUID:f64c9ebcd7899c3448a08dc9f9ddbe30",
+        "GUID:a92702ab18a2c37469cf92d0212e2d5a",
+        "GUID:75469ad4d38634e559750d17036d5f7c",
+        "GUID:3b7cf88e9d6729441884290e764f086b"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

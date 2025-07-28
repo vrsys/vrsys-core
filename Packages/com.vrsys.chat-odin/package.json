@@ -1,0 +1,21 @@
+{
+  "name" : "com.vrsys.chat-odin",
+  "version" : "1.0.0",
+  "displayName" : "VRSYS Chat Odin",
+  "description": "Implementation of 4Players ODIN technology as voice chat for VRSYS framework.",
+  "documentationUrl" : "https://vrsys.gitbook.io/vrsys",
+  "dependencies": {
+    "com.vrsys.core": "1.0.0"
+  },
+  "samples": [
+    {
+      "displayName": "Sample Odin Setups",
+      "description": "Contains a sample scene that shows how to setup ODIN with VRSYS framework.",
+      "path": "Samples~/Sample Voice Chat Setup"
+    }
+  ],
+  "author": {
+    "name": "VRSYS",
+    "url": "https://www.uni-weimar.de/vr"
+  }
+}

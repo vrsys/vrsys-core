@@ -76,7 +76,6 @@ ProjectSettings/EditorSettings.asset
 ProjectSettings/ProjectSettings.asset
 ProjectSettings/QualitySettings.asset
 ProjectSettings/GraphicsSettings.asset
-ProjectSettings/XRSettings.asset
 ProjectSettings/UnityConnectSettings.asset
 ProjectSettings/VersionControlSettings.asset
 .idea/*
@@ -96,6 +95,9 @@ Assets/DefaultNetworkPrefabs.asset
 Assets/DefaultNetworkPrefabs.asset.meta
 Assets/XRI/Settings/Resources/XRDeviceSimulatorSettings.asset
 Assets/XRI/Settings/Resources/XRDeviceSimulatorSettings.asset.meta
+ProjectSettings/SceneTemplateSettings.json
 Assets/XRI/Settings/XRInteractionEditorSettings.asset
 Assets/XRI/Settings/XRInteractionEditorSettings.asset.meta
-ProjectSettings/SceneTemplateSettings.json
+Assets/Oculus/Avatar2_SampleAssets/SampleAssets/SampleAssets/PresetAvatars_Quest.zip
+Assets/Oculus/Avatar2_SampleAssets/SampleAssets/SampleAssets/PresetAvatars_Rift.zip
+Assets/Resources/OculusPlatformSettings.asset

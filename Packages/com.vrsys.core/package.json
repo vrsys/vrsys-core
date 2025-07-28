@@ -17,7 +17,7 @@
     {
       "displayName": "Sample Scene Setups",
       "description": "Contains sample scenes that show how to setup basic scenes with VRSYS-Core.",
-      "path": "Samples/Sample Scene Setups"
+      "path": "Samples~/Sample Scene Setups"
     }
   ],
   "author": {

@@ -13,7 +13,7 @@
     {
       "displayName": "Meta Avatar Samples",
       "description": "Contains sample scene that shows how to setup meta avatars with VRSYS-Core.",
-      "path": "Samples/Meta Avatar Samples"
+      "path": "Samples~/Meta Avatar Samples"
     }
   ],
   "author": {

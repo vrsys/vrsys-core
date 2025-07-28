@@ -327,6 +327,14 @@ PrefabInstance:
       value: VRSYS-NetworkUserSpawner
       objectReference: {fileID: 0}
     - target: {fileID: 6081028906002393513, guid: 1c4b8e4515038a249a5b0c479fd0c4c8, type: 3}
+      propertyPath: userPrefabs.Array.data[0].Prefab
+      value: 
+      objectReference: {fileID: 7216047633976425198, guid: 809cce775431de842bae2eca7c27e046, type: 3}
+    - target: {fileID: 6081028906002393513, guid: 1c4b8e4515038a249a5b0c479fd0c4c8, type: 3}
+      propertyPath: userPrefabs.Array.data[1].Prefab
+      value: 
+      objectReference: {fileID: 8231461269131396514, guid: a261985c04347724aae188d2bb71865f, type: 3}
+    - target: {fileID: 6081028906002393513, guid: 1c4b8e4515038a249a5b0c479fd0c4c8, type: 3}
       propertyPath: userPrefabs.Array.data[0].UserRole
       value: 
       objectReference: {fileID: 11400000, guid: 4139bd1ba83848143964fe42a30a732a, type: 2}
@@ -334,6 +342,14 @@ PrefabInstance:
       propertyPath: userPrefabs.Array.data[1].UserRole
       value: 
       objectReference: {fileID: 11400000, guid: b7bd5f0441a114148b1f41a480c809d5, type: 2}
+    - target: {fileID: 6081028906002393513, guid: 1c4b8e4515038a249a5b0c479fd0c4c8, type: 3}
+      propertyPath: userPrefabs.Array.data[0].UserRole.Name
+      value: HMD
+      objectReference: {fileID: 0}
+    - target: {fileID: 6081028906002393513, guid: 1c4b8e4515038a249a5b0c479fd0c4c8, type: 3}
+      propertyPath: userPrefabs.Array.data[1].UserRole.Name
+      value: Desktop
+      objectReference: {fileID: 0}
     - target: {fileID: 8715944625018654086, guid: 1c4b8e4515038a249a5b0c479fd0c4c8, type: 3}
       propertyPath: GlobalObjectIdHash
       value: 287284751

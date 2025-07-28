@@ -1,3 +1,4 @@
+using System.Linq;
 using UnityEditor;
 using UnityEditor.PackageManager;
 using UnityEditor.PackageManager.Requests;
@@ -8,16 +9,61 @@ namespace VRSYS.Core.Editor
 {
     public class VRSYSAddSubPackages : MonoBehaviour
     {
+        private static string _logTag = $"{typeof(VRSYSAddSubPackages)}";
         
         #region Chat Odin Package
 
+        private static ListRequest OdinListRequest;
+
         private static AddRequest OdinRequest;
+        private static string odinPackageUrl = "https://github.com/4Players/odin-sdk-unity.git";
+
+        private static AddRequest VRSYSOdinRequest;
         private static string chatOdinPackageUrl = "https://github.com/vrsys/vrsys-core.git?path=/Packages/com.vrsys.chat-odin";
 
         [MenuItem("VRSYS/Add sub packages/Chat Odin")]
-        public static void AddChatOdin()
+        public static void CheckOdinPackages()
         {
-            OdinRequest = Client.Add(chatOdinPackageUrl);
+            OdinListRequest = Client.List();
+            EditorApplication.update += ListOdinProgress;
+        }
+
+        private static void ListOdinProgress()
+        {
+            if (OdinListRequest.IsCompleted)
+            {
+                if (OdinListRequest.Status == StatusCode.Success)
+                {
+                    bool odinIncluded = false;
+                    bool chatOdinIncluded = false;
+                    
+                    foreach (var package in OdinListRequest.Result)
+                    {
+                        if (package.packageId.Contains("io.fourplayers.odin"))
+                            odinIncluded = true;
+                        if (package.packageId.Contains("com.vrsys.chat-odin"))
+                            chatOdinIncluded = true;
+                    }
+
+                    if (!odinIncluded)
+                    {
+                        AddOdin();
+                    }
+                    else if (!chatOdinIncluded)
+                        AddChatOdin();
+                    else
+                    {
+                        ExtendedLogger.LogInfo(_logTag, "All packages already included.");
+                    }
+
+                    EditorApplication.update -= ListOdinProgress;
+                }
+            }
+        }
+
+        private static void AddOdin()
+        {
+            OdinRequest = Client.Add(odinPackageUrl);
             EditorApplication.update += AddOdinProgress;
         }
 
@@ -25,14 +71,41 @@ namespace VRSYS.Core.Editor
         {
             if (OdinRequest.IsCompleted)
             {
-                if(OdinRequest.Status == StatusCode.Success)
-                    ExtendedLogger.LogInfo($"{typeof(VRSYSAddSubPackages)}", $"Installed {OdinRequest.Result.packageId}");
+                if (OdinRequest.Status == StatusCode.Success)
+                {
+                    ExtendedLogger.LogInfo(_logTag, $"Installed {OdinRequest.Result.packageId}");
+                    AddChatOdin();
+                }
                 else
                 {
-                    ExtendedLogger.LogError($"{typeof(VRSYSAddSubPackages)}", OdinRequest.Error.message);
+                    ExtendedLogger.LogError(_logTag, OdinRequest.Error.message);
                 }
 
                 EditorApplication.update -= AddOdinProgress;
+            }
+        }
+
+        private static void AddChatOdin()
+        {
+            VRSYSOdinRequest = Client.Add(chatOdinPackageUrl);
+            EditorApplication.update += AddChatOdinProgress;
+        }
+        
+        private static void AddChatOdinProgress()
+        {
+            if (VRSYSOdinRequest.IsCompleted)
+            {
+                if (VRSYSOdinRequest.Status == StatusCode.Success)
+                {
+                    ExtendedLogger.LogInfo(_logTag, $"Installed {VRSYSOdinRequest.Result.packageId}");
+                    AddChatOdin();
+                }
+                else
+                {
+                    ExtendedLogger.LogError(_logTag, VRSYSOdinRequest.Error.message);
+                }
+
+                EditorApplication.update -= AddChatOdinProgress;
             }
         }
 
@@ -55,10 +128,10 @@ namespace VRSYS.Core.Editor
             if (MetaRequest.IsCompleted)
             {
                 if(MetaRequest.Status == StatusCode.Success)
-                    ExtendedLogger.LogInfo($"{typeof(VRSYSAddSubPackages)}", $"Installed {MetaRequest.Result.packageId}");
+                    ExtendedLogger.LogInfo(_logTag, $"Installed {MetaRequest.Result.packageId}");
                 else
                 {
-                    ExtendedLogger.LogError($"{typeof(VRSYSAddSubPackages)}", MetaRequest.Error.message);
+                    ExtendedLogger.LogError(_logTag, MetaRequest.Error.message);
                 }
 
                 EditorApplication.update -= AddMetaProgress;

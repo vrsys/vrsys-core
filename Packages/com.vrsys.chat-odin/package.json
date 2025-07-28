@@ -6,7 +6,7 @@
   "documentationUrl" : "https://vrsys.gitbook.io/vrsys",
   "dependencies": {
     "com.vrsys.core": "1.0.0",
-    "io.fourplayers.odin": "https://github.com/4Players/odin-sdk-unity.git"
+    "io.fourplayers.odin": "https://github.com/4Players/odin-sdk-unity.git#1.6.7"
   },
   "samples": [
     {

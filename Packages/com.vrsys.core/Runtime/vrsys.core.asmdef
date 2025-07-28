@@ -1,0 +1,26 @@
+{
+    "name": "vrsys.core",
+    "rootNamespace": "",
+    "references": [
+        "Unity.Services.Multiplayer",
+        "Unity.Services.Authentication",
+        "Unity.InputSystem",
+        "Unity.XR.Interaction.Toolkit",
+        "UnityEngine.UI",
+        "Unity.Netcode.Runtime",
+        "Unity.XR.Management",
+        "Unity.TextMeshPro",
+        "Unity.Services.Core",
+        "Unity.Collections",
+        "Unity.Networking.Transport"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

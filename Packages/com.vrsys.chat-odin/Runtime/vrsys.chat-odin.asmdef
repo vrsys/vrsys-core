@@ -1,0 +1,19 @@
+{
+    "name": "vrsys.chat-odin",
+    "rootNamespace": "",
+    "references": [
+        "GUID:9c9b4fe8b39ae5b41a7700da7b05a2c7",
+        "GUID:9d44f9d7f3932da4c84af6164f11d5e5",
+        "GUID:75469ad4d38634e559750d17036d5f7c",
+        "GUID:1491147abca9d7d4bb7105af628b223e"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -12,7 +12,7 @@ namespace VRSYS.Core.Editor
         #region Chat Odin Package
 
         private static AddRequest OdinRequest;
-        private static string chatOdinPackageUrl = "https://github.com/vrsys/vrsys-core.git?path=/Packages/com.vrsys.chat-odin#v1.0.0";
+        private static string chatOdinPackageUrl = "https://github.com/vrsys/vrsys-core.git?path=/Packages/com.vrsys.chat-odin";
 
         [MenuItem("VRSYS/Add sub packages/Chat Odin")]
         public static void AddChatOdin()
@@ -41,7 +41,7 @@ namespace VRSYS.Core.Editor
         #region Meta Integrations Package
 
         private static AddRequest MetaRequest;
-        private static string metaIntegrationsPackageUrl = "https://github.com/vrsys/vrsys-core.git?path=/Packages/com.vrsys.meta-integrations#v1.0.0";
+        private static string metaIntegrationsPackageUrl = "https://github.com/vrsys/vrsys-core.git?path=/Packages/com.vrsys.meta-integrations";
         
         [MenuItem("VRSYS/Add sub packages/Meta Integrations")]
         public static void AddMetaIntegrations()

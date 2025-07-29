@@ -37,7 +37,6 @@
 //-----------------------------------------------------------------
 
 using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
 
 namespace VRSYS.Core.Avatar
@@ -48,10 +47,10 @@ namespace VRSYS.Core.Avatar
 
         public Transform head;
         
-        public void SetColor(Color clr)
+        public void SetColor(Color color)
         {
             foreach (var r in colorableParts)
-                r.material.color = clr;
+                r.material.color = color;
         }
     }
 

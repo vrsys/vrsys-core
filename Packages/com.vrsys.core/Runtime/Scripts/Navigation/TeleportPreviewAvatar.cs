@@ -39,6 +39,7 @@
 using System;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace VRSYS.Core.Navigation
 {
@@ -46,15 +47,19 @@ namespace VRSYS.Core.Navigation
     {
         #region Member Variables
 
+        [FormerlySerializedAs("placementIndicatorVisuals")]
         [Header("Preview Avatar Components")]
         [Tooltip("This component represent the visuals to show selected position.")]
-        [SerializeField] private GameObject placementIndicatorVisuals;
+        [SerializeField] private GameObject _placementIndicatorVisuals;
+        [FormerlySerializedAs("progressIndicator")]
         [Tooltip("This component indicates progress of position locking.")]
-        [SerializeField] private Transform progressIndicator;
+        [SerializeField] private Transform _progressIndicator;
+        [FormerlySerializedAs("previewAvatar")]
         [Tooltip("This component indicates future rotation and height of the user.")]
-        [SerializeField] private Transform previewAvatar;
+        [SerializeField] private Transform _previewAvatar;
+        [FormerlySerializedAs("previewAvatarVisuals")]
         [Tooltip("This component is toggled to show or hide preview avatar when position is locked.")] 
-        [SerializeField] private GameObject previewAvatarVisuals;
+        [SerializeField] private GameObject _previewAvatarVisuals;
         
         // Network Variables
         private NetworkVariable<bool> placementIndicatorActive = new NetworkVariable<bool>(false,
@@ -88,8 +93,8 @@ namespace VRSYS.Core.Navigation
                 avatarActive.OnValueChanged += OnAvatarActiveChanged;
             }
             
-            placementIndicatorVisuals.SetActive(placementIndicatorActive.Value);
-            previewAvatarVisuals.SetActive(avatarActive.Value);
+            _placementIndicatorVisuals.SetActive(placementIndicatorActive.Value);
+            _previewAvatarVisuals.SetActive(avatarActive.Value);
 
             initialized = true;
         }
@@ -99,7 +104,7 @@ namespace VRSYS.Core.Navigation
         /// </summary>
         public void ActivateIndicator()
         {
-            placementIndicatorVisuals.SetActive(true);
+            _placementIndicatorVisuals.SetActive(true);
             placementIndicatorActive.Value = true;
         }
         
@@ -109,7 +114,7 @@ namespace VRSYS.Core.Navigation
         public void UpdateIndicator(Vector3 targetPos, float progress)
         {
             transform.position = targetPos;
-            progressIndicator.localScale = new Vector3(progress, progressIndicator.localScale.y,
+            _progressIndicator.localScale = new Vector3(progress, _progressIndicator.localScale.y,
                 progress);
         }
 
@@ -118,7 +123,7 @@ namespace VRSYS.Core.Navigation
         /// </summary>
         public void ActivateAvatar()
         {
-            previewAvatarVisuals.SetActive(true);
+            _previewAvatarVisuals.SetActive(true);
             avatarActive.Value = true;
         }
 
@@ -131,9 +136,9 @@ namespace VRSYS.Core.Navigation
             hitPos.y = transform.position.y;
             transform.LookAt(hitPos, Vector3.up);
 
-            Vector3 newPos = previewAvatar.localPosition;
+            Vector3 newPos = _previewAvatar.localPosition;
             newPos.y = height;
-            previewAvatar.localPosition = newPos;
+            _previewAvatar.localPosition = newPos;
         }
 
         /// <summary>
@@ -141,15 +146,15 @@ namespace VRSYS.Core.Navigation
         /// </summary>
         public void Deactivate()
         {
-            if (placementIndicatorVisuals.activeSelf)
+            if (_placementIndicatorVisuals.activeSelf)
             {
-                placementIndicatorVisuals.SetActive(false);
+                _placementIndicatorVisuals.SetActive(false);
                 placementIndicatorActive.Value = false;
             }
 
-            if (previewAvatarVisuals.activeSelf)
+            if (_previewAvatarVisuals.activeSelf)
             {
-                previewAvatarVisuals.SetActive(false);
+                _previewAvatarVisuals.SetActive(false);
                 avatarActive.Value = false;
             }
         }
@@ -159,10 +164,10 @@ namespace VRSYS.Core.Navigation
         #region OnValueChangedEvents
 
         private void OnIndicatorActiveChanged(bool previousValue, bool newValue) =>
-            placementIndicatorVisuals.SetActive(newValue);
+            _placementIndicatorVisuals.SetActive(newValue);
 
         private void OnAvatarActiveChanged(bool previousValue, bool newValue) =>
-            previewAvatarVisuals.SetActive(newValue);
+            _previewAvatarVisuals.SetActive(newValue);
 
         #endregion
     }

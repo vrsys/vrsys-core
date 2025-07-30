@@ -43,6 +43,7 @@ using Unity.Netcode;
 using Unity.Services.Authentication;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.Serialization;
 using VRSYS.Core.Avatar;
 using VRSYS.Core.Logging;
 
@@ -101,7 +102,7 @@ namespace VRSYS.Core.Networking
         [HideInInspector] public NetworkVariable<ulong> userId = new NetworkVariable<ulong>(0,
             NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
         
-        private NetworkVariable<UserRole> _userRole = new(default, NetworkVariableReadPermission.Everyone,
+        [HideInInspector] public NetworkVariable<UserRole> userRole = new(default, NetworkVariableReadPermission.Everyone,
             NetworkVariableWritePermission.Owner);
 
         private NetworkVariable<bool> _initialized = new NetworkVariable<bool>(false,
@@ -139,7 +140,7 @@ namespace VRSYS.Core.Networking
                 userColor.Value = _spawnInfo.userColor;
                 
                 // handle user role workflow
-                _userRole.Value = _spawnInfo.userRole;
+                userRole.Value = _spawnInfo.userRole;
                 
                 // mark user as initialized
                 _initialized.Value = true;

@@ -84,7 +84,7 @@ namespace VRSYS.Core.Utility
         [Tooltip("If set to true, configured raycast mask will be overwritten by raycast mask configured on ray interactor.")]
         public bool useInteractorLayers = false;
         [Tooltip("Layer mask used for raycast (selected layers = included in raycast).")]
-        [SerializeField] private LayerMask raycastMask;
+        public LayerMask raycastMask;
 
         
         // Helper bools

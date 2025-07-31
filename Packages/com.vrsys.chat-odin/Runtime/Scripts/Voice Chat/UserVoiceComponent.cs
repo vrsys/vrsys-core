@@ -80,7 +80,6 @@ namespace VRSYS.Core.Chat.Odin
         private GameObject localVoiceComponent;
 
         [Header("Voice Control")] 
-        public GameObject microphone;
         public InputActionProperty muteAction;
         public bool isGloballyMuted = false;
         public string muteGroup = "";
@@ -263,9 +262,6 @@ namespace VRSYS.Core.Chat.Odin
             OdinHandler.Instance.JoinRoom(roomConfig.roomName, userData);
             
             onJoinedRoom.Invoke(roomConfig);
-            
-            if(microphone != null && roomConfig.defaultStereo)
-                microphone.SetActive(true);
         }
 
         // Join a odin voice room and leave all other rooms
@@ -412,9 +408,6 @@ namespace VRSYS.Core.Chat.Odin
             {
                 AudioSource voiceAudioSource = voiceObject.GetComponent<AudioSource>();
                 voiceAudioSource.spatialBlend = isStereo ? 0f : 1f;
-                
-                if(microphone != null)
-                    microphone.SetActive(isStereo);
 
                 if (!IsOwner)
                 {
@@ -443,13 +436,6 @@ namespace VRSYS.Core.Chat.Odin
             OdinUserData userData = JsonUtility.FromJson<OdinUserData>(room.Self.UserData.ToString());
             userData.IsStereo = !userData.IsStereo;
             room.UpdatePeerUserData(userData);
-
-            if (microphone != null)
-            {
-                microphone.SetActive(userData.IsStereo);
-                if(userData.IsStereo)
-                    microphone.GetComponent<AudioSource>().Play();
-            }
         }
 
         private void UserDataChanged(object roomObject, PeerUserDataChangedEventArgs eventArgs)
@@ -466,9 +452,6 @@ namespace VRSYS.Core.Chat.Odin
                 {
                     AudioSource audioSource = voiceObjects.Find(o => o.name == roomName)?.GetComponent<AudioSource>();
                     audioSource.spatialBlend = userData.IsStereo ? 0f : 1f;
-                    
-                    if(microphone != null)
-                        microphone.SetActive(userData.IsStereo);
                 }
             }
         }

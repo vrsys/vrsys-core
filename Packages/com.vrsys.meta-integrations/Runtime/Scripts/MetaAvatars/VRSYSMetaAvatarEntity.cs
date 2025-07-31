@@ -100,9 +100,9 @@ namespace VRSYS.Meta.Avatars
 
         private IEnumerator LoadAvatar()
         {
-            while (VrsysOvrPlatformInitializer.status != VrsysOvrPlatformInitializer.OvrPlatformInitStatus.Succeeded)
+            while (VrsysOvrPlatformInitializer.Status != VrsysOvrPlatformInitializer.OvrPlatformInitStatus.Succeeded)
             {
-                if (VrsysOvrPlatformInitializer.status == VrsysOvrPlatformInitializer.OvrPlatformInitStatus.Failed)
+                if (VrsysOvrPlatformInitializer.Status == VrsysOvrPlatformInitializer.OvrPlatformInitStatus.Failed)
                 {
                     ExtendedLogger.LogError(GetType().Name, "Error initializing OvrPlatform.", this);
                     yield break;

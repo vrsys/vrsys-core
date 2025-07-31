@@ -87,7 +87,7 @@ namespace VRSYS.Meta.Avatars
 
         #endregion
 
-        #region Mono- & NEtworkBehaviour Callbacks
+        #region Mono- & NetworkBehaviour Callbacks
 
         public override void OnNetworkSpawn()
         {

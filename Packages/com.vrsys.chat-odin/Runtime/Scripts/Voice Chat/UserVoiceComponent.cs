@@ -88,13 +88,13 @@ namespace VRSYS.Core.Chat.Odin
         public PlaybackComponent playbackPrefab;
 
         [Header("Channel Handling")] 
-        public bool switchVoiceRoom = false;
-        public bool joinVoiceRoom = false;
-        public bool leaveVoiceRoom = false;
-        public bool leaveAllVoiceRooms = false;
-        public bool toggleStereoInRoom = false;
-        public bool toggleMuteInRoom = false;
-        public string voiceRoomName;
+        [SerializeField] private bool switchVoiceRoom = false;
+        [SerializeField] private bool joinVoiceRoom = false;
+        [SerializeField] private bool leaveVoiceRoom = false;
+        [SerializeField] private bool leaveAllVoiceRooms = false;
+        [SerializeField] private bool toggleStereoInRoom = false;
+        [SerializeField] private bool toggleMuteInRoom = false;
+        [SerializeField] private string voiceRoomName;
 
         [Header("Odin Rooms")]
         public OdinRoomsConfigurationInfo odinRoomsConfigurationInfo;

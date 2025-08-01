@@ -59,8 +59,8 @@ namespace VRSYS.Core.Navigation
         public float translationVelocity = 3.0f;
 
         [Tooltip("Rotation Velocity [degree/sec]")]
-        [Range(1.0f, 10.0f)]
-        public float rotationVelocity = 5.0f;
+        [Range(1.0f, 180.0f)]
+        public float rotationVelocity = 30.0f;
         
         private Vector3 rotInput = Vector3.zero;
 

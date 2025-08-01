@@ -40,6 +40,7 @@ using System.Collections;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
+using UnityEngine.Serialization;
 using VRSYS.Core.Networking;
 
 namespace VRSYS.Core.Logging
@@ -69,9 +70,9 @@ namespace VRSYS.Core.Logging
         #region Member Variables
 
         [Tooltip("Server URL logs get send to. Use https.")]
-        public string serverUrl = "https://foo.vrsys.org/api/app_usage";
+        [SerializeField] private string _serverUrl = "https://foo.vrsys.org/api/app_usage";
 
-        public LogLevel logLevel = LogLevel.Info;
+        [SerializeField] private LogLevel _logLevel = LogLevel.Info;
 
         private string _userName
         {
@@ -118,7 +119,7 @@ namespace VRSYS.Core.Logging
 
         private void LogInfo(ExtendedLoggerLogInformation logInfo)
         {
-            if (logLevel < LogLevel.Warning)
+            if (_logLevel < LogLevel.Warning)
             {
                 ServerLogInformation serverLog = new ServerLogInformation(Application.productName, logInfo.ClearMessage, _userId,
                     _userName, SystemInfo.deviceUniqueIdentifier, LogLevel.Info);
@@ -129,7 +130,7 @@ namespace VRSYS.Core.Logging
         
         private void LogWarning(ExtendedLoggerLogInformation logInfo)
         {
-            if (logLevel < LogLevel.Error)
+            if (_logLevel < LogLevel.Error)
             {
                 ServerLogInformation serverLog = new ServerLogInformation(Application.productName, logInfo.ClearMessage, _userId,
                     _userName, SystemInfo.deviceUniqueIdentifier, LogLevel.Warning);
@@ -140,7 +141,7 @@ namespace VRSYS.Core.Logging
         
         private void LogError(ExtendedLoggerLogInformation logInfo)
         {
-            if (logLevel < LogLevel.None)
+            if (_logLevel < LogLevel.None)
             {
                 ServerLogInformation serverLog = new ServerLogInformation(Application.productName, logInfo.ClearMessage, _userId,
                     _userName, SystemInfo.deviceUniqueIdentifier, LogLevel.Error);
@@ -158,7 +159,7 @@ namespace VRSYS.Core.Logging
             string json = JsonUtility.ToJson(serverLogInfo);
 
             Debug.Log("Logging information to server: " + json);
-            using (UnityWebRequest www = new UnityWebRequest(serverUrl, UnityWebRequest.kHttpVerbPOST))
+            using (UnityWebRequest www = new UnityWebRequest(_serverUrl, UnityWebRequest.kHttpVerbPOST))
             {
                 byte[] bodyRaw = Encoding.UTF8.GetBytes(json);
                 www.uploadHandler = new UploadHandlerRaw(bodyRaw);

@@ -47,8 +47,7 @@ namespace VRSYS.Core.Navigation
         [Header("Pre-Runtime Configuration")]
         public NavigationPlatformSpawnInfo spawnInfo;
         
-        [Header("Runtime Configuration")]
-        public Transform platformTransform;
+        [HideInInspector] public Transform platformTransform;
 
         private Transform lastPlatformTransform;
 

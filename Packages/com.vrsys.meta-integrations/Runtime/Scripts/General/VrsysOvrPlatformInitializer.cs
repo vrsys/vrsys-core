@@ -69,7 +69,7 @@ namespace VRSYS.Meta.General
 
         #region Member Variables
 
-        public static OvrPlatformInitStatus status { get; private set; } = OvrPlatformInitStatus.NotStarted;
+        public static OvrPlatformInitStatus Status { get; private set; } = OvrPlatformInitStatus.NotStarted;
         
         [HideInInspector] public bool Initialized = false;
         [HideInInspector] public ulong LocalUserId = 0;
@@ -106,7 +106,7 @@ namespace VRSYS.Meta.General
 
         public static void InitializeOvrPlatform()
         {
-            if (status == OvrPlatformInitStatus.Succeeded)
+            if (Status == OvrPlatformInitStatus.Succeeded)
             {
                 ExtendedLogger.LogWarning($"{typeof(VrsysOvrPlatformInitializer)}", "OvrPlatform is already initalized.");
                 return;
@@ -114,14 +114,14 @@ namespace VRSYS.Meta.General
 
             try
             {
-                status = OvrPlatformInitStatus.Initializing;
+                Status = OvrPlatformInitStatus.Initializing;
                 Oculus.Platform.Core.AsyncInitialize().OnComplete(InitializeComplete);
 
                 void InitializeComplete(Message<PlatformInitialize> msg)
                 {
                     if (msg.Data.Result != PlatformInitializeResult.Success)
                     {
-                        status = OvrPlatformInitStatus.Failed;
+                        Status = OvrPlatformInitStatus.Failed;
                         ExtendedLogger.LogError($"{typeof(VrsysOvrPlatformInitializer)}",
                             "Failed to initialize OvrPlatform");
                     }
@@ -139,7 +139,7 @@ namespace VRSYS.Meta.General
                     }
                     else
                     {
-                        status = OvrPlatformInitStatus.Failed;
+                        Status = OvrPlatformInitStatus.Failed;
                         var e = msg.GetError();
                         ExtendedLogger.LogError($"{typeof(VrsysOvrPlatformInitializer)}",
                             $"Failed entitlement check: {e.Code} - {e.Message}");
@@ -157,7 +157,7 @@ namespace VRSYS.Meta.General
                             output = $"{e.Code} - {e.Message}";
                         }
 
-                        status = OvrPlatformInitStatus.Failed;
+                        Status = OvrPlatformInitStatus.Failed;
                         ExtendedLogger.LogError($"{typeof(VrsysOvrPlatformInitializer)}",
                             $"Failed to retrieve access toke: {output}");
                     }
@@ -166,18 +166,18 @@ namespace VRSYS.Meta.General
                         ExtendedLogger.LogInfo($"{typeof(VrsysOvrPlatformInitializer)}",
                             "Successfully retrieved access token.");
                         OvrAvatarEntitlement.SetAccessToken(msg.Data);
-                        status = OvrPlatformInitStatus.Succeeded;
+                        Status = OvrPlatformInitStatus.Succeeded;
                     }
                 }
             }
             catch (Exception e)
             {
-                status = OvrPlatformInitStatus.Failed;
+                Status = OvrPlatformInitStatus.Failed;
                 ExtendedLogger.LogError($"{typeof(VrsysOvrPlatformInitializer)}", $"{e.Message}\n{e.StackTrace}");
             }
         }
 
-        public static void ResetOvrPlatformInitState() => status = OvrPlatformInitStatus.NotStarted;
+        public static void ResetOvrPlatformInitState() => Status = OvrPlatformInitStatus.NotStarted;
 
         #endregion
 
@@ -185,12 +185,12 @@ namespace VRSYS.Meta.General
 
         private IEnumerator InitializeOvrUser()
         {
-            if(status == OvrPlatformInitStatus.NotStarted)
+            if(Status == OvrPlatformInitStatus.NotStarted)
                 InitializeOvrPlatform();
 
-            while (status != OvrPlatformInitStatus.Succeeded)
+            while (Status != OvrPlatformInitStatus.Succeeded)
             {
-                if (status == OvrPlatformInitStatus.Failed)
+                if (Status == OvrPlatformInitStatus.Failed)
                 {
                     ExtendedLogger.LogError(GetType().Name, "Error initializing OvrPlatform.", this);
                     yield break;

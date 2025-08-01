@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace VRSYS.Core.Networking
 {
@@ -35,7 +36,22 @@ namespace VRSYS.Core.Networking
         
         #region Public Members
 
-        public List<UserRoleEntry> Roles = new List<UserRoleEntry>();
+        public List<UserRoleEntry> RoleEntries = new List<UserRoleEntry>();
+
+        public List<UserRole> UserRoles
+        {
+            get
+            {
+                List<UserRole> roles = new List<UserRole>();
+
+                foreach (var entry in RoleEntries)
+                {
+                    roles.Add(new UserRole(entry.Name));
+                }
+
+                return roles;
+            }
+        }
 
         #endregion
     }
@@ -57,7 +73,7 @@ namespace VRSYS.Core.Networking
                 return;
             }
 
-            var roles = roleList.Roles;
+            var roles = roleList.RoleEntries;
             if (roles == null)
             {
                 EditorGUI.LabelField(position, "No user roles defined.");

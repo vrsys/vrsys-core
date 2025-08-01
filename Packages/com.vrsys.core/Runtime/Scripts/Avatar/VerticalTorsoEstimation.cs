@@ -56,7 +56,7 @@ namespace VRSYS.Core.Avatar
             ApplyTorsoUpdate(headTransform, transform);
         }
 
-        public static void ApplyTorsoUpdate(Transform headTransform, Transform torsoTransform)
+        private static void ApplyTorsoUpdate(Transform headTransform, Transform torsoTransform)
         {
             torsoTransform.position = headTransform.position;
 

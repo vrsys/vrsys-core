@@ -44,7 +44,6 @@ namespace VRSYS.Core.Navigation
 {
     public class ProgressVisualization : MonoBehaviour
     {
-        public float progress = 0f;
 
         public bool scaleX = true;
 
@@ -52,6 +51,7 @@ namespace VRSYS.Core.Navigation
 
         public bool scaleZ = true;
 
+        private float progress = 0f;
         private float lastProgress;
 
         private Vector3 originalScale;

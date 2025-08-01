@@ -49,16 +49,6 @@ namespace VRSYS.Meta.Avatars
 
         [SerializeField] private OVRCameraRig _ovrCameraRig;
 
-        public OvrAvatarBodyTrackingMode BodyTrackingMode
-        {
-            get => _bodyTrackingMode;
-            set
-            {
-                _bodyTrackingMode = value;
-                InitializeBodyTracking();
-            }
-        }
-
         #endregion
 
         #region MonoBehaviour Callbacks

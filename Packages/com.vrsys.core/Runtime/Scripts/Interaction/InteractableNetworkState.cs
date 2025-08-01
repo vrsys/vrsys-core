@@ -38,6 +38,7 @@
 
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace VRSYS.Core.Interaction
 {
@@ -49,7 +50,7 @@ namespace VRSYS.Core.Interaction
             NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
         [Header("Debugging")]
-        [SerializeField] private bool getOwnership = false;
+        [SerializeField] private bool _getOwnership = false;
 
         #endregion
 
@@ -57,10 +58,10 @@ namespace VRSYS.Core.Interaction
 
         private void Update()
         {
-            if (getOwnership)
+            if (_getOwnership)
             {
                 SwitchOwnerRpc(NetworkManager.LocalClientId);
-                getOwnership = false;
+                _getOwnership = false;
             }
         }
 
@@ -81,13 +82,13 @@ namespace VRSYS.Core.Interaction
         #region RPCs
 
         [Rpc(SendTo.Server)]
-        public void UpdateIsGrabbedRpc(bool isGrabbed)
+        private void UpdateIsGrabbedRpc(bool isGrabbed)
         {
             this.isGrabbed.Value = isGrabbed;
         }
         
         [Rpc(SendTo.Server)]
-        public void SwitchOwnerRpc(ulong newOwner)
+        private void SwitchOwnerRpc(ulong newOwner)
         {
             NetworkObject.ChangeOwnership(newOwner);
         }

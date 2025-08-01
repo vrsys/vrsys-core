@@ -127,7 +127,7 @@ namespace VRSYS.Core.Networking
 
             List<string> userRoles = new List<string>();
             
-            foreach (var userRole in UserRoleList.Instance.Roles)
+            foreach (var userRole in UserRoleList.Instance.RoleEntries)
                 userRoles.Add(userRole.Name);
 
             userRoleDropdown.AddOptions(userRoles);

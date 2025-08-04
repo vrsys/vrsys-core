@@ -1,6 +1,6 @@
 {
   "name" : "com.vrsys.meta-integrations",
-  "version" : "1.0.0",
+  "version" : "1.1.0",
   "displayName" : "VRSYS Meta",
   "description": "Integration of Meta features with VRSYS framework.",
   "documentationUrl" : "https://vrsys.gitbook.io/vrsys",
@@ -14,6 +14,11 @@
       "displayName": "Meta Avatar Samples",
       "description": "Contains sample scene that shows how to setup meta avatars with VRSYS-Core.",
       "path": "Samples~/Meta Avatar Samples"
+    },
+    {
+      "displayName": "Meta Collocation Samples",
+      "description": "Contains sample scene that shows how to setup meta collocation and passthrough with VRSYS-Core.",
+      "path": "Samples~/Meta Collocation Samples"
     }
   ],
   "author": {

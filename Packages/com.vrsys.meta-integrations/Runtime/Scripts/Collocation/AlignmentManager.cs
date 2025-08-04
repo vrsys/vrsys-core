@@ -32,41 +32,44 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //-----------------------------------------------------------------
-//   Authors:        Tony Zoeppig
+//   Authors:        Tony Jan Zoeppig
 //   Date:           2025
 //-----------------------------------------------------------------
 
-using UnityEditor;
-using VRSYS.Core.Editor;
+using UnityEngine;
+using VRSYS.Core.Logging;
+using VRSYS.Core.Networking;
 
-namespace VRSYS.Meta.Editor
+namespace VRSYS.Meta.Collocation
 {
-    public static class CreateMetaPrefabUtility
+    public static class AlignmentManager
     {
-        #region Menu Items
+        private static string _logTag = nameof(AlignmentManager);
+        
+        #region Public Methods
 
-        [MenuItem("GameObject/VRSYS/Meta/General/OVRManager")]
-        public static void CreateOVRManager(MenuCommand menuCommand)
+        public static void AlignUserToAnchor(OVRSpatialAnchor anchor)
         {
-            CreateVRSYSPrefabUtility.CreatePrefab("Basic Prefabs/General/OVR Manager");
+            if (anchor == null || !anchor.Localized)
+            {
+                ExtendedLogger.LogError(_logTag, "Invalid or unlocalized anchor. Cannot align.");
+                return;
+            }
+            
+            ExtendedLogger.LogInfo(_logTag, $"Starting alignment to anchor: {anchor.Uuid}");
+
+            Align(anchor);
         }
-        
-        [MenuItem("GameObject/VRSYS/Meta/General/OVRPlatformInitializer")]
-        public static void VreatOVRPlatformInitializer(MenuCommand menuCommand)
+
+        private static void Align(OVRSpatialAnchor anchor)
         {
-            CreateVRSYSPrefabUtility.CreatePrefab("Basic Prefabs/General/VRSYS-OVRPlatformInitializer");
-        }
-        
-        [MenuItem("GameObject/VRSYS/Meta/Avatars/MetaAvatarManagers")]
-        public static void CreateMetaAvatarManager(MenuCommand menuCommand)
-        {
-            CreateVRSYSPrefabUtility.CreatePrefab("Basic Prefabs/Avatars/Meta Avatar Managers");
-        }
-        
-        [MenuItem("GameObject/VRSYS/Meta/Collocation/CollocationManager")]
-        public static void CreateCollocationManager(MenuCommand menuCommand)
-        {
-            CreateVRSYSPrefabUtility.CreatePrefab("Basic Prefabs/Collocation/VRSYS-CollocationManager");
+            Transform userTransform = NetworkUser.LocalInstance.transform;
+            Transform anchorTransform = anchor.transform;
+
+            userTransform.position = anchorTransform.InverseTransformPoint(Vector3.zero);
+            userTransform.eulerAngles = new Vector3(0, -anchorTransform.eulerAngles.y, 0);
+            
+            ExtendedLogger.LogInfo(_logTag, "Alignment complete");
         }
 
         #endregion

@@ -48,6 +48,12 @@ namespace VRSYS.Core.Networking
             return !(a == b);
         }
         
+        
+
+        #endregion
+
+        #region INetworkSerializable
+
         public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
         {
             serializer.SerializeValue(ref Name);
@@ -55,7 +61,11 @@ namespace VRSYS.Core.Networking
 
         #endregion
 
+        #region IEquatable
+
         public bool Equals(UserRole other) => String.Equals(Name, other.Name);
+
+        #endregion
     }
 
     [Serializable]

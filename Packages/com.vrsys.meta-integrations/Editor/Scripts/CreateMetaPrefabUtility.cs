@@ -48,19 +48,25 @@ namespace VRSYS.Meta.Editor
         [MenuItem("GameObject/VRSYS/Meta/General/OVRManager")]
         public static void CreateOVRManager(MenuCommand menuCommand)
         {
-            CreateVRSYSPrefabUtility.CreatePrefab("Prefabs/OVR Manager");
+            CreateVRSYSPrefabUtility.CreatePrefab("Basic Prefabs/General/OVR Manager");
+        }
+        
+        [MenuItem("GameObject/VRSYS/Meta/General/OVRPlatformInitializer")]
+        public static void VreatOVRPlatformInitializer(MenuCommand menuCommand)
+        {
+            CreateVRSYSPrefabUtility.CreatePrefab("Basic Prefabs/General/VRSYS-OVRPlatformInitializer");
         }
         
         [MenuItem("GameObject/VRSYS/Meta/Avatars/MetaAvatarManagers")]
         public static void CreateMetaAvatarManager(MenuCommand menuCommand)
         {
-            CreateVRSYSPrefabUtility.CreatePrefab("Prefabs/Meta Avatar Managers");
+            CreateVRSYSPrefabUtility.CreatePrefab("Basic Prefabs/Avatars/Meta Avatar Managers");
         }
-
-        [MenuItem("GameObject/VRSYS/Meta/General/OVRPlatformInitializer")]
-        public static void VreatOVRPlatformInitializer(MenuCommand menuCommand)
+        
+        [MenuItem("GameObject/VRSYS/Meta/Collocation/CollocationManager")]
+        public static void CreateCollocationManager(MenuCommand menuCommand)
         {
-            CreateVRSYSPrefabUtility.CreatePrefab("Prefabs/VRSYS-OVRPlatformInitializer");
+            CreateVRSYSPrefabUtility.CreatePrefab("Basic Prefabs/Collocation/VRSYS-CollocationManager");
         }
 
         #endregion

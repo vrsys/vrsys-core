@@ -166,16 +166,6 @@ namespace VRSYS.Core.Networking
             Instance = null;
         }
 
-        public async void KickPlayer(string playerId)
-        {
-            if (isLobbyCreator)
-            {
-                if(verbose)
-                    ExtendedLogger.LogInfo(GetType().Name, "kicking player " + playerId);
-                await LobbyService.Instance.RemovePlayerAsync(lobbyId, playerId);
-            }
-        }
-
         #endregion
 
         #region Unity Login
@@ -208,7 +198,7 @@ namespace VRSYS.Core.Networking
 
         private void OnAuthSignInFailed(RequestFailedException err)
         {
-            Debug.LogError(err);
+            ExtendedLogger.LogError(GetType().Name, $"Error: {err.Message} err.Message", this);
         }
         
         private void OnAuthSignedOut()
@@ -579,6 +569,20 @@ namespace VRSYS.Core.Networking
         {
             // Calling SetConnectionData automatically sets the protocoll to "Unity Transport"
             NetworkManager.Singleton.GetComponent<UnityTransport>().SetConnectionData(localNetworkSettings.ipAddress, localNetworkSettings.port);
+        }
+
+        #endregion
+
+        #region Kick Player
+
+        public async void KickPlayer(string playerId)
+        {
+            if (isLobbyCreator)
+            {
+                if(verbose)
+                    ExtendedLogger.LogInfo(GetType().Name, "kicking player " + playerId);
+                await LobbyService.Instance.RemovePlayerAsync(lobbyId, playerId);
+            }
         }
 
         #endregion

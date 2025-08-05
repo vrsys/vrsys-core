@@ -36,9 +36,14 @@
 //   Date:           2023
 //-----------------------------------------------------------------
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using TMPro;
+using Unity.Services.Lobbies;
 using UnityEngine;
 using UnityEngine.UI;
+using VRSYS.Core.Logging;
 
 namespace VRSYS.Core.Networking
 {
@@ -47,7 +52,10 @@ namespace VRSYS.Core.Networking
         #region Member Variables
 
         // lobby Data
-        private LobbyListUpdater.LobbyData lobbyData;
+        private LobbyListUpdater.LobbyData _lobbyData;
+        
+        // network menu
+        private NetworkMenu _networkMenu;
 
         [Header("UI Elements")] 
         public TextMeshProUGUI lobbyNameText;
@@ -67,9 +75,25 @@ namespace VRSYS.Core.Networking
 
         #region Custom Methods
 
-        public void SetupTile(LobbyListUpdater.LobbyData lobbyData)
+        public async void SetupTile(LobbyListUpdater.LobbyData lobbyData, NetworkMenu menu)
         {
-            this.lobbyData = lobbyData;
+            _lobbyData = lobbyData;
+            _networkMenu = menu;
+
+            var lobbyCallbacks = new LobbyEventCallbacks();
+
+            lobbyCallbacks.PlayerJoined += OnPlayerJoinedLobby;
+            lobbyCallbacks.PlayerLeft += OnPlayerLeftLobby;
+            lobbyCallbacks.LobbyDeleted += OnLobbyDeleted;
+
+            try
+            {
+                await LobbyService.Instance.SubscribeToLobbyEventsAsync(_lobbyData.LobbyId, lobbyCallbacks);
+            }
+            catch(Exception e)
+            {
+                ExtendedLogger.LogError(GetType().Name, $"Error while subscribing to lobby events: {e.Message}", this);
+            }
 
             lobbyNameText.text = lobbyData.LobbyName;
             userCountText.text = lobbyData.CurrentUser.ToString() + "/" + lobbyData.MaxUser.ToString();
@@ -81,7 +105,26 @@ namespace VRSYS.Core.Networking
         private void JoinLobby()
         {
             transform.root.gameObject.SetActive(false);
-            ConnectionManager.Instance.JoinLobby(lobbyData.LobbyId);
+            ConnectionManager.Instance.JoinLobby(_lobbyData.LobbyId);
+        }
+
+        #endregion
+
+        #region Event Callbacks
+
+        private void OnPlayerJoinedLobby(List<LobbyPlayerJoined> obj)
+        {
+            userCountText.text = obj.Count.ToString();
+        }
+        
+        private void OnPlayerLeftLobby(List<int> obj)
+        {
+            userCountText.text = obj.Count.ToString();
+        }
+        
+        private void OnLobbyDeleted()
+        {
+            throw new NotImplementedException();
         }
 
         #endregion

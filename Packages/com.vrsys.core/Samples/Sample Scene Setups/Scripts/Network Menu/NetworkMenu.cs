@@ -309,6 +309,7 @@ namespace VRSYS.Core.Networking
 
         public void RemoveLobbyTile(string lobbyId)
         {
+            Destroy(lobbyTiles[lobbyId].gameObject);
             lobbyTiles.Remove(lobbyId);
         }
 

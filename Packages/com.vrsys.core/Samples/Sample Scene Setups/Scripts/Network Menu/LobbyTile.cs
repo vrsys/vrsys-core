@@ -36,7 +36,6 @@
 //   Date:           2023
 //-----------------------------------------------------------------
 
-using System.Collections;
 using TMPro;
 using Unity.Services.Lobbies;
 using UnityEngine;
@@ -62,6 +61,8 @@ namespace VRSYS.Core.Networking
         [Header("Configuration")] 
         public float lobbyUpdateInterval = 2f;
 
+        private bool _isUpdating = false;
+
         #endregion
 
         #region MonoBehaviour Callbacks
@@ -69,6 +70,15 @@ namespace VRSYS.Core.Networking
         private void Start()
         {
             joinButton.onClick.AddListener(JoinLobby);
+        }
+
+        private void OnDisable()
+        {
+            if (_isUpdating)
+            {
+                CancelInvoke(nameof(UpdateLobby));
+                _networkMenu.RemoveLobbyTile(_lobbyData.LobbyId);
+            }
         }
 
         #endregion
@@ -86,34 +96,27 @@ namespace VRSYS.Core.Networking
             if (lobbyData.CurrentUser == lobbyData.MaxUser)
                 joinButton.interactable = false;
 
-            if(gameObject.activeSelf)
-                StartCoroutine(UpdateLobbyDataCoroutine());
+            _isUpdating = true;
+            InvokeRepeating(nameof(UpdateLobby), 0f, lobbyUpdateInterval);
         }
 
         private async void UpdateLobby()
         {
-            var lobby = await LobbyService.Instance.GetLobbyAsync(_lobbyData.LobbyId);
-
-            userCountText.text = lobby.Players.Count + "/" + lobby.MaxPlayers;
+            try
+            {
+                var lobby = await LobbyService.Instance.GetLobbyAsync(_lobbyData.LobbyId);
+                userCountText.text = lobby.Players.Count + "/" + lobby.MaxPlayers;
+            }
+            catch
+            {
+                _networkMenu.RemoveLobbyTile(_lobbyData.LobbyId);
+            }
         }
 
         private void JoinLobby()
         {
             transform.root.gameObject.SetActive(false);
             ConnectionManager.Instance.JoinLobby(_lobbyData.LobbyId);
-        }
-
-        #endregion
-
-        #region Coroutines
-
-        private IEnumerator UpdateLobbyDataCoroutine()
-        {
-            while (true)
-            {
-                yield return new WaitForSeconds(lobbyUpdateInterval);
-                UpdateLobby();
-            }
         }
 
         #endregion

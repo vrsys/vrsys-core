@@ -41,9 +41,9 @@ using System.Linq;
 using Unity.Collections;
 using Unity.Netcode;
 using Unity.Services.Authentication;
+using Unity.Services.Lobbies;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.Serialization;
 using VRSYS.Core.Avatar;
 using VRSYS.Core.Logging;
 
@@ -193,6 +193,8 @@ namespace VRSYS.Core.Networking
         {
             if (!IsOwner)
             {
+                ExtendedLogger.LogInfo(GetType().Name, "Remote despawn called.");
+                
                 var networkUserCallbackTargets = FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None).OfType<INetworkUserCallbacks>();
                 foreach (var target in networkUserCallbackTargets)
                 {
@@ -202,6 +204,10 @@ namespace VRSYS.Core.Networking
 
             if (IsOwner)
             {
+                ExtendedLogger.LogInfo(GetType().Name, "Local despawn called.");
+                
+                LobbyService.Instance.RemovePlayerAsync(ConnectionManager.Instance.lobby.Id, AuthenticationService.Instance.PlayerId);
+                
                 LocalInstance = null;
             }
         }

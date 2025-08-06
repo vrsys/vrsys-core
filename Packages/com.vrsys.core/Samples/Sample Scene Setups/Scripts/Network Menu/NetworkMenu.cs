@@ -283,7 +283,7 @@ namespace VRSYS.Core.Networking
         {
             foreach (var lobby in lobbyListUpdater.lobbyList)
             {
-                if (lobbyTiles[lobby.LobbyId] == null)
+                if (!lobbyTiles.Keys.Contains(lobby.LobbyId))
                 {
                     GameObject lobbyTile = Instantiate(lobbyTilePrefab, tileParent);
                     lobbyTile.GetComponent<LobbyTile>().SetupTile(lobby, this);
@@ -307,7 +307,7 @@ namespace VRSYS.Core.Networking
             contentTransform.sizeDelta = new Vector2(lobbyListUpdater.lobbyList.Count * (lobbyTilePrefab.GetComponent<RectTransform>().rect.height + tileParent.GetComponent<VerticalLayoutGroup>().spacing),contentTransform.rect.width);
         }
 
-        private void RemoveLobbyTile(string lobbyId)
+        public void RemoveLobbyTile(string lobbyId)
         {
             lobbyTiles.Remove(lobbyId);
         }
@@ -333,7 +333,6 @@ namespace VRSYS.Core.Networking
             {
                 ExtendedLogger.LogError(GetType().Name, "No valid input for port.", this);
             }
-            
         }
 
         private void StartServer()

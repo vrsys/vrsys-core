@@ -36,14 +36,11 @@
 //   Date:           2023
 //-----------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Collections;
 using TMPro;
 using Unity.Services.Lobbies;
 using UnityEngine;
 using UnityEngine.UI;
-using VRSYS.Core.Logging;
 
 namespace VRSYS.Core.Networking
 {
@@ -62,6 +59,9 @@ namespace VRSYS.Core.Networking
         public TextMeshProUGUI userCountText;
         public Button joinButton;
 
+        [Header("Configuration")] 
+        public float lobbyUpdateInterval = 2f;
+
         #endregion
 
         #region MonoBehaviour Callbacks
@@ -75,31 +75,26 @@ namespace VRSYS.Core.Networking
 
         #region Custom Methods
 
-        public async void SetupTile(LobbyListUpdater.LobbyData lobbyData, NetworkMenu menu)
+        public void SetupTile(LobbyListUpdater.LobbyData lobbyData, NetworkMenu menu)
         {
             _lobbyData = lobbyData;
             _networkMenu = menu;
 
-            var lobbyCallbacks = new LobbyEventCallbacks();
-
-            lobbyCallbacks.PlayerJoined += OnPlayerJoinedLobby;
-            lobbyCallbacks.PlayerLeft += OnPlayerLeftLobby;
-            lobbyCallbacks.LobbyDeleted += OnLobbyDeleted;
-
-            try
-            {
-                await LobbyService.Instance.SubscribeToLobbyEventsAsync(_lobbyData.LobbyId, lobbyCallbacks);
-            }
-            catch(Exception e)
-            {
-                ExtendedLogger.LogError(GetType().Name, $"Error while subscribing to lobby events: {e.Message}", this);
-            }
-
             lobbyNameText.text = lobbyData.LobbyName;
-            userCountText.text = lobbyData.CurrentUser.ToString() + "/" + lobbyData.MaxUser.ToString();
+            userCountText.text = lobbyData.CurrentUser + "/" + lobbyData.MaxUser;
 
             if (lobbyData.CurrentUser == lobbyData.MaxUser)
                 joinButton.interactable = false;
+
+            if(gameObject.activeSelf)
+                StartCoroutine(UpdateLobbyDataCoroutine());
+        }
+
+        private async void UpdateLobby()
+        {
+            var lobby = await LobbyService.Instance.GetLobbyAsync(_lobbyData.LobbyId);
+
+            userCountText.text = lobby.Players.Count + "/" + lobby.MaxPlayers;
         }
 
         private void JoinLobby()
@@ -110,21 +105,15 @@ namespace VRSYS.Core.Networking
 
         #endregion
 
-        #region Event Callbacks
+        #region Coroutines
 
-        private void OnPlayerJoinedLobby(List<LobbyPlayerJoined> obj)
+        private IEnumerator UpdateLobbyDataCoroutine()
         {
-            userCountText.text = obj.Count.ToString();
-        }
-        
-        private void OnPlayerLeftLobby(List<int> obj)
-        {
-            userCountText.text = obj.Count.ToString();
-        }
-        
-        private void OnLobbyDeleted()
-        {
-            throw new NotImplementedException();
+            while (true)
+            {
+                yield return new WaitForSeconds(lobbyUpdateInterval);
+                UpdateLobby();
+            }
         }
 
         #endregion

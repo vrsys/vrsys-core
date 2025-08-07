@@ -93,6 +93,8 @@ namespace VRSYS.Core.Networking
 
         private LobbyListUpdater lobbyListUpdater;
 
+        private Dictionary<string, LobbyTile> lobbyTiles = new Dictionary<string, LobbyTile>();
+
         private LocalNetworkSettings localNetworkSettings => ConnectionManager.Instance.localNetworkSettings;
 
         #endregion
@@ -279,19 +281,36 @@ namespace VRSYS.Core.Networking
 
         private void UpdateLobbyList()
         {
-            foreach (Transform t in tileParent)
+            foreach (var lobby in lobbyListUpdater.lobbyList)
             {
-                Destroy(t.gameObject);
+                if (!lobbyTiles.Keys.Contains(lobby.LobbyId))
+                {
+                    GameObject lobbyTile = Instantiate(lobbyTilePrefab, tileParent);
+                    lobbyTile.GetComponent<LobbyTile>().SetupTile(lobby, this);
+                    
+                    lobbyTiles.Add(lobby.LobbyId, lobbyTile.GetComponent<LobbyTile>());
+                }
             }
-
-            foreach (var lobbyData in lobbyListUpdater.lobbyList)
-            {
-                GameObject lobbyTile = Instantiate(lobbyTilePrefab, tileParent);
-                lobbyTile.GetComponent<LobbyTile>().SetupTile(lobbyData);
-            }
+            
+            // foreach (Transform t in tileParent)
+            // {
+            //     Destroy(t.gameObject);
+            // }
+            //
+            // foreach (var lobbyData in lobbyListUpdater.lobbyList)
+            // {
+            //     GameObject lobbyTile = Instantiate(lobbyTilePrefab, tileParent);
+            //     lobbyTile.GetComponent<LobbyTile>().SetupTile(lobbyData);
+            // }
 
             RectTransform contentTransform = tileParent.GetComponent<RectTransform>();
             contentTransform.sizeDelta = new Vector2(lobbyListUpdater.lobbyList.Count * (lobbyTilePrefab.GetComponent<RectTransform>().rect.height + tileParent.GetComponent<VerticalLayoutGroup>().spacing),contentTransform.rect.width);
+        }
+
+        public void RemoveLobbyTile(string lobbyId)
+        {
+            Destroy(lobbyTiles[lobbyId].gameObject);
+            lobbyTiles.Remove(lobbyId);
         }
 
         private void LocalNetwork()
@@ -315,7 +334,6 @@ namespace VRSYS.Core.Networking
             {
                 ExtendedLogger.LogError(GetType().Name, "No valid input for port.", this);
             }
-            
         }
 
         private void StartServer()

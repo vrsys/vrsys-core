@@ -114,6 +114,14 @@ namespace VRSYS.Meta.Avatars
 
         #endregion
 
+        #region Public Methods
+
+        public VRSYSMetaAvatarEntity LocalAvatar() { return _localAvatar; }
+        
+        public VRSYSMetaAvatarEntity RemoteAvatar() { return _remoteAvatar; }
+
+        #endregion
+
         #region Private Methods
 
         private void ClearComponentsOnRemote()

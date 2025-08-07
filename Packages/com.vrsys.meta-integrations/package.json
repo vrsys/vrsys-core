@@ -1,6 +1,6 @@
 {
   "name" : "com.vrsys.meta-integrations",
-  "version" : "1.1.0",
+  "version" : "1.1.1",
   "displayName" : "VRSYS Meta",
   "description": "Integration of Meta features with VRSYS framework.",
   "documentationUrl" : "https://vrsys.gitbook.io/vrsys",

@@ -51,7 +51,7 @@ namespace VRSYS.Core.Networking
         public bool checkForLobby = true;
         private bool lastCheckForLobby = false;
 
-        public UnityEvent onLobbyFound;
+        public UnityEvent<string> onLobbyFound;
         public UnityEvent onLobbyNotFound;
 
         private LobbyListUpdater lobbyListUpdater;
@@ -99,7 +99,7 @@ namespace VRSYS.Core.Networking
             {
                 if(verbose)
                     ExtendedLogger.LogInfo(GetType().Name, "Lobby " + lobbyName + " found.");
-                onLobbyFound.Invoke();
+                onLobbyFound.Invoke(lobbyListUpdater.lobbyList[idx].LobbyId);
             }
             else
             {

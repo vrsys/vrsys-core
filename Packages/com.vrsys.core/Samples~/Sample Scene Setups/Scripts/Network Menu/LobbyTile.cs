@@ -37,6 +37,7 @@
 //-----------------------------------------------------------------
 
 using TMPro;
+using Unity.Services.Lobbies;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -47,12 +48,20 @@ namespace VRSYS.Core.Networking
         #region Member Variables
 
         // lobby Data
-        private LobbyListUpdater.LobbyData lobbyData;
+        private LobbyListUpdater.LobbyData _lobbyData;
+        
+        // network menu
+        private NetworkMenu _networkMenu;
 
         [Header("UI Elements")] 
         public TextMeshProUGUI lobbyNameText;
         public TextMeshProUGUI userCountText;
         public Button joinButton;
+
+        [Header("Configuration")] 
+        public float lobbyUpdateInterval = 2f;
+
+        private bool _isUpdating = false;
 
         #endregion
 
@@ -63,25 +72,51 @@ namespace VRSYS.Core.Networking
             joinButton.onClick.AddListener(JoinLobby);
         }
 
+        private void OnDisable()
+        {
+            if (_isUpdating)
+            {
+                CancelInvoke(nameof(UpdateLobby));
+                _networkMenu.RemoveLobbyTile(_lobbyData.LobbyId);
+            }
+        }
+
         #endregion
 
         #region Custom Methods
 
-        public void SetupTile(LobbyListUpdater.LobbyData lobbyData)
+        public void SetupTile(LobbyListUpdater.LobbyData lobbyData, NetworkMenu menu)
         {
-            this.lobbyData = lobbyData;
+            _lobbyData = lobbyData;
+            _networkMenu = menu;
 
             lobbyNameText.text = lobbyData.LobbyName;
-            userCountText.text = lobbyData.CurrentUser.ToString() + "/" + lobbyData.MaxUser.ToString();
+            userCountText.text = lobbyData.CurrentUser + "/" + lobbyData.MaxUser;
 
             if (lobbyData.CurrentUser == lobbyData.MaxUser)
                 joinButton.interactable = false;
+
+            _isUpdating = true;
+            InvokeRepeating(nameof(UpdateLobby), 0f, lobbyUpdateInterval);
+        }
+
+        private async void UpdateLobby()
+        {
+            try
+            {
+                var lobby = await LobbyService.Instance.GetLobbyAsync(_lobbyData.LobbyId);
+                userCountText.text = lobby.Players.Count + "/" + lobby.MaxPlayers;
+            }
+            catch
+            {
+                _networkMenu.RemoveLobbyTile(_lobbyData.LobbyId);
+            }
         }
 
         private void JoinLobby()
         {
             transform.root.gameObject.SetActive(false);
-            ConnectionManager.Instance.JoinLobby(lobbyData.LobbyId);
+            ConnectionManager.Instance.JoinLobby(_lobbyData.LobbyId);
         }
 
         #endregion

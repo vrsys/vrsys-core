@@ -50,7 +50,7 @@ using VRSYS.Core.Logging;
 namespace VRSYS.Core.Networking
 {
     [RequireComponent(typeof(NetworkObject), typeof(AvatarAnatomy))]
-    public class NetworkUser : NetworkBehaviour
+    public partial class NetworkUser : NetworkBehaviour
     {
         #region Local Instance
 

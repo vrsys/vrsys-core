@@ -1,6 +1,6 @@
 {
   "name" : "com.vrsys.core",
-  "version" : "1.0.0",
+  "version" : "1.0.1",
   "displayName" : "VRSYS Core",
   "description": "Core elements of VRSYS framework.",
   "documentationUrl" : "https://vrsys.gitbook.io/vrsys",

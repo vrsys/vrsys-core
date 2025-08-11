@@ -36,6 +36,8 @@
 //   Date:           2025
 //-----------------------------------------------------------------
 
+#if UNITY_EDITOR
+
 using UnityEditor;
 using UnityEngine;
 using VRSYS.Core.Logging;
@@ -126,3 +128,5 @@ namespace VRSYS.Core.Editor
         #endregion
     }
 }
+
+#endif

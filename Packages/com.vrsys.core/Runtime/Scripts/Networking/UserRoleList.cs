@@ -1,9 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using UnityEditor;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace VRSYS.Core.Networking
 {
@@ -11,7 +8,23 @@ namespace VRSYS.Core.Networking
     {
         #region Singleton
 
-        public static UserRoleList Instance;
+        private static UserRoleList _instance;
+        
+        public static UserRoleList Instance
+        {
+            get
+            {
+                if (_instance == null)
+                {
+                    var results = Resources.LoadAll<UserRoleList>("");
+
+                    if (results.Length > 0)
+                        _instance = results[0];
+                }
+                    
+                return _instance;
+            }
+        }
 
         #endregion
         
@@ -32,15 +45,6 @@ namespace VRSYS.Core.Networking
 
                 return roles;
             }
-        }
-
-        #endregion
-
-        #region Scriptable Object Callbacks
-
-        private void Awake()
-        {
-            Instance = this;
         }
 
         #endregion

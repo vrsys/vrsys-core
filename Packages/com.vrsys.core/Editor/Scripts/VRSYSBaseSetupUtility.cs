@@ -38,6 +38,7 @@
 
 #if UNITY_EDITOR
 
+using System.IO;
 using UnityEditor;
 using UnityEngine;
 using VRSYS.Core.Logging;
@@ -51,7 +52,8 @@ namespace VRSYS.Core.Editor
 
         private static string _logTag = "VRSYSBaseSetupUtility";
         
-        private const string userRoleListAssetPath = "Assets/UserRoleList.asset";
+        private const string userRoleListAssetPath = "Assets/VRSYS/Resources/";
+        private const string userRoleListFileName = "UserRoleList.asset";
 
         #endregion
 
@@ -82,8 +84,10 @@ namespace VRSYS.Core.Editor
                 return;
             }
 
+            Directory.CreateDirectory(userRoleListAssetPath);
+            
             UserRoleList userRoleList = ScriptableObject.CreateInstance<UserRoleList>();
-            AssetDatabase.CreateAsset(userRoleList, userRoleListAssetPath);
+            AssetDatabase.CreateAsset(userRoleList, string.Concat(userRoleListAssetPath, userRoleListFileName));
             AssetDatabase.SaveAssets();
             
             EditorUtility.FocusProjectWindow();

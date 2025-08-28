@@ -441,7 +441,8 @@ namespace VRSYS.Core.Networking
                 }
                 catch (LobbyServiceException e)
                 {
-                    Debug.LogError(e);
+                    ExtendedLogger.LogWarning(GetType().Name, $"Auto start failed. Starting retry. Error: {e.Message}", this);
+                    Invoke(nameof(AutoStart), 1f);
                 }
             }
             else

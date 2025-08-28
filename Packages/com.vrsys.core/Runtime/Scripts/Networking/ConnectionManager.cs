@@ -107,10 +107,8 @@ namespace VRSYS.Core.Networking
         {
             if(Instance != null)
             {
-                if(verbose)
-                    ExtendedLogger.LogInfo(GetType().Name, "destroying previous connection manager");
-                DestroyImmediate(Instance.gameObject);
-                Instance = null;
+                Destroy(gameObject);
+                return;
             }
 
             Instance = this;
@@ -441,7 +439,8 @@ namespace VRSYS.Core.Networking
                 }
                 catch (LobbyServiceException e)
                 {
-                    Debug.LogError(e);
+                    ExtendedLogger.LogWarning(GetType().Name, $"Auto start failed. Starting retry. Error: {e.Message}", this);
+                    Invoke(nameof(AutoStart), 1f);
                 }
             }
             else

@@ -46,7 +46,7 @@ namespace VRSYS.Core.Networking
         public bool autoStart = false;
         public string lobbyName = "Default Lobby";
         public int maxUsers = 10;
-        public bool isPrivate = false;
+        [HideInInspector] public bool isPrivate = false;
         
         public void SetAutoStart(bool autoStart) => this.autoStart = autoStart;
         

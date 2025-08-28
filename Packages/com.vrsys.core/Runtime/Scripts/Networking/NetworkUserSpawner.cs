@@ -79,12 +79,12 @@ namespace VRSYS.Core.Networking
 
                 if (prefabIndex == -1)
                 {
-                    ExtendedLogger.LogError(GetType().Name, "no user prefab found for user role " + spawnInfo.userRole);
+                    ExtendedLogger.LogError(GetType().Name, "no user prefab found for user role " + spawnInfo.userRole.Name);
                     return;
                 }
 
                 if(verbose)
-                    ExtendedLogger.LogInfo(GetType().Name, "spawning " + spawnInfo.userName + " " + spawnInfo.userRole.ToString());
+                    ExtendedLogger.LogInfo(GetType().Name, "spawning " + spawnInfo.userName + " " + spawnInfo.userRole.Name);
 
                 SpawnUserPrefabServerRPC(prefabIndex);
             }

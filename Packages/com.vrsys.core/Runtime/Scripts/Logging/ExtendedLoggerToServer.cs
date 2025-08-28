@@ -53,9 +53,9 @@ namespace VRSYS.Core.Logging
             get
             {
                 if (NetworkUser.LocalInstance != null)
-                    return "[" + NetworkUser.LocalInstance.userName.Value + "]";
+                    return $"<color=white>[<color=purple>{NetworkUser.LocalInstance.userName.Value}</color>]</color>";
 
-                return "[Client" + NetworkManager.LocalClientId + "]";
+                return $"<color=white>[<color=purple>Client {NetworkManager.LocalClientId}</color>]</color>";
             }
         }
 

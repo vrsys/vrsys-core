@@ -107,10 +107,8 @@ namespace VRSYS.Core.Networking
         {
             if(Instance != null)
             {
-                if(verbose)
-                    ExtendedLogger.LogInfo(GetType().Name, "destroying previous connection manager");
-                DestroyImmediate(Instance.gameObject);
-                Instance = null;
+                Destroy(gameObject);
+                return;
             }
 
             Instance = this;

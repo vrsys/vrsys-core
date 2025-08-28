@@ -48,17 +48,17 @@ namespace VRSYS.Core.Logging
 
         [SerializeField] private LogLevel _logLevel;
 
-        private string logTag
+        private string _logTag
         {
             get
             {
                 if (NetworkUser.LocalInstance != null)
-                    return "[" + NetworkUser.LocalInstance.userName.Value + "]";
+                    return $"<color=white>[<color=purple>{NetworkUser.LocalInstance.userName.Value}</color>]</color>";
 
-                return "[Client" + NetworkManager.LocalClientId + "]";
+                return $"<color=white>[<color=purple>Client {NetworkManager.LocalClientId}</color>]</color>";
             }
         }
-
+        
         #endregion
 
         #region Mono- & NetworkBehaviour Callbacks
@@ -91,7 +91,7 @@ namespace VRSYS.Core.Logging
         {
             if (_logLevel < LogLevel.Warning)
             {
-                string log = logTag + logInfo.FormattedMessage;
+                string log = _logTag + logInfo.FormattedMessage;
                 LogInfoRpc(log);
             }
         }
@@ -100,7 +100,7 @@ namespace VRSYS.Core.Logging
         {
             if (_logLevel < LogLevel.Error)
             {
-                string log = logTag + logInfo.FormattedMessage;
+                string log = _logTag + logInfo.FormattedMessage;
                 LogWarningRpc(log);
             }
         }
@@ -109,7 +109,8 @@ namespace VRSYS.Core.Logging
         {
             if (_logLevel < LogLevel.None)
             {
-                string log = logTag + logInfo.FormattedMessage;
+                string log = _logTag + logInfo.FormattedMessage;
+                
                 LogErrorRpc(log);
             }
         }

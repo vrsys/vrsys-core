@@ -3146,7 +3146,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
-  userRole: {fileID: 0}
   localBehaviours:
   - {fileID: 7216047633375872281}
   - {fileID: 124210279391279872}
@@ -3203,6 +3202,9 @@ MonoBehaviour:
         byte0029: 0
   userId:
     m_InternalValue: 0
+  userRole:
+    m_InternalValue:
+      Name: 
 --- !u!114 &9029850245739658440
 MonoBehaviour:
   m_ObjectHideFlags: 0

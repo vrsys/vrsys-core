@@ -89,6 +89,8 @@ namespace VRSYS.Meta.Collocation
         [Tooltip("If true, warning and info logs will be printed to console. If false, only error logs will be logged.")]
         [SerializeField] private bool _verbose = false;
 
+        private OVRSpatialAnchor _currentAnchor;
+
         #endregion
 
         #region MonoBehaviour Callbacks
@@ -112,6 +114,16 @@ namespace VRSYS.Meta.Collocation
         public void OnRemoteNetworkUserSetup(NetworkUser user)
         {
             // ...
+        }
+
+        #endregion
+
+        #region Public Methods
+
+        public void Realign()
+        {
+            if(_collcoationUserRoles.Contains(NetworkUser.LocalInstance.userRole.Value) && _currentAnchor != null)
+                AlignmentManager.AlignUserToAnchor(_currentAnchor);
         }
 
         #endregion
@@ -184,9 +196,11 @@ namespace VRSYS.Meta.Collocation
                     var spatialAnchor = Instantiate(_anchorPrefab);
                     // Bind localized anchor to instantiated anchor in scene
                     unboundAnchors[0].BindTo(spatialAnchor);
+
+                    _currentAnchor = spatialAnchor;
                     
                     // Trigger alignment of user to anchor
-                    AlignmentManager.AlignUserToAnchor(spatialAnchor);
+                    AlignmentManager.AlignUserToAnchor(_currentAnchor);
                     return;
                 }
                 
@@ -266,6 +280,8 @@ namespace VRSYS.Meta.Collocation
                     ExtendedLogger.LogError(GetType().Name, $"Failed to share alignment anchor. Error: {shareResult.Status}", this);
                     return;
                 }
+
+                _currentAnchor = anchor;
 
                 if (_verbose)
                     ExtendedLogger.LogInfo(GetType().Name, $"Alignment anchor shared successfully. Group UUID: {_currentSessionUUID}", this);

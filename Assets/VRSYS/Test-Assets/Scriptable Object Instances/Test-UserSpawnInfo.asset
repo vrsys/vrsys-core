@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: Test-UserSpawnInfo
   m_EditorClassIdentifier: 
   userRole:
-    Name: Desktop
+    Name: HMD
   userName: 
   userColor: {r: 0, g: 0, b: 0, a: 0}

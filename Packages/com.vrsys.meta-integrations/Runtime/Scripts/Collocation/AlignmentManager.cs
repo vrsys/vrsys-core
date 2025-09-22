@@ -36,6 +36,7 @@
 //   Date:           2025
 //-----------------------------------------------------------------
 
+using System.Threading.Tasks;
 using UnityEngine;
 using VRSYS.Core.Logging;
 using VRSYS.Core.Networking;
@@ -65,6 +66,9 @@ namespace VRSYS.Meta.Collocation
         {
             Transform userTransform = NetworkUser.LocalInstance.transform;
             Transform anchorTransform = anchor.transform;
+            
+            userTransform.position = Vector3.zero;
+            userTransform.eulerAngles = Vector3.zero;
 
             userTransform.position = anchorTransform.InverseTransformPoint(Vector3.zero);
             userTransform.eulerAngles = new Vector3(0, -anchorTransform.eulerAngles.y, 0);

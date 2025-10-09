@@ -120,6 +120,21 @@ namespace VRSYS.Meta.Avatars
         
         public VRSYSMetaAvatarEntity RemoteAvatar() { return _remoteAvatar; }
 
+        public void ReloadAvatar()
+        {
+            if (!IsOwner)
+            {
+                ExtendedLogger.LogError(GetType().Name, "Avatar reload can only be triggered by avatar owner.", this);
+                return;
+            }
+            
+            if(_verbose)
+                ExtendedLogger.LogInfo(GetType().Name, "Triggered reload of avatar.", this);
+            
+            _localAvatar.LoadLocalAvatar();
+            ReloadAvatarRpc(_userId);
+        }
+
         #endregion
 
         #region Private Methods
@@ -200,6 +215,9 @@ namespace VRSYS.Meta.Avatars
             if (_remoteAvatarIsLoaded)
                 _remoteAvatar.ApplyStreamData(data);
         }
+
+        [Rpc(SendTo.NotMe)]
+        private void ReloadAvatarRpc(ulong userId) => _remoteAvatar.LoadAvatarByCdn(userId);
 
         #endregion
     }

@@ -36,7 +36,6 @@
 //   Date:           2025
 //-----------------------------------------------------------------
 
-using Oculus.Avatar2;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using VRSYS.Core.Networking;

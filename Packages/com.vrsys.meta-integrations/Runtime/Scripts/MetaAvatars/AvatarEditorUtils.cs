@@ -23,6 +23,8 @@
 
 using System;
 using Oculus.Platform;
+using UnityEngine;
+using VRSYS.Core.Logging;
 
 namespace VRSYS.Meta.Avatars
 {
@@ -81,7 +83,7 @@ namespace VRSYS.Meta.Avatars
             }
             catch (Exception error)
             {
-                OvrAvatarLog.LogError("[AvatarEditorUtils] Launch Avatar Editor error: " + error);
+                ExtendedLogger.LogError("AvatarEditorUtils","Launch Avatar Editor error: " + error);
             }
 #endif
         }

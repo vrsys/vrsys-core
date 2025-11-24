@@ -71,7 +71,7 @@ namespace VRSYS.Core.Networking
 
         private void Start()
         {
-            if(ConnectionManager.Instance.connectionState == ConnectionState.Online) // start directly if already online, e.g. when returning to lobby from multi-user session
+            if(ConnectionManager.Instance.connectionState == ConnectionState.Online || ConnectionManager.Instance.connectionState == ConnectionState.JoinedLobby) // start directly if already online, e.g. when returning to lobby from multi-user session
                 StartLobbyListUpdate();
             else
                 ConnectionManager.Instance.onConnectionStateChange.AddListener(Initialize);

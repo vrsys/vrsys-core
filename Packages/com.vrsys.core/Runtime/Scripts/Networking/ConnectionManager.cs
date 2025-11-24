@@ -107,7 +107,7 @@ namespace VRSYS.Core.Networking
         {
             if(Instance != null)
             {
-                DestroyImmediate(gameObject);
+                DestroyImmediate(Instance.gameObject);
                 return;
             }
 

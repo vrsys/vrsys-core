@@ -71,7 +71,10 @@ namespace VRSYS.Core.Networking
 
         private void Start()
         {
-            ConnectionManager.Instance.onConnectionStateChange.AddListener(Initialize);
+            if(ConnectionManager.Instance.connectionState == ConnectionState.Online) // start directly if already online, e.g. when returning to lobby from multi-user session
+                StartLobbyListUpdate();
+            else
+                ConnectionManager.Instance.onConnectionStateChange.AddListener(Initialize);
         }
 
         private void OnDestroy()
@@ -88,7 +91,12 @@ namespace VRSYS.Core.Networking
         {
             // start list update
             if(state == ConnectionState.Online)
-                InvokeRepeating(nameof(UpdateLobbyList), 5f, updateInterval);
+                StartLobbyListUpdate();
+        }
+
+        private void StartLobbyListUpdate()
+        {
+            InvokeRepeating(nameof(UpdateLobbyList), 5f, updateInterval);
         }
 
         private async void UpdateLobbyList()

@@ -94,7 +94,7 @@ namespace VRSYS.Core.Networking
         private RelayJoinData joinData;
 
         // Connection state
-        private ConnectionState connectionState = ConnectionState.Offline;
+        public ConnectionState connectionState = ConnectionState.Offline;
         [HideInInspector] public UnityEvent<ConnectionState> onConnectionStateChange = new UnityEvent<ConnectionState>();
 
         private static string authenticatorGameObjectName = "UnityServicesAuthenticator";

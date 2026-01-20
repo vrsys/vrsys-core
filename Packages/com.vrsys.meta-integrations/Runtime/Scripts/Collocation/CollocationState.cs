@@ -4,6 +4,8 @@ namespace VRSYS.Meta.Collocation
     {
         Idle,
         LoadingLocalAnchor,
+        CreatingLocalAnchor,
+        DisplayLocalAnchors,
         SearchingCollocationSession,
         LoadingSessionAnchor,
         AligningToAnchor,

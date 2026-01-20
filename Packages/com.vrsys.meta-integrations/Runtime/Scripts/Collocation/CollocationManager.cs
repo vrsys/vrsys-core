@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using VRSYS.Core.Networking;
+using VRSYS.Meta.Collocation.VRSYS.Meta.Collocation;
 
 namespace VRSYS.Meta.Collocation
 {
@@ -36,6 +37,13 @@ namespace VRSYS.Meta.Collocation
         private CollocationStateHandler _currentState;
         
         public SearchSessionStateHandler SearchSessionStateHandler { get; private set; }
+        
+        // Local Anchor States
+        public LoadingLocalAnchorStateHandler LoadingLocalAnchorStateHandler { get; private set; }
+        public CreatingLocalAnchorStateHandler CreatingLocalAnchorStateHandler { get; private set; }
+        
+        // TODO: For local anchor or support both group and individual anchors?
+        public AligningToAnchorStateHandler AligningToAnchorStateHandler { get; private set; }
 
         #endregion
 

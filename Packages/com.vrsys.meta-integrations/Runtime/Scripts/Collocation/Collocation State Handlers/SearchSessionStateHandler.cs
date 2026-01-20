@@ -17,10 +17,6 @@ public class SearchSessionStateHandler : CollocationStateHandler
 
     public override void StartState()
     {
-        CollocationStateMessage message = new CollocationStateMessage(State, CollocationStateStatus.Started,
-            "Starting discovery of collocation sessions...");
-        manager.UpdateState(message);
-
         StartDiscoveringSessions();
     }
 
@@ -39,7 +35,7 @@ public class SearchSessionStateHandler : CollocationStateHandler
             : $"Retry to start discovery of collocation sessions. Retry: {_retryCount}";
 
         CollocationStateMessage stateMessage = new CollocationStateMessage(State, status, message);
-        manager.UpdateState(stateMessage);
+        manager.BroadcastState(stateMessage);
         
         OVRColocationSession.ColocationSessionDiscovered += OnSessionDiscovered;
         var discoveryStartResult = await OVRColocationSession.StartDiscoveryAsync(); // start discovery
@@ -50,7 +46,8 @@ public class SearchSessionStateHandler : CollocationStateHandler
             {
                 stateMessage = new CollocationStateMessage(State, CollocationStateStatus.Failed,
                     $"Failed to start collocation session discovery. Result: {discoveryStartResult.Status}");
-                ExtendedLogger.LogError(GetType().Name, stateMessage.Message, manager);
+                ExtendedLogger.LogWarning(GetType().Name, stateMessage.Message, manager);
+                manager.BroadcastState(stateMessage);
                 return;
             }
 
@@ -74,22 +71,26 @@ public class SearchSessionStateHandler : CollocationStateHandler
 
         await Task.Delay((int)(manager.DiscoverTime * 1000));
 
-        EvaluateDiscoveryResults();
+        EndState();
     }
 
-    private void EvaluateDiscoveryResults()
+    protected override void EndState()
     {
-        
+        if (manager.SessionDatas == null || manager.SessionDatas.Count == 0)
+        {
+            // geh in create session
+        }
+        else
+        {
+            // geh in zeige sessions
+        }
     }
 
     #endregion
 
     #region Event Callbacks
 
-    private void OnSessionDiscovered(OVRColocationSession.Data data)
-    {
-        
-    }
+    private void OnSessionDiscovered(OVRColocationSession.Data sessionData) => manager.AddSession(sessionData);
 
     #endregion
 }

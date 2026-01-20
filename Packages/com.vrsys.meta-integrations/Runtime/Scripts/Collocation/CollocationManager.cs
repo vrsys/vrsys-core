@@ -10,7 +10,7 @@ namespace VRSYS.Meta.Collocation
         #region Properties
 
         [Header("State")]
-        public CollocationState State { get; private set; } = CollocationState.Idle;
+        public CollocationState State => _currentState.State;
         public UnityEvent<CollocationStateMessage> OnStateChanged = new ();
 
         [Header("Configuration")] 
@@ -26,6 +26,8 @@ namespace VRSYS.Meta.Collocation
         [Header("Debugging")] 
         [SerializeField] private bool _verbose = true;
         public bool Verbose => _verbose;
+
+        public List<OVRColocationSession.Data> SessionDatas { get; private set; }
         
         #endregion
 
@@ -57,11 +59,23 @@ namespace VRSYS.Meta.Collocation
 
         #region Public Methods
 
-        public void UpdateState(CollocationStateMessage message)
+        public void BroadcastState(CollocationStateMessage message)
         {
-            State = message.State;
-            
             OnStateChanged.Invoke(message);
+        }
+
+        public void EnterState(CollocationStateHandler state)
+        {
+            _currentState = state;
+            state.StartState();
+        }
+
+        public void AddSession(OVRColocationSession.Data sessionData)
+        {
+            if (SessionDatas == null)
+                SessionDatas = new List<OVRColocationSession.Data>();
+            
+            SessionDatas.Add(sessionData);
         }
 
         #endregion
@@ -81,8 +95,7 @@ namespace VRSYS.Meta.Collocation
             }
             else
             {
-                _currentState = SearchSessionStateHandler;
-                SearchSessionStateHandler.StartState();
+                EnterState(SearchSessionStateHandler);
             }
         }
 

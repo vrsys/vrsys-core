@@ -30,6 +30,8 @@ namespace VRSYS.Meta.Collocation
         #region Public Methods
 
         public abstract void StartState();
+        
+        protected abstract void EndState();
 
         #endregion
     }

@@ -428,6 +428,58 @@ Transform:
   - {fileID: 1959796354}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &497175524
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 497175526}
+  - component: {fileID: 497175525}
+  m_Layer: 0
+  m_Name: VRSYS-CollocationManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &497175525
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 497175524}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a3039bf17116d1f4496aa6a8dd91f38c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  OnStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  _discoveryTime: 10
+  _retryTime: 1
+  _maxRetries: 5
+  _collocationRoles: []
+  _verbose: 1
+--- !u!4 &497175526
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 497175524}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &525213377
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -990,7 +1042,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1461935703739182483, guid: 273626d798a2a4c48ad9b129aa98d06b, type: 3}
       propertyPath: m_Name
-      value: VRSYS-CollocationManager
+      value: VRSYS-CollocationManager-Old
       objectReference: {fileID: 0}
     - target: {fileID: 9108676969860956501, guid: 273626d798a2a4c48ad9b129aa98d06b, type: 3}
       propertyPath: m_LocalPosition.x
@@ -1619,7 +1671,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3c08b63a2ee50414e8b9284005888b21, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  collocationManager: {fileID: 691024783}
+  collocationManagerOld: {fileID: 691024783}
   realignAction:
     m_Name: Realign
     m_Type: 0
@@ -1767,3 +1819,4 @@ SceneRoots:
   - {fileID: 489919309}
   - {fileID: 1479260458}
   - {fileID: 69449845}
+  - {fileID: 497175526}

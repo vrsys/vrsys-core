@@ -1,12 +1,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Serialization;
 using UnityEngine.XR;
 using VRSYS.Meta.Collocation;
 
 public class DebugCollocationRealing : MonoBehaviour
 {
-    public CollocationManager collocationManager;
+    [FormerlySerializedAs("collocationManager")] public CollocationManagerOld collocationManagerOld;
     public InputAction realignAction;
 
     private List<XRInputSubsystem> _xrInputSubsystems = new();
@@ -19,6 +20,6 @@ public class DebugCollocationRealing : MonoBehaviour
     private void Update()
     {
         if(realignAction.WasPressedThisFrame())
-            collocationManager.Realign();
+            collocationManagerOld.Realign();
     }
 }

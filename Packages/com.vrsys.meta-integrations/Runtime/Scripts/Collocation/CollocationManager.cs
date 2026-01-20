@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.Serialization;
 using VRSYS.Core.Networking;
 
 namespace VRSYS.Meta.Collocation
@@ -23,11 +24,20 @@ namespace VRSYS.Meta.Collocation
 
         [SerializeField] [UserRoleSelector] private List<UserRole> _collocationRoles;
 
+        [FormerlySerializedAs("_sessionListUi")]
+        [Header("UI")] 
+        
+        [SerializeField] private GameObject _sessionListUiPrefab;
+        public GameObject SessionListUiPrefab => _sessionListUiPrefab;
+        
         [Header("Debugging")] 
         [SerializeField] private bool _verbose = true;
         public bool Verbose => _verbose;
 
         public List<OVRColocationSession.Data> SessionDatas { get; private set; }
+
+        private OVRColocationSession.Data _currentSessionData;
+        public OVRColocationSession.Data CurrentSessionData => _currentSessionData;
         
         #endregion
 
@@ -36,6 +46,8 @@ namespace VRSYS.Meta.Collocation
         private CollocationStateHandler _currentState;
         
         public SearchSessionStateHandler SearchSessionStateHandler { get; private set; }
+        
+        public DisplaySessionsStateHandler DisplaySessionsStateHandler { get; private set; }
 
         #endregion
 
@@ -78,6 +90,8 @@ namespace VRSYS.Meta.Collocation
             SessionDatas.Add(sessionData);
         }
 
+        public void SetCurrentSession(OVRColocationSession.Data data) =>_currentSessionData = data;
+
         #endregion
 
         #region Private Methods
@@ -85,6 +99,7 @@ namespace VRSYS.Meta.Collocation
         private void InitializeStates()
         {
             SearchSessionStateHandler = new SearchSessionStateHandler(this);
+            DisplaySessionsStateHandler = new DisplaySessionsStateHandler(this);
         }
         
         private void StartCollocation()

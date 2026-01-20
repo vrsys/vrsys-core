@@ -11,7 +11,8 @@ namespace VRSYS.Meta.Collocation
         AdvertisingSession,
         CreatingSessionAnchor,
         SavingSessionAnchor,
-        SharingSessionAnchor
+        SharingSessionAnchor,
+        DisplaySessions
     }
     
     public enum CollocationStateStatus

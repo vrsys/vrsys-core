@@ -19,6 +19,22 @@ public class SearchSessionStateHandler : CollocationStateHandler
     {
         StartDiscoveringSessions();
     }
+    
+    protected override void EndState()
+    {
+        if (_manager.SessionDatas == null || _manager.SessionDatas.Count == 0)
+        {
+            // TODO: switch to create session state
+        }
+        else
+        {
+            CollocationStateMessage stateMessage = new CollocationStateMessage(State, CollocationStateStatus.Success,
+                $"Found {_manager.SessionDatas.Count} collocation sessions");
+            _manager.BroadcastState(stateMessage);
+            
+            _manager.EnterState(_manager.DisplaySessionsStateHandler);
+        }
+    }
 
     #endregion
 
@@ -35,28 +51,28 @@ public class SearchSessionStateHandler : CollocationStateHandler
             : $"Retry to start discovery of collocation sessions. Retry: {_retryCount}";
 
         CollocationStateMessage stateMessage = new CollocationStateMessage(State, status, message);
-        manager.BroadcastState(stateMessage);
+        _manager.BroadcastState(stateMessage);
         
         OVRColocationSession.ColocationSessionDiscovered += OnSessionDiscovered;
         var discoveryStartResult = await OVRColocationSession.StartDiscoveryAsync(); // start discovery
 
         if (discoveryStartResult.Status == OVRColocationSession.Result.Failure)
         {
-            if (_retryCount == manager.MaxRetries)
+            if (_retryCount == _manager.MaxRetries)
             {
                 stateMessage = new CollocationStateMessage(State, CollocationStateStatus.Failed,
                     $"Failed to start collocation session discovery. Result: {discoveryStartResult.Status}");
-                ExtendedLogger.LogWarning(GetType().Name, stateMessage.Message, manager);
-                manager.BroadcastState(stateMessage);
+                ExtendedLogger.LogWarning(GetType().Name, stateMessage.Message, _manager);
+                _manager.BroadcastState(stateMessage);
                 return;
             }
 
             _retryCount++;
             
-            if(manager.Verbose)
-                ExtendedLogger.LogInfo(GetType().Name, $"Failed to start collocation session discovery. Retry in {manager.RetryTime} seconds.");
+            if(_manager.Verbose)
+                ExtendedLogger.LogInfo(GetType().Name, $"Failed to start collocation session discovery. Retry in {_manager.RetryTime} seconds.");
 
-            await Task.Delay((int)(manager.RetryTime * 1000));
+            await Task.Delay((int)(_manager.RetryTime * 1000));
 
             StartDiscoveringSessions();
             
@@ -64,33 +80,21 @@ public class SearchSessionStateHandler : CollocationStateHandler
         }
 
         stateMessage = new CollocationStateMessage(State, CollocationStateStatus.Running,
-            $"Started collocation discovery for {manager.DiscoverTime} seconds.");
+            $"Started collocation discovery for {_manager.DiscoverTime} seconds.");
         
-        if(manager.Verbose)
-            ExtendedLogger.LogInfo(GetType().Name, stateMessage.Message, manager);
+        if(_manager.Verbose)
+            ExtendedLogger.LogInfo(GetType().Name, stateMessage.Message, _manager);
 
-        await Task.Delay((int)(manager.DiscoverTime * 1000));
+        await Task.Delay((int)(_manager.DiscoverTime * 1000));
 
         EndState();
-    }
-
-    protected override void EndState()
-    {
-        if (manager.SessionDatas == null || manager.SessionDatas.Count == 0)
-        {
-            // geh in create session
-        }
-        else
-        {
-            // geh in zeige sessions
-        }
     }
 
     #endregion
 
     #region Event Callbacks
 
-    private void OnSessionDiscovered(OVRColocationSession.Data sessionData) => manager.AddSession(sessionData);
+    private void OnSessionDiscovered(OVRColocationSession.Data sessionData) => _manager.AddSession(sessionData);
 
     #endregion
 }

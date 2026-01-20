@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using VRSYS.Core.Networking;
-using VRSYS.Meta.Collocation.VRSYS.Meta.Collocation;
 
 namespace VRSYS.Meta.Collocation
 {

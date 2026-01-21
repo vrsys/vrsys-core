@@ -29,6 +29,11 @@ namespace VRSYS.Meta.Collocation
         [SerializeField] private int _maxRetries = 5;
         public int MaxRetries => _maxRetries;
         
+        [Tooltip("User roles that try to collocate themselves.")]
+        [SerializeField] [UserRoleSelector] private List<UserRole> _collocationRoles;
+        
+        [Header("Anchor configuration")]
+        
         [Tooltip("If true, session anchor is always created at DefaultAnchorWorldPosition.")]
         [SerializeField] private bool _useDefaultAnchor = true;
         public bool UseDefaultAnchor => _useDefaultAnchor;
@@ -37,8 +42,9 @@ namespace VRSYS.Meta.Collocation
         [SerializeField] private Vector3 _defaultAnchorWorldPosition = Vector3.zero;
         public Vector3 DefaultAnchorWorldPosition => _defaultAnchorWorldPosition;
 
-        [Tooltip("User roles that try to collocate themselves.")]
-        [SerializeField] [UserRoleSelector] private List<UserRole> _collocationRoles;
+        [Tooltip("Anchor prefab spawned to create anchor.")] 
+        [SerializeField] private OVRSpatialAnchor _anchorPrefab;
+        public OVRSpatialAnchor AnchorPrefab => _anchorPrefab;
 
         [Header("UI")] 
         
@@ -63,6 +69,8 @@ namespace VRSYS.Meta.Collocation
         public bool IsSessionHost { get; private set; }
         
         public Guid HostedSessionId { get; private set; }
+        
+        public OVRSpatialAnchor CurrentAnchor { get; private set; }
         
         #endregion
 
@@ -129,6 +137,8 @@ namespace VRSYS.Meta.Collocation
             IsSessionHost = true;
             HostedSessionId = sessionId;
         }
+
+        public void SetCurrentAnchor(OVRSpatialAnchor anchor) => CurrentAnchor = anchor;
 
         #endregion
 

@@ -10,7 +10,7 @@ namespace VRSYS.Meta.Collocation
 
         public CollocationState State { get; protected set; }
 
-        protected CollocationManager manager;
+        protected CollocationManager _manager;
 
         protected int _retryCount;
 
@@ -20,7 +20,7 @@ namespace VRSYS.Meta.Collocation
 
         public CollocationStateHandler(CollocationManager manager)
         {
-            this.manager = manager;
+            _manager = manager;
 
             _retryCount = 0;
         }

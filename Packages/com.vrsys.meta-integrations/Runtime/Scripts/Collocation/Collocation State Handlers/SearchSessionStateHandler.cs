@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using VRSYS.Core.Logging;
+using VRSYS.Meta.Collocation;
 
 namespace VRSYS.Meta.Collocation
 {
@@ -7,93 +8,97 @@ namespace VRSYS.Meta.Collocation
     {
         #region Constructor
 
-        public SearchSessionStateHandler(CollocationManager manager) : base(manager)
+    #endregion
+
+    #region Collocation State Handler Methods
+
+    public override void StartState()
+    {
+        StartDiscoveringSessions();
+    }
+    
+    protected override void EndState()
+    {
+        OVRColocationSession.ColocationSessionDiscovered -= OnSessionDiscovered;
+        OVRColocationSession.StopDiscoveryAsync();
+        
+        if (_manager.SessionDatas == null || _manager.SessionDatas.Count == 0)
         {
-            State = CollocationState.SearchingCollocationSession;
+            CollocationStateMessage stateMessage = new CollocationStateMessage(State, CollocationStateStatus.Success,
+                "Could not find existing collocation sessions.");
+            _manager.BroadcastState(stateMessage);
+            
+            _manager.EnterState(_manager.CreateSessionStateHandler);
         }
-
-        #endregion
-
-        #region Collocation State Handler Methods
-
-        public override void StartState()
+        else
         {
-            StartDiscoveringSessions();
+            CollocationStateMessage stateMessage = new CollocationStateMessage(State, CollocationStateStatus.Success,
+                $"Found {_manager.SessionDatas.Count} collocation sessions");
+            _manager.BroadcastState(stateMessage);
+            
+            _manager.EnterState(_manager.DisplaySessionsStateHandler);
         }
+    }
 
-        #endregion
+    #endregion
 
-        #region Private Methods
+    #region Private Methods
 
-        private async void StartDiscoveringSessions()
+    private async void StartDiscoveringSessions()
+    {
+        bool isFirstTry = _retryCount == 0;
+        
+        CollocationStateStatus status = isFirstTry ? CollocationStateStatus.Started : CollocationStateStatus.Retry;
+
+        string message = isFirstTry
+            ? "Try starting discovery of collocation sessions."
+            : $"Retry to start discovery of collocation sessions. Retry: {_retryCount}";
+
+        CollocationStateMessage stateMessage = new CollocationStateMessage(State, status, message);
+        _manager.BroadcastState(stateMessage);
+        
+        OVRColocationSession.ColocationSessionDiscovered += OnSessionDiscovered;
+        var discoveryStartResult = await OVRColocationSession.StartDiscoveryAsync(); // start discovery
+
+        if (discoveryStartResult.Status == OVRColocationSession.Result.Failure)
         {
-            bool isFirstTry = _retryCount == 0;
-
-            CollocationStateStatus status = isFirstTry ? CollocationStateStatus.Started : CollocationStateStatus.Retry;
-
-            string message = isFirstTry
-                ? "Try starting discovery of collocation sessions."
-                : $"Retry to start discovery of collocation sessions. Retry: {_retryCount}";
-
-            CollocationStateMessage stateMessage = new CollocationStateMessage(State, status, message);
-            manager.BroadcastState(stateMessage);
-
-            OVRColocationSession.ColocationSessionDiscovered += OnSessionDiscovered;
-            var discoveryStartResult = await OVRColocationSession.StartDiscoveryAsync(); // start discovery
-
-            if (discoveryStartResult.Status == OVRColocationSession.Result.Failure)
+            OVRColocationSession.ColocationSessionDiscovered -= OnSessionDiscovered;
+            
+            if (_retryCount == _manager.MaxRetries)
             {
-                if (_retryCount == manager.MaxRetries)
-                {
-                    stateMessage = new CollocationStateMessage(State, CollocationStateStatus.Failed,
-                        $"Failed to start collocation session discovery. Result: {discoveryStartResult.Status}");
-                    ExtendedLogger.LogWarning(GetType().Name, stateMessage.Message, manager);
-                    manager.BroadcastState(stateMessage);
-                    return;
-                }
-
-                _retryCount++;
-
-                if (manager.Verbose)
-                    ExtendedLogger.LogInfo(GetType().Name,
-                        $"Failed to start collocation session discovery. Retry in {manager.RetryTime} seconds.");
-
-                await Task.Delay((int)(manager.RetryTime * 1000));
-
-                StartDiscoveringSessions();
-
+                stateMessage = new CollocationStateMessage(State, CollocationStateStatus.Failed,
+                    $"Failed to start collocation session discovery. Result: {discoveryStartResult.Status}. Stopping collocation process.");
+                _manager.BroadcastState(stateMessage);
                 return;
             }
 
-            stateMessage = new CollocationStateMessage(State, CollocationStateStatus.Running,
-                $"Started collocation discovery for {manager.DiscoverTime} seconds.");
+            _retryCount++;
 
-            if (manager.Verbose)
-                ExtendedLogger.LogInfo(GetType().Name, stateMessage.Message, manager);
+            stateMessage = new CollocationStateMessage(State, CollocationStateStatus.Retry,
+                $"Failed to start collocation session discovery. Retry in {_manager.RetryTime} seconds.");
+            _manager.BroadcastState(stateMessage);
+
+            await Task.Delay((int)(_manager.RetryTime * 1000));
 
             await Task.Delay((int)(manager.DiscoverTime * 1000));
 
             EndState();
         }
 
-        protected override void EndState()
-        {
-            if (manager.SessionDatas == null || manager.SessionDatas.Count == 0)
-            {
-                // geh in create session
-            }
-            else
-            {
-                // geh in zeige sessions
-            }
-        }
+        stateMessage = new CollocationStateMessage(State, CollocationStateStatus.Running,
+            $"Started collocation discovery for {_manager.DiscoverTime} seconds.");
+        _manager.BroadcastState(stateMessage);
 
-        #endregion
+        await Task.Delay((int)(_manager.DiscoverTime * 1000));
 
-        #region Event Callbacks
-
-        private void OnSessionDiscovered(OVRColocationSession.Data sessionData) => manager.AddSession(sessionData);
-
-        #endregion
+        EndState();
     }
+
+    #endregion
+
+    #region Event Callbacks
+
+    private void OnSessionDiscovered(OVRColocationSession.Data sessionData) => _manager.AddAvailableSession(sessionData);
+
+    #endregion
 }

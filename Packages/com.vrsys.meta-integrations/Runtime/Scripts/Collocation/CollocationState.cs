@@ -13,7 +13,8 @@ namespace VRSYS.Meta.Collocation
         AdvertisingSession,
         CreatingSessionAnchor,
         SavingSessionAnchor,
-        SharingSessionAnchor
+        SharingSessionAnchor,
+        DisplaySessions
     }
     
     public enum CollocationStateStatus
@@ -22,6 +23,7 @@ namespace VRSYS.Meta.Collocation
         Retry,
         Running,
         Success,
-        Failed
+        Failed,
+        Error
     }
 }

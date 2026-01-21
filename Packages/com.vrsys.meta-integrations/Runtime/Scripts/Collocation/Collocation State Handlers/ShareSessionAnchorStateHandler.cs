@@ -26,6 +26,7 @@ namespace VRSYS.Meta.Collocation
         {
             CollocationStateMessage stateMessage = new CollocationStateMessage(State, CollocationStateStatus.Success,
                 "Successfully shared session anchor.");
+            _manager.BroadcastState(stateMessage);
         }
 
         #endregion

@@ -22,6 +22,9 @@ public class SearchSessionStateHandler : CollocationStateHandler
     
     protected override void EndState()
     {
+        OVRColocationSession.ColocationSessionDiscovered -= OnSessionDiscovered;
+        OVRColocationSession.StopDiscoveryAsync();
+        
         if (_manager.SessionDatas == null || _manager.SessionDatas.Count == 0)
         {
             CollocationStateMessage stateMessage = new CollocationStateMessage(State, CollocationStateStatus.Success,
@@ -62,6 +65,8 @@ public class SearchSessionStateHandler : CollocationStateHandler
 
         if (discoveryStartResult.Status == OVRColocationSession.Result.Failure)
         {
+            OVRColocationSession.ColocationSessionDiscovered -= OnSessionDiscovered;
+            
             if (_retryCount == _manager.MaxRetries)
             {
                 stateMessage = new CollocationStateMessage(State, CollocationStateStatus.Failed,

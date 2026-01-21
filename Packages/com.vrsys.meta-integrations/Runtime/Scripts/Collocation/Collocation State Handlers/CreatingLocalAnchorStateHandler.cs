@@ -5,6 +5,7 @@ using UnityEngine;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using VRSYS.Core.Networking;
 
 namespace VRSYS.Meta.Collocation
 {
@@ -35,6 +36,7 @@ namespace VRSYS.Meta.Collocation
 
         public override void StartState()
         {
+            manager.AnchorCreationManager.SetupAnchorCreationMode(AlignmentAnchorsCreated);
             // TODO: Enable Anchor creation user interface
             // TODO: Subscribe AlignmentAnchorsCreated() callback
         }
@@ -50,17 +52,10 @@ namespace VRSYS.Meta.Collocation
         #region Private Methods
         
         // Callback for AlignmentAnchorCreationManager
-        public void AlignmentAnchorsCreated(List<OVRSpatialAnchor> anchors)
+        public void AlignmentAnchorsCreated(OVRSpatialAnchor anchor)
         {
-            // Add the anchor to the list of all instances
-            _anchorInstances.AddRange(anchors);
-            
-            // When user confirms created anchors, persist anchors
-           foreach (OVRSpatialAnchor anchor in _anchorInstances)
-           {
-               SaveAnchorAsync(anchor);
-           }
-           SaveAnchorIdsToFile();
+            SaveAnchorAsync(anchor);
+            SaveAnchorIdsToFile();
         }
         
         private async void SaveAnchorAsync(OVRSpatialAnchor anchor)

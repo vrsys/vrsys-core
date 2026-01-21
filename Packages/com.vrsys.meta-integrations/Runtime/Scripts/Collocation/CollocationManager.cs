@@ -29,6 +29,8 @@ namespace VRSYS.Meta.Collocation
 
         public List<OVRColocationSession.Data> SessionDatas { get; private set; }
         
+        public AnchorCreationManager AnchorCreationManager { get; private set; }
+        
         #endregion
 
         #region Collocation States
@@ -43,7 +45,7 @@ namespace VRSYS.Meta.Collocation
         
         // TODO: For local anchor or support both group and individual anchors?
         public AligningToAnchorStateHandler AligningToAnchorStateHandler { get; private set; }
-
+        
         #endregion
 
         #region INetworkUserCallbacks
@@ -92,6 +94,7 @@ namespace VRSYS.Meta.Collocation
         private void InitializeStates()
         {
             SearchSessionStateHandler = new SearchSessionStateHandler(this);
+            CreatingLocalAnchorStateHandler = new CreatingLocalAnchorStateHandler(this);
         }
         
         private void StartCollocation()

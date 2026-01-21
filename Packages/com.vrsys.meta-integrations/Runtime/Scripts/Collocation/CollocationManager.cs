@@ -87,6 +87,8 @@ namespace VRSYS.Meta.Collocation
         public LoadSessionAnchorStateHandler LoadSessionAnchorStateHandler { get; private set; }
         
         public CreateSessionAnchorStateHandler CreateSessionAnchorStateHandler { get; private set; }
+        
+        public ShareSessionAnchorStateHandler ShareSessionAnchorStateHandler { get; private set; }
 
         #endregion
 
@@ -171,6 +173,7 @@ namespace VRSYS.Meta.Collocation
             CreateSessionStateHandler = new CreateSessionStateHandler(this);
             LoadSessionAnchorStateHandler = new LoadSessionAnchorStateHandler(this);
             CreateSessionAnchorStateHandler = new CreateSessionAnchorStateHandler(this);
+            ShareSessionAnchorStateHandler = new ShareSessionAnchorStateHandler(this);
         }
         
         private void StartCollocation()

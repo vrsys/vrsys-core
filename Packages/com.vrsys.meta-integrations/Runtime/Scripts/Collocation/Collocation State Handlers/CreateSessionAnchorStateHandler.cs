@@ -29,7 +29,7 @@ namespace VRSYS.Meta.Collocation
                 "Successfully created session anchor.");
             _manager.BroadcastState(stateMessage);
             
-            // TODO: Enter share anchor state
+            _manager.EnterState(_manager.ShareSessionAnchorStateHandler);
         }
 
         #endregion

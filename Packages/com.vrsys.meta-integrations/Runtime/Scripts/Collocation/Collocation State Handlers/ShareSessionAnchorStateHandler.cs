@@ -60,6 +60,7 @@ namespace VRSYS.Meta.Collocation
 
                 stateMessage = new CollocationStateMessage(State, CollocationStateStatus.Retry,
                     $"Failed to share session anchor. Retry in {_manager.RetryTime} seconds.");
+                _manager.BroadcastState(stateMessage);
 
                 await Task.Delay((int)(_manager.RetryTime * 1000));
                 

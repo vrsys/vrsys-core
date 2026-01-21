@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.Serialization;
 using VRSYS.Core.Logging;
 using VRSYS.Core.Networking;
 
+// TODO: Check that asset menu creation for prefab still works
 namespace VRSYS.Meta.Collocation
 {
     public class CollocationManager : MonoBehaviour, INetworkUserCallbacks
@@ -16,24 +16,43 @@ namespace VRSYS.Meta.Collocation
         [HideInInspector] public UnityEvent<CollocationStateMessage> OnStateChanged = new ();
 
         [Header("Configuration")] 
+        
+        [Tooltip("Time in seconds defining how long existing collocation sessions are searched.")]
         [SerializeField] private float _discoveryTime = 10f;
         public float DiscoverTime => _discoveryTime;
+        
+        [Tooltip("Time in seconds defining how long system waits before retrying failed action.")]
         [SerializeField] private float _retryTime = 1;
         public float RetryTime => _retryTime;
+        
+        [Tooltip("Defines how often failed actions are retried, before process stops.")]
         [SerializeField] private int _maxRetries = 5;
         public int MaxRetries => _maxRetries;
+        
+        [Tooltip("If true, session anchor is always created at DefaultAnchorWorldPosition.")]
+        [SerializeField] private bool _useDefaultAnchor = true;
+        public bool UseDefaultAnchor => _useDefaultAnchor;
+        
+        [Tooltip("World position at which default anchor is created.")]
+        [SerializeField] private Vector3 _defaultAnchorWorldPosition = Vector3.zero;
+        public Vector3 DefaultAnchorWorldPosition => _defaultAnchorWorldPosition;
 
+        [Tooltip("User roles that try to collocate themselves.")]
         [SerializeField] [UserRoleSelector] private List<UserRole> _collocationRoles;
 
         [Header("UI")] 
         
+        [Tooltip("Prefab of UI used to display available collocation sessions.")]
         [SerializeField] private SessionListUi _sessionListUiPrefab;
         public SessionListUi SessionListUiPrefab => _sessionListUiPrefab;
 
+        [Tooltip("Prefab of UI used to create a new collocation session.")]
         [SerializeField] private CreateSessionUi _createSessionUiPrefab;
         public CreateSessionUi CreateSessionUi => _createSessionUiPrefab;
         
         [Header("Debugging")] 
+        
+        [Tooltip("If true, Info logs are printed to the console. If false, only Warning and Error logs will be printed.")]
         [SerializeField] private bool _verbose = true;
 
         public List<OVRColocationSession.Data> SessionDatas { get; private set; }

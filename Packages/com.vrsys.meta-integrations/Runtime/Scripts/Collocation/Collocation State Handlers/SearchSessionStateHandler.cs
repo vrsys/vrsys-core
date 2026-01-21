@@ -1,5 +1,4 @@
 using System.Threading.Tasks;
-using VRSYS.Core.Logging;
 using VRSYS.Meta.Collocation;
 
 public class SearchSessionStateHandler : CollocationStateHandler

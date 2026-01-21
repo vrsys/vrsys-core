@@ -1,12 +1,14 @@
 using System.Threading.Tasks;
-using VRSYS.Core.Logging;
 using VRSYS.Meta.Collocation;
 
-namespace VRSYS.Meta.Collocation
+public class SearchSessionStateHandler : CollocationStateHandler
 {
-    public class SearchSessionStateHandler : CollocationStateHandler
+    #region Constructor
+
+    public SearchSessionStateHandler(CollocationManager manager) : base(manager)
     {
-        #region Constructor
+        State = CollocationState.SearchingCollocationSession;
+    }
 
     #endregion
 
@@ -80,9 +82,9 @@ namespace VRSYS.Meta.Collocation
 
             await Task.Delay((int)(_manager.RetryTime * 1000));
 
-            await Task.Delay((int)(manager.DiscoverTime * 1000));
-
-            EndState();
+            StartDiscoveringSessions();
+            
+            return;
         }
 
         stateMessage = new CollocationStateMessage(State, CollocationStateStatus.Running,

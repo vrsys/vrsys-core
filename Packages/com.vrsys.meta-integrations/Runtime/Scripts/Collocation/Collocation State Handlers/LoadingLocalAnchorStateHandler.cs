@@ -37,7 +37,7 @@ namespace VRSYS.Meta.Collocation
         // OR
         // Show UI for selecting existing anchors
         
-        manager.EnterState(manager.LoadingLocalAnchorStateHandler);
+        _manager.EnterState(_manager.LoadingLocalAnchorStateHandler);
     }
 
     #endregion

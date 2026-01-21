@@ -1,6 +1,8 @@
 ﻿using System;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.InputSystem;
+using UnityEngine.Serialization;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
 using VRSYS.Core.Networking;
 using VRSYS.Core.Utility;
@@ -9,7 +11,8 @@ namespace VRSYS.Meta.Collocation
 {
     public class AnchorCreationManager : MonoBehaviour
     {
-        [SerializeField] private GameObject _anchorCreationUI;
+        [SerializeField] private GameObject _confirmationUIPrefab;
+        private AnchorConfirmationUI _confirmationUI;
         
         [SerializeField] private GameObject _floorPlane;
         [SerializeField] private GameObject _anchorPrefab;
@@ -37,24 +40,17 @@ namespace VRSYS.Meta.Collocation
         }
 
         private AnchorCreationState interactionState;
+        
+        public UnityEvent<Vector3,Quaternion> OnAnchorCreated = new UnityEvent<Vector3,Quaternion>();
 
-        private void Start()
+        public void SetupAnchorCreationMode()
         {
             // Setup UI and Interation
             _isAnchorCreationActive = true;
             _anchorCreationAction.action.Enable();
             
-            // Place floor plane on ground height of user
-            _floorPlane.transform.position = NetworkUser.LocalInstance.transform.position;
-        }
-
-        public void SetupAnchorCreationMode(Action<OVRSpatialAnchor> returnAction)
-        {
-            returnAnchor = returnAction;
-            
-            // Setup UI and Interation
-            _isAnchorCreationActive = true;
-            _anchorCreationAction.action.Enable();
+            _confirmationUI = Instantiate(_confirmationUIPrefab).GetComponent<AnchorConfirmationUI>();
+            _confirmationUI.Initialize(AnchorConfirmed, RedoAnchor);
             
             // Place floor plane on ground height of user
             _floorPlane.transform.position = NetworkUser.LocalInstance.transform.position;
@@ -72,9 +68,7 @@ namespace VRSYS.Meta.Collocation
             {
                 if (interactionState == AnchorCreationState.Locked)
                 {
-                    CreateAnchor();
-                    _rayVisual.enabled = false;
-                    _anchorPreview.SetActive(false);
+                    ShowAnchorConfirmationUI();
                     return;
                 }
                 
@@ -90,9 +84,7 @@ namespace VRSYS.Meta.Collocation
             {
                 if (interactionState == AnchorCreationState.Locked)
                 {
-                    CreateAnchor();
-                    _rayVisual.enabled = false;
-                    _anchorPreview.SetActive(false);
+                    ShowAnchorConfirmationUI();
                     return;
                 }
                 
@@ -130,13 +122,13 @@ namespace VRSYS.Meta.Collocation
                 
                 if(interactionState == AnchorCreationState.Aiming)
                 {
-                    // update position only
+                    // update position
                     _anchorPreview.transform.position = _hit.point;
                 }
                 else if(interactionState == AnchorCreationState.Locked)
                 {
-                    // update rotation only
-                    _anchorPreview.transform.LookAt(hit.point);
+                    // rotate
+                    _anchorPreview.transform.LookAt(hit.point, _floorPlane.transform.up);
                 }
             }
             else
@@ -145,56 +137,42 @@ namespace VRSYS.Meta.Collocation
             }
         }
         
-        private void CreateAnchor()
+        private void ShowAnchorConfirmationUI()
         {
             _isAnchorCreationActive = false; // for now disable anchor creation mode
+            _rayVisual.enabled = false; // do not show ray
             
-            // create a spatial anchor at the hitpoint
-            var go = Instantiate(_anchorPrefab, _anchorPreview.transform.position, _anchorPreview.transform.rotation);
-            _spatialAnchor = go.AddComponent<OVRSpatialAnchor>();
-            SetupSpatialAnchorAsync();
             interactionState = AnchorCreationState.Idle;
-        }
-
-        private async void SetupSpatialAnchorAsync()
-        {
-            // Keep checking for a valid and localized anchor state
-            if (!await _spatialAnchor.WhenLocalizedAsync())
-            {
-                Debug.LogError($"Unable to create anchor.");
-                Destroy(_spatialAnchor.gameObject);
-                _spatialAnchor = null;
-                
-                // retry anchor creation
-                _isAnchorCreationActive = true;
-            }
-            else
-            {
-                // Spatial anchor was created
-                _anchorCreationUI.SetActive(true);
-            }
+            
+            _confirmationUI.Show();
         }
         
         /// <summary>
         ///  Callback to User confirming selected anchors
         /// </summary>
-        private void ConfirmAnchors()
+        private void AnchorConfirmed()
         {
             // Teardown
-            _anchorCreationUI.SetActive(false);
+            _anchorPreview.SetActive(false);
+            _rayVisual.enabled = false;
+            
+            Destroy(_confirmationUI.gameObject);
+            _confirmationUI = null;
+            
             _anchorCreationAction.action.Disable();
             
-            returnAnchor(_spatialAnchor);
+            // Disable in hierarchy
+            this.gameObject.SetActive(false);
+            
+            OnAnchorCreated.Invoke(_anchorPreview.transform.position, _anchorPreview.transform.rotation);
         }
 
         /// <summary>
         ///  Callback to User confirming selected anchors
         /// </summary>
-        private void RedoAnchors()
+        private void RedoAnchor()
         {
-            Destroy(_spatialAnchor.gameObject);
-            _spatialAnchor = null;
-            _anchorCreationUI.SetActive(false);
+            _confirmationUI.Hide();
             
             // retry anchor creation
             _isAnchorCreationActive = true;

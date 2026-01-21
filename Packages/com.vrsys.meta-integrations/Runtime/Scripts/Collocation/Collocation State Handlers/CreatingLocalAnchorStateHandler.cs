@@ -2,10 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
-
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using VRSYS.Core.Networking;
 
 namespace VRSYS.Meta.Collocation
 {
@@ -36,7 +33,8 @@ namespace VRSYS.Meta.Collocation
 
         public override void StartState()
         {
-            manager.AnchorCreationManager.SetupAnchorCreationMode(AlignmentAnchorsCreated);
+            _manager.AnchorCreationManager.OnAnchorCreated.AddListener(OnUserDefinedAnchor);
+            _manager.AnchorCreationManager.SetupAnchorCreationMode();
             // TODO: Enable Anchor creation user interface
             // TODO: Subscribe AlignmentAnchorsCreated() callback
         }
@@ -44,18 +42,24 @@ namespace VRSYS.Meta.Collocation
         protected override void EndState()
         {
             // Then enter AligningToAnchorState
-            manager.EnterState(manager.AligningToAnchorStateHandler);
+            _manager.EnterState(_manager.AligningToAnchorStateHandler);
         }
 
         #endregion
         
         #region Private Methods
         
-        // Callback for AlignmentAnchorCreationManager
-        public void AlignmentAnchorsCreated(OVRSpatialAnchor anchor)
+        // Callback for AlignmentAnchorCreationManager.OnAnchorCreated Event
+        public void OnUserDefinedAnchor(Vector3 targetWorldPosition, Quaternion targetWorldRotation)
         {
+            CreateAnchorAsync(targetWorldPosition, targetWorldRotation);
+        }
+
+        private async void CreateAnchorAsync(Vector3 targetWorldPosition, Quaternion targetWorldRotation)
+        {
+            // create from 
+            OVRSpatialAnchor anchor = GameObject.Instantiate(_manager.AnchorPrefab, targetWorldPosition, targetWorldRotation).GetComponent<OVRSpatialAnchor>(); 
             SaveAnchorAsync(anchor);
-            SaveAnchorIdsToFile();
         }
         
         private async void SaveAnchorAsync(OVRSpatialAnchor anchor)

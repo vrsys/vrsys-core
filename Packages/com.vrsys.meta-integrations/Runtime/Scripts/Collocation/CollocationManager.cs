@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Serialization;
+using VRSYS.Core.Logging;
 using VRSYS.Core.Networking;
 
 namespace VRSYS.Meta.Collocation
@@ -10,9 +12,8 @@ namespace VRSYS.Meta.Collocation
     {
         #region Properties
 
-        [Header("State")]
         public CollocationState State => _currentState.State;
-        public UnityEvent<CollocationStateMessage> OnStateChanged = new ();
+        [HideInInspector] public UnityEvent<CollocationStateMessage> OnStateChanged = new ();
 
         [Header("Configuration")] 
         [SerializeField] private float _discoveryTime = 10f;
@@ -24,20 +25,25 @@ namespace VRSYS.Meta.Collocation
 
         [SerializeField] [UserRoleSelector] private List<UserRole> _collocationRoles;
 
-        [FormerlySerializedAs("_sessionListUi")]
         [Header("UI")] 
         
-        [SerializeField] private GameObject _sessionListUiPrefab;
-        public GameObject SessionListUiPrefab => _sessionListUiPrefab;
+        [SerializeField] private SessionListUi _sessionListUiPrefab;
+        public SessionListUi SessionListUiPrefab => _sessionListUiPrefab;
+
+        [SerializeField] private CreateSessionUi _createSessionUiPrefab;
+        public CreateSessionUi CreateSessionUi => _createSessionUiPrefab;
         
         [Header("Debugging")] 
         [SerializeField] private bool _verbose = true;
-        public bool Verbose => _verbose;
 
         public List<OVRColocationSession.Data> SessionDatas { get; private set; }
 
-        private OVRColocationSession.Data _currentSessionData;
-        public OVRColocationSession.Data CurrentSessionData => _currentSessionData;
+        private OVRColocationSession.Data _joinedSessionData; // only set if session client
+        public OVRColocationSession.Data JoinedSessionData => _joinedSessionData;
+        
+        public bool IsSessionHost { get; private set; }
+        
+        public Guid HostedSessionId { get; private set; }
         
         #endregion
 
@@ -48,6 +54,12 @@ namespace VRSYS.Meta.Collocation
         public SearchSessionStateHandler SearchSessionStateHandler { get; private set; }
         
         public DisplaySessionsStateHandler DisplaySessionsStateHandler { get; private set; }
+        
+        public CreateSessionStateHandler CreateSessionStateHandler { get; private set; }
+        
+        public LoadSessionAnchorStateHandler LoadSessionAnchorStateHandler { get; private set; }
+        
+        public CreateSessionAnchorStateHandler CreateSessionAnchorStateHandler { get; private set; }
 
         #endregion
 
@@ -74,6 +86,7 @@ namespace VRSYS.Meta.Collocation
         public void BroadcastState(CollocationStateMessage message)
         {
             OnStateChanged.Invoke(message);
+            LogStateMessage(message);
         }
 
         public void EnterState(CollocationStateHandler state)
@@ -82,7 +95,7 @@ namespace VRSYS.Meta.Collocation
             state.StartState();
         }
 
-        public void AddSession(OVRColocationSession.Data sessionData)
+        public void AddAvailableSession(OVRColocationSession.Data sessionData)
         {
             if (SessionDatas == null)
                 SessionDatas = new List<OVRColocationSession.Data>();
@@ -90,16 +103,45 @@ namespace VRSYS.Meta.Collocation
             SessionDatas.Add(sessionData);
         }
 
-        public void SetCurrentSession(OVRColocationSession.Data data) =>_currentSessionData = data;
+        public void SetJoinedSession(OVRColocationSession.Data data) =>_joinedSessionData = data;
+
+        public void SetHostInformation(Guid sessionId)
+        {
+            IsSessionHost = true;
+            HostedSessionId = sessionId;
+        }
 
         #endregion
 
         #region Private Methods
 
+        private void LogStateMessage(CollocationStateMessage message)
+        {
+            switch (message.Status)
+            {
+                case CollocationStateStatus.Failed:
+                    ExtendedLogger.LogInfo(GetType().Name, $"[{message.State}] [{message.Status}] {message.Message}",
+                        this);
+                    break;
+                case CollocationStateStatus.Error:
+                    ExtendedLogger.LogError(GetType().Name, $"[{message.State}] [{message.Status}] {message.Message}",
+                        this);
+                    break;
+                default:
+                    if(_verbose)
+                        ExtendedLogger.LogInfo(GetType().Name, $"[{message.State}] [{message.Status}] {message.Message}",
+                            this);
+                    break;
+            }
+        }
+        
         private void InitializeStates()
         {
             SearchSessionStateHandler = new SearchSessionStateHandler(this);
             DisplaySessionsStateHandler = new DisplaySessionsStateHandler(this);
+            CreateSessionStateHandler = new CreateSessionStateHandler(this);
+            LoadSessionAnchorStateHandler = new LoadSessionAnchorStateHandler(this);
+            CreateSessionAnchorStateHandler = new CreateSessionAnchorStateHandler(this);
         }
         
         private void StartCollocation()

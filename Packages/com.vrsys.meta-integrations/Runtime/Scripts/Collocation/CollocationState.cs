@@ -21,6 +21,7 @@ namespace VRSYS.Meta.Collocation
         Retry,
         Running,
         Success,
-        Failed
+        Failed,
+        Error
     }
 }

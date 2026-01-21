@@ -24,7 +24,11 @@ public class SearchSessionStateHandler : CollocationStateHandler
     {
         if (_manager.SessionDatas == null || _manager.SessionDatas.Count == 0)
         {
-            // TODO: switch to create session state
+            CollocationStateMessage stateMessage = new CollocationStateMessage(State, CollocationStateStatus.Success,
+                "Could not find existing collocation sessions.");
+            _manager.BroadcastState(stateMessage);
+            
+            _manager.EnterState(_manager.CreateSessionStateHandler);
         }
         else
         {
@@ -61,16 +65,16 @@ public class SearchSessionStateHandler : CollocationStateHandler
             if (_retryCount == _manager.MaxRetries)
             {
                 stateMessage = new CollocationStateMessage(State, CollocationStateStatus.Failed,
-                    $"Failed to start collocation session discovery. Result: {discoveryStartResult.Status}");
-                ExtendedLogger.LogWarning(GetType().Name, stateMessage.Message, _manager);
+                    $"Failed to start collocation session discovery. Result: {discoveryStartResult.Status}. Stopping collocation process.");
                 _manager.BroadcastState(stateMessage);
                 return;
             }
 
             _retryCount++;
-            
-            if(_manager.Verbose)
-                ExtendedLogger.LogInfo(GetType().Name, $"Failed to start collocation session discovery. Retry in {_manager.RetryTime} seconds.");
+
+            stateMessage = new CollocationStateMessage(State, CollocationStateStatus.Retry,
+                $"Failed to start collocation session discovery. Retry in {_manager.RetryTime} seconds.");
+            _manager.BroadcastState(stateMessage);
 
             await Task.Delay((int)(_manager.RetryTime * 1000));
 
@@ -81,9 +85,7 @@ public class SearchSessionStateHandler : CollocationStateHandler
 
         stateMessage = new CollocationStateMessage(State, CollocationStateStatus.Running,
             $"Started collocation discovery for {_manager.DiscoverTime} seconds.");
-        
-        if(_manager.Verbose)
-            ExtendedLogger.LogInfo(GetType().Name, stateMessage.Message, _manager);
+        _manager.BroadcastState(stateMessage);
 
         await Task.Delay((int)(_manager.DiscoverTime * 1000));
 
@@ -94,7 +96,7 @@ public class SearchSessionStateHandler : CollocationStateHandler
 
     #region Event Callbacks
 
-    private void OnSessionDiscovered(OVRColocationSession.Data sessionData) => _manager.AddSession(sessionData);
+    private void OnSessionDiscovered(OVRColocationSession.Data sessionData) => _manager.AddAvailableSession(sessionData);
 
     #endregion
 }

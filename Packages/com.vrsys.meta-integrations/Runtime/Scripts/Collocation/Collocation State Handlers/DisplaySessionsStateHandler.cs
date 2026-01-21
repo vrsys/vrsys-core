@@ -28,7 +28,7 @@ namespace VRSYS.Meta.Collocation
 
         protected override void EndState()
         {
-            
+            Object.Destroy(_sessionListUi.gameObject);
         }
 
         #endregion
@@ -41,7 +41,7 @@ namespace VRSYS.Meta.Collocation
                 "Initializing session list ui.");
             _manager.BroadcastState(stateMessage);
             
-            GameObject go = GameObject.Instantiate(_manager.SessionListUiPrefab);
+            GameObject go = GameObject.Instantiate(_manager.SessionListUiPrefab.gameObject);
             _sessionListUi = go.GetComponent<SessionListUi>();
             
             _sessionListUi.Initialize(_manager.SessionDatas, this);
@@ -57,18 +57,22 @@ namespace VRSYS.Meta.Collocation
                 $"Joining collocation session. UUID: {data.AdvertisementUuid}");
             _manager.BroadcastState(stateMessage);
             
-            _manager.SetCurrentSession(data);
+            _manager.SetJoinedSession(data);
             
-            // TODO: Enter load session anchor state
+            EndState();
+            
+            _manager.EnterState(_manager.LoadSessionAnchorStateHandler);
         }
 
-        public void CreateSession()
+        public void CreateNewSession()
         {
             CollocationStateMessage stateMessage = new CollocationStateMessage(State, CollocationStateStatus.Success,
                 "Selected creation of new session.");
             _manager.BroadcastState(stateMessage);
             
-            // TODO: Enter create session state
+            EndState();
+            
+            _manager.EnterState(_manager.CreateSessionStateHandler);
         }
 
         #endregion

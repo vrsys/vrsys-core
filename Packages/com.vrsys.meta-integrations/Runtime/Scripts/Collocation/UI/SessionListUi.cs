@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using VRSYS.Core.Networking;
 
 namespace VRSYS.Meta.Collocation
@@ -13,6 +14,7 @@ namespace VRSYS.Meta.Collocation
         [Header("UI Components")] 
         [SerializeField] private Transform _tileRoot;
         [SerializeField] private GameObject _sessionTilePrefab;
+        [SerializeField] private Button _createSessionButton;
 
         #endregion
 
@@ -37,6 +39,8 @@ namespace VRSYS.Meta.Collocation
 
                 tileGameObject.GetComponent<CollocationSessionTile>().Initialize(_stateHandler, data);
             }
+            
+            _createSessionButton.onClick.AddListener(_stateHandler.CreateNewSession);
         }
 
         #endregion

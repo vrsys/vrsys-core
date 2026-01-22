@@ -4,6 +4,8 @@ using UnityEngine;
 using UnityEngine.Events;
 using VRSYS.Core.Logging;
 using VRSYS.Core.Networking;
+using System.IO;
+
 
 // TODO: Check that asset menu creation for prefab still works
 namespace VRSYS.Meta.Collocation
@@ -61,6 +63,12 @@ namespace VRSYS.Meta.Collocation
         [Tooltip("If true, Info logs are printed to the console. If false, only Warning and Error logs will be printed.")]
         [SerializeField] private bool _verbose = true;
 
+        #region Local Anchor Properties
+
+        public string AnchorIDsFilePath { get; private set; } // Persistent anchor storage path
+
+        #endregion
+        
         public List<OVRColocationSession.Data> SessionDatas { get; private set; }
 
         private OVRColocationSession.Data _joinedSessionData; // only set if session client
@@ -72,7 +80,7 @@ namespace VRSYS.Meta.Collocation
         
         public OVRSpatialAnchor CurrentAnchor { get; private set; }
         
-        public AnchorCreationManager AnchorCreationManager { get; private set; }
+        public SpatialAnchorManager SpatialAnchorManager { get; private set; }
         
         #endregion
 
@@ -102,6 +110,7 @@ namespace VRSYS.Meta.Collocation
         {
             if (_collocationRoles.Contains(NetworkUser.LocalInstance.userRole.Value))
             {
+                SpatialAnchorManager = new SpatialAnchorManager();
                 InitializeStates();
                 StartCollocation();
             }
@@ -179,13 +188,18 @@ namespace VRSYS.Meta.Collocation
             LoadSessionAnchorStateHandler = new LoadSessionAnchorStateHandler(this);
             CreateSessionAnchorStateHandler = new CreateSessionAnchorStateHandler(this);
             ShareSessionAnchorStateHandler = new ShareSessionAnchorStateHandler(this);
+            AligningToAnchorStateHandler = new AligningToAnchorStateHandler(this);
         }
         
         private void StartCollocation()
         {
+            // TODO: Only for testing
+            EnterState(CreatingLocalAnchorStateHandler);
+            return;
+            
             if (ConnectionManager.Instance.offlineSession)
             {
-                // TODO: Load local anchor state
+                EnterState(LoadingLocalAnchorStateHandler);
             }
             else
             {

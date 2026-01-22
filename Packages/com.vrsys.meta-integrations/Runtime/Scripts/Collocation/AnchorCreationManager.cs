@@ -11,26 +11,22 @@ namespace VRSYS.Meta.Collocation
 {
     public class AnchorCreationManager : MonoBehaviour
     {
+        [HideInInspector] public UnityEvent<Vector3,Quaternion> OnUserDefinedAnchor = new UnityEvent<Vector3,Quaternion>();
+        
         [SerializeField] private GameObject _confirmationUIPrefab;
-        private AnchorConfirmationUI _confirmationUI;
-        
-        [SerializeField] private GameObject _floorPlane;
+        [SerializeField] private GameObject _floorPlanePrefab;
         [SerializeField] private GameObject _anchorPrefab;
-        [SerializeField] private GameObject _anchorPreview;
+
+        [SerializeField] private InputActionProperty _anchorCreationAction;
+        [SerializeField] private LayerMask anchorLayerMask;
+
+        [SerializeField] private GameObject _floorPlane;
         [SerializeField] private LineRenderer _rayVisual;
-        
-        [SerializeField] private InputActionReference _anchorCreationAction;
         [SerializeField] private Transform _userHand;
         
-        [SerializeField] private LayerMask anchorLayerMask;
-        
+        private AnchorConfirmationUI _confirmationUI;
+        private GameObject _anchorPreview;
         private bool _isAnchorCreationActive;
-        private RaycastHit _hit;
-        
-        private GameObject _anchor;
-        private OVRSpatialAnchor _spatialAnchor;
-        
-        private Action<OVRSpatialAnchor> returnAnchor;
         
         private enum AnchorCreationState
         {
@@ -38,22 +34,22 @@ namespace VRSYS.Meta.Collocation
             Aiming,
             Locked
         }
-
         private AnchorCreationState interactionState;
         
-        public UnityEvent<Vector3,Quaternion> OnAnchorCreated = new UnityEvent<Vector3,Quaternion>();
 
         public void SetupAnchorCreationMode()
         {
             // Setup UI and Interation
             _isAnchorCreationActive = true;
             _anchorCreationAction.action.Enable();
+            _anchorPreview = Instantiate(_anchorPrefab);
+            _anchorPrefab.SetActive(false);
             
             _confirmationUI = Instantiate(_confirmationUIPrefab).GetComponent<AnchorConfirmationUI>();
             _confirmationUI.Initialize(AnchorConfirmed, RedoAnchor);
             
             // Place floor plane on ground height of user
-            _floorPlane.transform.position = NetworkUser.LocalInstance.transform.position;
+            _floorPlane = Instantiate(_floorPlanePrefab, NetworkUser.LocalInstance.transform.position, Quaternion.identity);
         }
 
         private void Update()
@@ -116,19 +112,20 @@ namespace VRSYS.Meta.Collocation
         {
             _rayVisual.SetPosition(0, _userHand.position);
             
-            if (Physics.Raycast(_userHand.position, _userHand.forward,  out RaycastHit hit, anchorLayerMask))
-            { 
+            if (Physics.Raycast(_userHand.position, _userHand.forward,  out RaycastHit hit, 100f, anchorLayerMask))
+            {
+                Debug.Log(hit.collider.gameObject.name);
                 _rayVisual.SetPosition(1, hit.point);
                 
                 if(interactionState == AnchorCreationState.Aiming)
                 {
                     // update position
-                    _anchorPreview.transform.position = _hit.point;
+                    _anchorPreview.transform.position = hit.point;
                 }
                 else if(interactionState == AnchorCreationState.Locked)
                 {
                     // rotate
-                    _anchorPreview.transform.LookAt(hit.point, _floorPlane.transform.up);
+                    _anchorPreview.transform.LookAt(hit.point, _floorPlanePrefab.transform.up);
                 }
             }
             else
@@ -164,7 +161,7 @@ namespace VRSYS.Meta.Collocation
             // Disable in hierarchy
             this.gameObject.SetActive(false);
             
-            OnAnchorCreated.Invoke(_anchorPreview.transform.position, _anchorPreview.transform.rotation);
+            OnUserDefinedAnchor.Invoke(_anchorPreview.transform.position, _anchorPreview.transform.rotation);
         }
 
         /// <summary>
@@ -173,6 +170,7 @@ namespace VRSYS.Meta.Collocation
         private void RedoAnchor()
         {
             _confirmationUI.Hide();
+            _anchorPreview.SetActive(false);
             
             // retry anchor creation
             _isAnchorCreationActive = true;

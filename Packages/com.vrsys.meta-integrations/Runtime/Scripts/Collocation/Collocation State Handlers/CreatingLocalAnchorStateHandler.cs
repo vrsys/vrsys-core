@@ -1,30 +1,22 @@
 ﻿using System;
+using System.Threading.Tasks;
 using System.Collections.Generic;
-using System.IO;
+using JetBrains.Annotations;
 using UnityEngine;
-using Newtonsoft.Json;
+using VRSYS.Core.Logging;
+using VRSYS.Core.Networking;
 
 namespace VRSYS.Meta.Collocation
 {
     public class CreatingLocalAnchorStateHandler : CollocationStateHandler
     {
-        #region Fields
-        
-        private string m_FilePath; // Persistent anchor storage path
-        private HashSet<Guid> _anchorUuids = new(); // Saved anchor UUIDs
-        
-        private List<OVRSpatialAnchor> _anchorInstances = new(); // Spatial anchor instances
-        
-        private Action<bool, OVRSpatialAnchor.UnboundAnchor> _onLocalized;
-
-        #endregion
+        private AnchorCreationManager _anchorCreationManager;
         
         #region Constructor
 
         public CreatingLocalAnchorStateHandler(CollocationManager manager) : base(manager)
         {
             State = CollocationState.CreatingLocalAnchor;
-            m_FilePath = Path.Combine(Application.persistentDataPath, "SavedAnchorIds.json");
         }
 
         #endregion
@@ -33,14 +25,27 @@ namespace VRSYS.Meta.Collocation
 
         public override void StartState()
         {
-            _manager.AnchorCreationManager.OnAnchorCreated.AddListener(OnUserDefinedAnchor);
-            _manager.AnchorCreationManager.SetupAnchorCreationMode();
-            // TODO: Enable Anchor creation user interface
-            // TODO: Subscribe AlignmentAnchorsCreated() callback
+            _anchorCreationManager = NetworkUser.LocalInstance.GetComponent<AnchorCreationManager>();
+            if (_anchorCreationManager == null)
+            {
+                _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Error,
+                    "Required AnchorCreationManager component not found on local user."));
+                return;
+            }
+            _anchorCreationManager.OnUserDefinedAnchor.AddListener(OnUserDefinedAnchor);
+            _anchorCreationManager.SetupAnchorCreationMode();
+            
+            CollocationStateMessage stateMessage = new CollocationStateMessage(State, CollocationStateStatus.Started,
+                "Started anchor creation process.");
+            _manager.BroadcastState(stateMessage);
         }
         
         protected override void EndState()
         {
+            CollocationStateMessage stateMessage = new CollocationStateMessage(State, CollocationStateStatus.Success,
+                "Local Anchor created successfully.");
+            _manager.BroadcastState(stateMessage);
+            
             // Then enter AligningToAnchorState
             _manager.EnterState(_manager.AligningToAnchorStateHandler);
         }
@@ -50,63 +55,95 @@ namespace VRSYS.Meta.Collocation
         #region Private Methods
         
         // Callback for AlignmentAnchorCreationManager.OnAnchorCreated Event
-        public void OnUserDefinedAnchor(Vector3 targetWorldPosition, Quaternion targetWorldRotation)
+        private async void OnUserDefinedAnchor(Vector3 targetWorldPosition, Quaternion targetWorldRotation)
         {
-            CreateAnchorAsync(targetWorldPosition, targetWorldRotation);
-        }
-
-        private async void CreateAnchorAsync(Vector3 targetWorldPosition, Quaternion targetWorldRotation)
-        {
-            // create from 
-            OVRSpatialAnchor anchor = GameObject.Instantiate(_manager.AnchorPrefab, targetWorldPosition, targetWorldRotation).GetComponent<OVRSpatialAnchor>(); 
-            SaveAnchorAsync(anchor);
+            try
+            {
+                _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Running,
+                    "Creating user defined spatial anchor."));
+                
+                OVRSpatialAnchor anchor = await CreateAnchor(targetWorldPosition, targetWorldRotation);
+                if (anchor == null)
+                {
+                    _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Failed,
+                        "Could not create spatial anchor."));
+                    return;
+                }
+                SaveAnchor(anchor);
+            }
+            catch (Exception e)
+            {
+                ExtendedLogger.LogError(GetType().Name, $"Error during anchor creation: {e.Message}");
+            }
         }
         
-        private async void SaveAnchorAsync(OVRSpatialAnchor anchor)
+        // copied from CollocationManagerOld.cs TODO: refactor to have only one method :)
+        private async Task<OVRSpatialAnchor> CreateAnchor(Vector3 position, Quaternion rotation)
         {
-            // Wait that the anchor is ready to use before saving (valid and localized anchor state)
-            if (!await anchor.WhenLocalizedAsync())
+            try
             {
-                Debug.LogError($"Unable to create anchor.");
-                _anchorInstances.Remove(anchor);
-                GameObject.Destroy(anchor.gameObject);
-                return;
+                // create anchor at given position and rotation
+                var go = GameObject.Instantiate(_manager.AnchorPrefab, position, rotation);
+                OVRSpatialAnchor anchor = go.GetComponent<OVRSpatialAnchor>();
+                
+                // wait for anchor UUID to be valid
+                while (!anchor.Created)
+                {
+                    await Task.Yield();
+                }
+
+                ExtendedLogger.LogInfo(GetType().Name, $"Anchor created successfully. UUID: {anchor.Uuid}");
+                return anchor;
             }
-            
-            // Save anchor and save anchor UUID to file storage
-            if ((await anchor.SaveAnchorAsync()).Success)
+            catch (Exception e)
             {
-                // Remember UUID so you can load the anchor later
-                _anchorUuids.Add(anchor.Uuid);
-            }
-            else
-            {
-                Debug.LogError("Implement failure handling for anchor save.");
+                ExtendedLogger.LogError(GetType().Name, $"Error during anchor creation: {e.Message}");
+                return null;
             }
         }
-
-        private async void SaveAnchorIdsToFile()
+        
+        private async void SaveAnchor(OVRSpatialAnchor anchor)
         {
-            await SaveAnchorGUIDsAsync();
-            Debug.Log($"Saved current saved anchor IDs to file. Now tracking {_anchorUuids.Count} anchor guids");
+            // save anchor to meta cloud
+            var saveResult = await anchor.SaveAnchorAsync();
+
+            if (!saveResult.Success)
+            {
+                if (_retryCount == _manager.MaxRetries)
+                {
+                    _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Failed,
+                        $"Failed to save spatial anchor. Result: {saveResult.Status}"));
+                    return;
+                }
+                _retryCount++;
             
-            // When anchors are saved, exit the anchor creation state
+                _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Retry,
+                    $"Failed to save spatial anchor. Retry in {_manager.RetryTime} seconds."));
+            
+                await Task.Delay((int)(_manager.RetryTime * 1000));
+                SaveAnchor(anchor);
+                return;
+            }
+
+            _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Running,
+                $"Saved spatial anchor with UUID: {anchor.Uuid}"));
+            
+            _manager.SetCurrentAnchor(anchor);
+            try
+            {
+                SpatialAnchorManager.SaveAnchorID(anchor.Uuid);
+            }
+            catch (Exception e)
+            {
+                _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Failed,
+                    $"Could not save anchor ID to device storage. Exception: {e.Message}"));
+            }
+            
+            _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Running,
+                $"Saved spatial anchor with UUID: {anchor.Uuid}"));
             EndState();
         }
         
-        #endregion
-        
-        #region UUID Storage Operations
-        
-        /// <summary>
-        /// Save list of anchor UUID to persistent storage as JSON.
-        /// </summary>
-        private async Awaitable SaveAnchorGUIDsAsync()
-        {
-            var jsonString = JsonConvert.SerializeObject(_anchorUuids, Formatting.Indented);
-            await File.WriteAllTextAsync(m_FilePath, jsonString);
-        }
-
         #endregion
     }
 }

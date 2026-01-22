@@ -34,7 +34,7 @@ namespace VRSYS.Meta.Collocation
             transform.position = userHead.position + userHead.forward * 0.3f;
 
             Vector3 rotationAngles = userHead.rotation.eulerAngles;
-            rotationAngles = new Vector3(0, rotationAngles.y + 180, 0);
+            rotationAngles = new Vector3(0, rotationAngles.y, 0);
             transform.rotation = Quaternion.Euler(rotationAngles);
         }
 

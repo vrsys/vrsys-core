@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace VRSYS.Meta.Collocation
 {
-    public class SpatialAnchorManager
+    public class SavedAnchorIDManager
     {
         public static string AnchorIDsFilePath { get; private set; } = Path.Combine(Application.persistentDataPath, "SavedAnchorIds.json");
         

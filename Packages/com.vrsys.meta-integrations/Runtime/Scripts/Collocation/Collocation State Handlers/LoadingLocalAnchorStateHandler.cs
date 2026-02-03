@@ -10,7 +10,6 @@ namespace VRSYS.Meta.Collocation
     /// </summary>
     public class LoadingLocalAnchorStateHandler : CollocationStateHandler
     {
-        [SerializeField] private ConfirmationUI _confirmationUIPrefab;
         private ConfirmationUI _confirmationUI;
         private OVRSpatialAnchor loadedAnchor;
         
@@ -37,9 +36,12 @@ namespace VRSYS.Meta.Collocation
 
         private async void LoadAnchor()
         {
-            var anchorIDs = await SpatialAnchorManager.LoadAnchorIdsFromFile();
+            _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Started, "Loading saved anchor IDs."));
+            var anchorIDs = await SavedAnchorIDManager.LoadAnchorIdsFromFile();
             if (anchorIDs.Count > 0)
             {
+                _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Running,
+                    $"Found {anchorIDs.Count} anchor IDs. Loading last anchor ID in file."));
                 Guid[] guids = new Guid[anchorIDs.Count];
                 anchorIDs.CopyTo(guids);
                 LoadSpatialAnchor(guids[^1]);
@@ -53,6 +55,8 @@ namespace VRSYS.Meta.Collocation
         
         public async void LoadSpatialAnchor(Guid anchorUuid)
         {
+            _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Running,
+                $"Loading OVRSpatialAnchor with ID ({anchorUuid})."));
             // Load and localize
             var unboundAnchors = new List<OVRSpatialAnchor.UnboundAnchor>();
             var result = await OVRSpatialAnchor.LoadUnboundAnchorsAsync(new []{anchorUuid}, unboundAnchors);
@@ -70,7 +74,7 @@ namespace VRSYS.Meta.Collocation
             }
             else
             {
-                SpatialAnchorManager.DeleteIDfromSaved(anchorUuid); // Clean up ID that cannot be loaded
+                SavedAnchorIDManager.DeleteIDfromSaved(anchorUuid); // Clean up ID that cannot be loaded
                 _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Failed, "Failed to load spatial anchor."));
                 _manager.EnterState(_manager.CreatingLocalAnchorStateHandler);
             }
@@ -78,7 +82,7 @@ namespace VRSYS.Meta.Collocation
 
         private void WaitForConfirmation()
         {
-            _confirmationUI = GameObject.Instantiate(_confirmationUIPrefab);
+            _confirmationUI = GameObject.Instantiate(_manager.ConfirmationUIPrefab);
             _confirmationUI.Initialize(OnConfirm: OnConfirmAnchor, OnReject: OnCreateNewAnchor);
             _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Running, "Waiting for user confirmation of loaded anchor..."));
         }
@@ -110,7 +114,7 @@ namespace VRSYS.Meta.Collocation
                 _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Failed, "Failed to erase the loaded spatial anchor."));
             }
             
-            await SpatialAnchorManager.DeleteIDfromSaved(loadedAnchor.Uuid);
+            await SavedAnchorIDManager.DeleteIDfromSaved(loadedAnchor.Uuid);
             _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Success, "Deleted anchor ID."));
             
             GameObject.Destroy(loadedAnchor);

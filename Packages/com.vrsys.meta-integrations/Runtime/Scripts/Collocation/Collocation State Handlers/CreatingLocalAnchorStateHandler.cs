@@ -131,7 +131,7 @@ namespace VRSYS.Meta.Collocation
             _manager.SetCurrentAnchor(anchor);
             try
             {
-                SpatialAnchorManager.SaveAnchorID(anchor.Uuid);
+                SavedAnchorIDManager.SaveAnchorID(anchor.Uuid);
             }
             catch (Exception e)
             {

@@ -40,6 +40,9 @@ namespace VRSYS.Meta.Collocation
         
         [Tooltip("If true, local anchor is used to create collocation session.")]
         [SerializeField] private bool _useLocalAnchor = false;
+
+        [Tooltip("If true, tries to load previous anchor automatically")] 
+        [SerializeField] private bool _tryLoadLocalAnchor = false;
         
         [Tooltip("If true, session anchor is always created at DefaultSessionAnchorWorldPosition.")]
         [SerializeField] private bool _useDefaultSessionAnchor = true;
@@ -63,6 +66,10 @@ namespace VRSYS.Meta.Collocation
         [SerializeField] private CreateSessionUi _createSessionUiPrefab;
         public CreateSessionUi CreateSessionUi => _createSessionUiPrefab;
         
+        [Tooltip("Prefab of UI used to confirm anchor alignment.")]
+        [SerializeField] private ConfirmationUI _confirmationUIPrefab;
+        public ConfirmationUI ConfirmationUIPrefab => _confirmationUIPrefab;
+        
         [Header("Debugging")] 
         
         [Tooltip("If true, Info logs are printed to the console. If false, only Warning and Error logs will be printed.")]
@@ -85,7 +92,7 @@ namespace VRSYS.Meta.Collocation
         
         public OVRSpatialAnchor CurrentAnchor { get; private set; }
         
-        public SpatialAnchorManager SpatialAnchorManager { get; private set; }
+        public SavedAnchorIDManager SavedAnchorIDManager { get; private set; }
         
         #endregion
 
@@ -115,7 +122,7 @@ namespace VRSYS.Meta.Collocation
         {
             if (_collocationRoles.Contains(NetworkUser.LocalInstance.userRole.Value))
             {
-                SpatialAnchorManager = new SpatialAnchorManager();
+                SavedAnchorIDManager = new SavedAnchorIDManager();
                 InitializeStates();
                 StartCollocation();
             }
@@ -204,7 +211,10 @@ namespace VRSYS.Meta.Collocation
         {
             if (_useLocalAnchor)
             {
-                EnterState(LoadingLocalAnchorStateHandler);
+                if (_tryLoadLocalAnchor)
+                    EnterState(LoadingLocalAnchorStateHandler);
+                else
+                    EnterState(CreatingLocalAnchorStateHandler);
             }
             else
             {

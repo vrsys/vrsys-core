@@ -466,11 +466,13 @@ MonoBehaviour:
   _collocationRoles:
   - Name: HMD
   _useLocalAnchor: 1
-  _useDefaultSessionAnchor: 1
+  _tryLoadLocalAnchor: 1
+  _useDefaultSessionAnchor: 0
   _defaultSessionAnchorWorldPosition: {x: 0, y: 0, z: 0}
   _anchorPrefab: {fileID: 2756040260494941293, guid: c3abdf3665c88894aa6573af026dc957, type: 3}
   _sessionListUiPrefab: {fileID: 5511117897281850996, guid: aba0be27b6060b449a761ffa61449bc5, type: 3}
   _createSessionUiPrefab: {fileID: 9166904928618224019, guid: 818ad397567d44940a029bcab1bd8234, type: 3}
+  _confirmationUIPrefab: {fileID: 514847569646770258, guid: 752097519ecd1b946a7eac83c3250b75, type: 3}
   _verbose: 1
 --- !u!4 &497175526
 Transform:

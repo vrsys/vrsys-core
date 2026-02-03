@@ -24,19 +24,6 @@ namespace VRSYS.Meta.Collocation
             {
                 if (!File.Exists(AnchorIDsFilePath))
                     return new HashSet<Guid>();
-
-                // using var streamReader = File.OpenText(AnchorIDsFilePath);
-                // using var jsonTextReader = new JsonTextReader(streamReader);
-
-                // var kvp = (JObject)await JToken.ReadFromAsync(jsonTextReader);
-                // foreach (var (idAsString, dateTime) in kvp)
-                // {
-                //     var tokens = idAsString.Split("-");
-                //     var low = Convert.ToUInt64(tokens[0], 16);
-                //     var high = Convert.ToUInt64(tokens[1], 16);
-                //     var serializableGuid = new SerializableGuid(low, high);
-                //     _savedAnchors.Add(serializableGuid, (DateTime)dateTime);
-                // }
                 
                 var text = await File.ReadAllTextAsync(AnchorIDsFilePath);
                 return JsonConvert.DeserializeObject<HashSet<Guid>>(text);
@@ -55,6 +42,14 @@ namespace VRSYS.Meta.Collocation
         {
             var currentlySavedIDs = await LoadAnchorIdsFromFile();
             currentlySavedIDs.Add(anchorUuid);
+            var jsonString = JsonConvert.SerializeObject(currentlySavedIDs, Formatting.Indented);
+            await File.WriteAllTextAsync(AnchorIDsFilePath, jsonString);
+        }
+
+        public static async Awaitable DeleteIDfromSaved(Guid anchorUuid)
+        {
+            var currentlySavedIDs = await LoadAnchorIdsFromFile();
+            currentlySavedIDs.Remove(anchorUuid);
             var jsonString = JsonConvert.SerializeObject(currentlySavedIDs, Formatting.Indented);
             await File.WriteAllTextAsync(AnchorIDsFilePath, jsonString);
         }

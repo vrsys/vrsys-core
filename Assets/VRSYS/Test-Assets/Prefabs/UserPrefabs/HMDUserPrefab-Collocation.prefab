@@ -182,6 +182,10 @@ PrefabInstance:
       propertyPath: m_CullingMask.m_Bits
       value: 119
       objectReference: {fileID: 0}
+    - target: {fileID: 4048174999287893325, guid: 13ae61ea84116d34497c03f1f19c380d, type: 3}
+      propertyPath: raycastMask.m_Bits
+      value: 96
+      objectReference: {fileID: 0}
     - target: {fileID: 7216047633976425185, guid: 13ae61ea84116d34497c03f1f19c380d, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -229,6 +233,10 @@ PrefabInstance:
     - target: {fileID: 7216047633976425198, guid: 13ae61ea84116d34497c03f1f19c380d, type: 3}
       propertyPath: m_Name
       value: HMDUserPrefab-Collocation
+      objectReference: {fileID: 0}
+    - target: {fileID: 7627770897703282757, guid: 13ae61ea84116d34497c03f1f19c380d, type: 3}
+      propertyPath: raycastMask.m_Bits
+      value: 96
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 594239884952932559, guid: 13ae61ea84116d34497c03f1f19c380d, type: 3}
@@ -393,7 +401,7 @@ MonoBehaviour:
   OnUserDefinedAnchor:
     m_PersistentCalls:
       m_Calls: []
-  _confirmationUIPrefab: {fileID: 1850286696144778228, guid: 752097519ecd1b946a7eac83c3250b75, type: 3}
+  _confirmationUIPrefab: {fileID: 514847569646770258, guid: 752097519ecd1b946a7eac83c3250b75, type: 3}
   _floorPlanePrefab: {fileID: 6956093484841103989, guid: f98edacc9f2b0fb4ba7eb97496e24ee3, type: 3}
   _anchorPrefab: {fileID: 7229767251128816808, guid: 97979b4a7cafa26469ba5a30d224459d, type: 3}
   _anchorCreationAction:
@@ -419,7 +427,6 @@ MonoBehaviour:
   anchorLayerMask:
     serializedVersion: 2
     m_Bits: 128
-  _floorPlane: {fileID: 0}
   _rayVisual: {fileID: 6946185083107808750}
   _userHand: {fileID: 7800312357087503932}
 --- !u!4 &7800312357087503932 stripped

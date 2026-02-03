@@ -3,25 +3,26 @@ using UnityEngine.UI;
 using VRSYS.Core.Networking;
 
 using UnityEngine.Events;
+using UnityEngine.Serialization;
 
 namespace VRSYS.Meta.Collocation
 {
-    public class AnchorConfirmationUI : MonoBehaviour
+    public class ConfirmationUI : MonoBehaviour
     {
         #region Properties
 
         [Header("UI Elements")] 
         [SerializeField] private Button _confirm;
-        [SerializeField] private Button _tryAgain;
+        [SerializeField] private Button _reject;
 
         #endregion
 
         #region Public Methods
 
-        public void Initialize(UnityAction OnConfirm, UnityAction OnTryAgain)
+        public void Initialize(UnityAction OnConfirm, UnityAction OnReject)
         {
             _confirm.onClick.AddListener(OnConfirm);
-            _tryAgain.onClick.AddListener(OnTryAgain);
+            _reject.onClick.AddListener(OnReject);
             Hide();
         }
         

@@ -42,9 +42,9 @@ namespace VRSYS.Meta.Collocation
                 "Starting to create session anchor.");
             _manager.BroadcastState(stateMessage);
 
-            if (_manager.UseDefaultAnchor)
+            if (_manager.UseDefaultSessionAnchor)
             {
-                CreateAnchor(_manager.DefaultAnchorWorldPosition, Quaternion.identity);
+                CreateAnchor(_manager.DefaultSessionAnchorWorldPosition, Quaternion.identity);
             }
             else
             {

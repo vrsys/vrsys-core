@@ -13,18 +13,18 @@ namespace VRSYS.Meta.Collocation
     {
         [HideInInspector] public UnityEvent<Vector3,Quaternion> OnUserDefinedAnchor = new UnityEvent<Vector3,Quaternion>();
         
-        [SerializeField] private GameObject _confirmationUIPrefab;
+        [SerializeField] private ConfirmationUI _confirmationUIPrefab;
         [SerializeField] private GameObject _floorPlanePrefab;
         [SerializeField] private GameObject _anchorPrefab;
 
         [SerializeField] private InputActionProperty _anchorCreationAction;
         [SerializeField] private LayerMask anchorLayerMask;
 
-        [SerializeField] private GameObject _floorPlane;
         [SerializeField] private LineRenderer _rayVisual;
         [SerializeField] private Transform _userHand;
         
-        private AnchorConfirmationUI _confirmationUI;
+        private GameObject _floorPlane;
+        private ConfirmationUI _confirmationUI;
         private GameObject _anchorPreview;
         private bool _isAnchorCreationActive;
         
@@ -45,7 +45,7 @@ namespace VRSYS.Meta.Collocation
             _anchorPreview = Instantiate(_anchorPrefab);
             _anchorPrefab.SetActive(false);
             
-            _confirmationUI = Instantiate(_confirmationUIPrefab).GetComponent<AnchorConfirmationUI>();
+            _confirmationUI = Instantiate(_confirmationUIPrefab);
             _confirmationUI.Initialize(AnchorConfirmed, RedoAnchor);
             
             // Place floor plane on ground height of user
@@ -114,7 +114,6 @@ namespace VRSYS.Meta.Collocation
             
             if (Physics.Raycast(_userHand.position, _userHand.forward,  out RaycastHit hit, 100f, anchorLayerMask))
             {
-                Debug.Log(hit.collider.gameObject.name);
                 _rayVisual.SetPosition(1, hit.point);
                 
                 if(interactionState == AnchorCreationState.Aiming)
@@ -125,7 +124,7 @@ namespace VRSYS.Meta.Collocation
                 else if(interactionState == AnchorCreationState.Locked)
                 {
                     // rotate
-                    _anchorPreview.transform.LookAt(hit.point, _floorPlanePrefab.transform.up);
+                    _anchorPreview.transform.LookAt(hit.point, _floorPlane.transform.up);
                 }
             }
             else

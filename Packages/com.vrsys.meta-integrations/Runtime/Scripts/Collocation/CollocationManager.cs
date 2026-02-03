@@ -31,6 +31,7 @@ namespace VRSYS.Meta.Collocation
         
         [Tooltip("User roles that try to collocate themselves.")]
         [SerializeField] [UserRoleSelector] private List<UserRole> _collocationRoles;
+        public List<UserRole> CollocationRoles => _collocationRoles;
         
         [Header("Anchor configuration")]
         

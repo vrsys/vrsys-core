@@ -84,6 +84,7 @@ namespace VRSYS.Meta.Collocation
         {
             _confirmationUI = GameObject.Instantiate(_manager.ConfirmationUIPrefab);
             _confirmationUI.Initialize(OnConfirm: OnConfirmAnchor, OnReject: OnCreateNewAnchor);
+            _confirmationUI.Show();
             _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Running, "Waiting for user confirmation of loaded anchor..."));
         }
 
@@ -92,8 +93,13 @@ namespace VRSYS.Meta.Collocation
         /// </summary>
         private void OnConfirmAnchor()
         {
+            _confirmationUI.Hide();
+            GameObject.Destroy(_confirmationUI.gameObject); //TODO: This should happen in EndState I think...
+            
             _manager.SetCurrentAnchor(loadedAnchor);
             _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Success, "User confirmed loaded anchor."));
+            
+            // TODO: I want to call EndState here, but different next states are possible so I'm calling EnterState directly instead.
             _manager.EnterState(_manager.AligningToAnchorStateHandler);
         }
 
@@ -104,6 +110,7 @@ namespace VRSYS.Meta.Collocation
         {
             _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Running, "User rejected loaded anchor."));
             
+            Debug.Log($"{loadedAnchor}",loadedAnchor);
             var result = await loadedAnchor.EraseAnchorAsync();
             if (result.Success)
             {
@@ -119,7 +126,7 @@ namespace VRSYS.Meta.Collocation
             
             GameObject.Destroy(loadedAnchor);
             loadedAnchor = null;
-            
+            // TODO: I want to call EndState here, but different next states are possible so I'm calling EnterState directly instead.
             _manager.EnterState(_manager.CreatingLocalAnchorStateHandler);
         }
 

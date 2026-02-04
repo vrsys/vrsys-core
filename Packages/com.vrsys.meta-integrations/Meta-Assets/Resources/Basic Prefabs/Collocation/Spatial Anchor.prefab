@@ -97,6 +97,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: SimpleGizmo
       objectReference: {fileID: 0}
+    - target: {fileID: 7229767251128816808, guid: 97979b4a7cafa26469ba5a30d224459d, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

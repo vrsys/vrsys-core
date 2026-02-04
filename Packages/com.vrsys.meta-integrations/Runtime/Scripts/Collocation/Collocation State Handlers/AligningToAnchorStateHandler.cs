@@ -3,12 +3,14 @@ using UnityEngine;
 using System.Collections.Generic;
 using UnityEngine.XR;
 using VRSYS.Core.Networking;
+using UnityEngine.InputSystem;
 
 namespace VRSYS.Meta.Collocation
 {
     public class AligningToAnchorStateHandler : CollocationStateHandler
     {
         private XRInputSubsystem _xrInputSubsystem;
+        
         public AligningToAnchorStateHandler(CollocationManager manager) : base(manager)
         {
             State = CollocationState.AligningToAnchor;
@@ -26,7 +28,7 @@ namespace VRSYS.Meta.Collocation
                 "Removing callback to TrackingOriginUpdates and resetting scene alignment."));
             _xrInputSubsystem.trackingOriginUpdated -= OnTrackingOriginUpdated;
             // TODO: Is it desired to reset scene alignment here?
-            ResetSceneAlignment();
+            // ResetTrackingOrigin();
         }
         
         private void InitializeXRInputSubsystem()
@@ -55,16 +57,16 @@ namespace VRSYS.Meta.Collocation
         /// </summary>
         public void AlignScene()
         {
-            var origin = NetworkUser.LocalInstance.transform; // XR Origin
+            var trackingOrigin = NetworkUser.LocalInstance.transform; // XR Origin
             var alignmentAnchor = _manager.CurrentAnchor;
             
             _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Running,
-                $"Aligning scene with origin {origin.position} to current anchor " 
+                $"Aligning tracking space with current position {trackingOrigin.position} to current anchor " 
                 + $"with position {alignmentAnchor.transform.position}"));
             
             Matrix4x4 O = Matrix4x4.TRS(
-                origin.position,
-                origin.rotation,
+                trackingOrigin.position,
+                trackingOrigin.rotation,
                 Vector3.one
             );
 
@@ -75,10 +77,12 @@ namespace VRSYS.Meta.Collocation
 
             var alignmentMatrix = O * A.inverse;
 
-            origin.position = alignmentMatrix.GetColumn(3);
-            origin.rotation = alignmentMatrix.rotation;
-            origin.localScale = alignmentMatrix.lossyScale;
-
+            trackingOrigin.position = alignmentMatrix.GetColumn(3);
+            trackingOrigin.rotation = alignmentMatrix.rotation;
+            trackingOrigin.localScale = alignmentMatrix.lossyScale;
+            
+            Debug.Log($"Tracking origin now in: {NetworkUser.LocalInstance.transform.position}, anchor in {alignmentAnchor.transform.position}");
+            
             // origin.position = a.transform.position;
             // origin.LookAt(b.transform.position, Vector3.up);
         }
@@ -86,22 +90,31 @@ namespace VRSYS.Meta.Collocation
         private void OnTrackingOriginUpdated(XRInputSubsystem obj)
         {
             _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Started,
-                $"TrackingOriginUpdated. Realigning scene..."));
+                $"TrackingOriginUpdated Event received. origin {NetworkUser.LocalInstance.transform.position}, anchor {_manager.CurrentAnchor.transform.position}"));
             _manager.StartCoroutine(ResetAlignmentNextFrame());
         }
         
         IEnumerator ResetAlignmentNextFrame()
         {
-            yield return null;
-            ResetSceneAlignment();
+            Debug.Log("Resetting scene alignment...");
+            ResetTrackingOrigin();
+            
+            // Wait for one frame, because after resetting the new tracked anchor position is not yet available
+            // TODO: Is it possible to fetch the new anchor position without waiting?
+            yield return null;  
+            
+            Debug.Log("Aliging scene to spatial anchor...");
             AlignScene();
         }
         
-        public void ResetSceneAlignment()
+        public void ResetTrackingOrigin()
         {
+            Debug.Log($"Before reset: origin {NetworkUser.LocalInstance.transform.position}, anchor {_manager.CurrentAnchor.transform.position}");
             var origin = NetworkUser.LocalInstance.transform;
             origin.position = Vector3.zero;
             origin.rotation = Quaternion.identity;
+            origin.localScale = Vector3.one;
+            Debug.Log($"After reset: origin {NetworkUser.LocalInstance.transform.position}, anchor {_manager.CurrentAnchor.transform.position}");
         }
     }
 }

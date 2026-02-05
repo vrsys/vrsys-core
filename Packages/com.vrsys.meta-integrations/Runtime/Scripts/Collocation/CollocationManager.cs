@@ -103,26 +103,8 @@ namespace VRSYS.Meta.Collocation
 
         public bool CanRestart => _isSuccessfullyCollocated || _isFailed;
         
-        #endregion
-
-        #region Collocation States
-
         private CollocationStateHandler _currentState;
-
-        public SearchSessionStateHandler SearchSessionStateHandler { get; private set; }
         
-        // Local Anchor States
-        public LoadingLocalAnchorStateHandler LoadingLocalAnchorStateHandler { get; private set; }
-        public CreatingLocalAnchorStateHandler CreatingLocalAnchorStateHandler { get; private set; }
-        public AligningToAnchorStateHandler AligningToAnchorStateHandler { get; private set; }
-        
-        // Meta Session States
-        public DisplaySessionsStateHandler DisplaySessionsStateHandler { get; private set; }
-        public CreateSessionStateHandler CreateSessionStateHandler { get; private set; }
-        public LoadSessionAnchorStateHandler LoadSessionAnchorStateHandler { get; private set; }
-        public CreateSessionAnchorStateHandler CreateSessionAnchorStateHandler { get; private set; }
-        public ShareSessionAnchorStateHandler ShareSessionAnchorStateHandler { get; private set; }
-
         #endregion
 
         #region INetworkUserCallbacks
@@ -132,7 +114,6 @@ namespace VRSYS.Meta.Collocation
             if (_collocationRoles.Contains(NetworkUser.LocalInstance.userRole.Value))
             {
                 SavedAnchorIDManager = new SavedAnchorIDManager();
-                InitializeStates();
                 StartCollocation();
             }
         }
@@ -225,22 +206,6 @@ namespace VRSYS.Meta.Collocation
                             this);
                     break;
             }
-        }
-        
-        private void InitializeStates()
-        {
-            // Local Anchor States
-            LoadingLocalAnchorStateHandler = new LoadingLocalAnchorStateHandler(this);
-            CreatingLocalAnchorStateHandler = new CreatingLocalAnchorStateHandler(this);
-            // Meta Shared Session States
-            SearchSessionStateHandler = new SearchSessionStateHandler(this);
-            DisplaySessionsStateHandler = new DisplaySessionsStateHandler(this);
-            CreateSessionStateHandler = new CreateSessionStateHandler(this);
-            LoadSessionAnchorStateHandler = new LoadSessionAnchorStateHandler(this);
-            CreateSessionAnchorStateHandler = new CreateSessionAnchorStateHandler(this);
-            ShareSessionAnchorStateHandler = new ShareSessionAnchorStateHandler(this);
-            // Aligning State
-            AligningToAnchorStateHandler = new AligningToAnchorStateHandler(this);
         }
         
         /// <summary>

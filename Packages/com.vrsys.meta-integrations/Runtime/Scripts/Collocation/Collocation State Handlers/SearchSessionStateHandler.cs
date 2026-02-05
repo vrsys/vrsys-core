@@ -30,7 +30,7 @@ public class SearchSessionStateHandler : CollocationStateHandler
                 "Could not find existing collocation sessions.");
             _manager.BroadcastState(stateMessage);
             
-            _manager.EnterState(_manager.CreateSessionStateHandler);
+            _manager.EnterState<CreateSessionStateHandler>();
         }
         else
         {
@@ -38,7 +38,7 @@ public class SearchSessionStateHandler : CollocationStateHandler
                 $"Found {_manager.SessionDatas.Count} collocation sessions");
             _manager.BroadcastState(stateMessage);
             
-            _manager.EnterState(_manager.DisplaySessionsStateHandler);
+            _manager.EnterState<DisplaySessionsStateHandler>();
         }
     }
 
@@ -71,6 +71,9 @@ public class SearchSessionStateHandler : CollocationStateHandler
                 stateMessage = new CollocationStateMessage(State, CollocationStateStatus.Failed,
                     $"Failed to start collocation session discovery. Result: {discoveryStartResult.Status}. Stopping collocation process.");
                 _manager.BroadcastState(stateMessage);
+                
+                _manager.SetIsFailed(true);
+                
                 return;
             }
 

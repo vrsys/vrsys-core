@@ -22,13 +22,13 @@ namespace VRSYS.Meta.Collocation
             ShareSessionAnchor();
         }
 
-        protected override void EndState(CollocationStateHandler nextStateHandler)
+        protected override void EndState<T>()
         {
             CollocationStateMessage stateMessage = new CollocationStateMessage(State, CollocationStateStatus.Success,
                 "Successfully shared session anchor.");
             _manager.BroadcastState(stateMessage);
             
-            base.EndState(nextStateHandler);
+            base.EndState<T>();
         }
 
         #endregion
@@ -57,6 +57,9 @@ namespace VRSYS.Meta.Collocation
                     stateMessage = new CollocationStateMessage(State, CollocationStateStatus.Failed,
                         $"Failed to share session anchor. Status: {shareResult.Status}");
                     _manager.BroadcastState(stateMessage);
+                    
+                    _manager.SetIsFailed(true);
+                    return;
                 }
 
                 _retryCount++;
@@ -71,7 +74,7 @@ namespace VRSYS.Meta.Collocation
                 return;
             }
             
-            EndState(_manager.AligningToAnchorStateHandler);
+            EndState<AligningToAnchorStateHandler>();
         }
 
         #endregion

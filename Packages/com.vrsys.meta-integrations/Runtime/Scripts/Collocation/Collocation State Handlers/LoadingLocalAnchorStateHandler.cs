@@ -49,7 +49,7 @@ namespace VRSYS.Meta.Collocation
             else
             {
                 _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Failed, "No anchor IDs saved."));
-                _manager.EnterState(_manager.CreatingLocalAnchorStateHandler);
+                _manager.EnterState<CreatingLocalAnchorStateHandler>();
             }
         }
         
@@ -76,7 +76,7 @@ namespace VRSYS.Meta.Collocation
             {
                 SavedAnchorIDManager.DeleteIDfromSaved(anchorUuid); // Clean up ID that cannot be loaded
                 _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Failed, "Failed to load spatial anchor."));
-                _manager.EnterState(_manager.CreatingLocalAnchorStateHandler);
+                _manager.EnterState<CreatingLocalAnchorStateHandler>();
             }
         }
 
@@ -95,7 +95,7 @@ namespace VRSYS.Meta.Collocation
         {
             _manager.SetCurrentAnchor(loadedAnchor);
             _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Success, "User confirmed loaded anchor."));
-            EndState(_manager.AligningToAnchorStateHandler);
+            EndState<AligningToAnchorStateHandler>();
         }
 
         /// <summary>
@@ -121,16 +121,16 @@ namespace VRSYS.Meta.Collocation
             GameObject.Destroy(loadedAnchor.gameObject);
             loadedAnchor = null;
             
-            EndState(_manager.CreatingLocalAnchorStateHandler);
+            EndState<CreatingLocalAnchorStateHandler>();
         }
 
-        protected override void EndState(CollocationStateHandler nextStateHandler)
+        protected override void EndState<T>()
         {
             // Teardown actions
             _confirmationUI.Hide();
             GameObject.Destroy(_confirmationUI.gameObject);
             
-            base.EndState();
+            base.EndState<T>();
         }
 
         #endregion

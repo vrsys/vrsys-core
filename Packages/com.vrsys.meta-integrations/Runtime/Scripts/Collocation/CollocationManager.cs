@@ -18,6 +18,8 @@ namespace VRSYS.Meta.Collocation
         /// </summary>
         public CollocationState State => _currentState.State;
         [HideInInspector] public UnityEvent<CollocationStateMessage> OnStateChanged = new ();
+
+        [HideInInspector] public UnityEvent OnRestart = new();
         
         [Header("Configuration")] 
         
@@ -94,6 +96,12 @@ namespace VRSYS.Meta.Collocation
         public OVRSpatialAnchor CurrentAnchor { get; private set; }
         
         public SavedAnchorIDManager SavedAnchorIDManager { get; private set; }
+
+        private bool _isSuccessfullyCollocated = false;
+
+        private bool _isFailed = false;
+
+        public bool CanRestart => _isSuccessfullyCollocated || _isFailed;
         
         #endregion
 
@@ -144,10 +152,10 @@ namespace VRSYS.Meta.Collocation
             LogStateMessage(message);
         }
 
-        public void EnterState(CollocationStateHandler state)
+        public void EnterState<T>() where T : CollocationStateHandler
         {
-            _currentState = state;
-            state.StartState();
+            _currentState = (T)Activator.CreateInstance(typeof(T), args: new object[]{this});
+            _currentState.StartState();
         }
 
         public void AddAvailableSession(OVRColocationSession.Data sessionData)
@@ -160,13 +168,40 @@ namespace VRSYS.Meta.Collocation
 
         public void SetJoinedSession(OVRColocationSession.Data data) =>_joinedSessionData = data;
 
+        public void ResetSessionData()
+        {
+            SessionDatas = null;
+            _joinedSessionData = default;
+        }
+
         public void SetHostInformation(Guid sessionId)
         {
             IsSessionHost = true;
             HostedSessionId = sessionId;
         }
 
+        public void ResetHostInformation()
+        {
+            IsSessionHost = false;
+            HostedSessionId = default;
+        }
+
         public void SetCurrentAnchor(OVRSpatialAnchor anchor) => CurrentAnchor = anchor;
+
+        public void SetIsSuccessfullyCollocated(bool isCollocated) => _isSuccessfullyCollocated = isCollocated;
+
+        public void SetIsFailed(bool isFailed) => _isFailed = isFailed;
+
+        public void RestartCollocation()
+        {
+            if (!CanRestart)
+                return;
+            
+            OnRestart.Invoke();
+
+            _currentState = new RestartCollocationStateHandler(this, StartCollocation);
+            _currentState.StartState();
+        }
 
         #endregion
 
@@ -216,13 +251,13 @@ namespace VRSYS.Meta.Collocation
             if (_useLocalAnchor)
             {
                 if (_tryLoadLocalAnchor)
-                    EnterState(LoadingLocalAnchorStateHandler);
+                    EnterState<LoadingLocalAnchorStateHandler>();
                 else
-                    EnterState(CreatingLocalAnchorStateHandler);
+                    EnterState<CreatingLocalAnchorStateHandler>();
             }
             else
             {
-                EnterState(SearchSessionStateHandler);
+                EnterState<SearchSessionStateHandler>();
             }
         }
 

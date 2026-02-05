@@ -3,7 +3,6 @@ using UnityEngine;
 using System.Collections.Generic;
 using UnityEngine.XR;
 using VRSYS.Core.Networking;
-using UnityEngine.InputSystem;
 
 namespace VRSYS.Meta.Collocation
 {
@@ -18,6 +17,8 @@ namespace VRSYS.Meta.Collocation
 
         public override void StartState()
         {
+            _manager.OnRestart.AddListener(EndState);
+            
             InitializeXRInputSubsystem();
             AlignScene();
         }
@@ -85,6 +86,8 @@ namespace VRSYS.Meta.Collocation
             trackingOrigin.localScale = alignmentMatrix.lossyScale;
             
             Debug.Log($"Tracking origin now in: {NetworkUser.LocalInstance.transform.position}, anchor in {alignmentAnchor.transform.position}");
+            
+            _manager.SetIsSuccessfullyCollocated(true);
             
             _manager.BroadcastState(new CollocationStateMessage(CollocationState.AligningToAnchor, CollocationStateStatus.Success,
                 "Colocated."));

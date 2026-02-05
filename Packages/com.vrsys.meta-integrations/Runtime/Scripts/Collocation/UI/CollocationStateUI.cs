@@ -32,6 +32,7 @@ namespace VRSYS.Meta.Collocation
         [SerializeField] private TextMeshProUGUI _statusText;
         [SerializeField] private TextMeshProUGUI _messageText;
         [SerializeField] private Button _closeButton;
+        [SerializeField] private Button _restartButton;
         
         [Header("UI Configuration")]
         [SerializeField] private Color _defaultTextColor = Color.white;
@@ -68,6 +69,9 @@ namespace VRSYS.Meta.Collocation
             
             _collocationManager.OnStateChanged.AddListener(OnCollocationStateChanged);
             _closeButton.onClick.AddListener(CloseMenu);
+            
+            _restartButton.gameObject.SetActive(_collocationManager.CanRestart);
+            _restartButton.onClick.AddListener(TryRestartCollocation);
 
             _toggleUIAction.action.Enable();
             _toggleUIAction.action.performed += ToggleUI;
@@ -106,6 +110,8 @@ namespace VRSYS.Meta.Collocation
             _statusText.color = idx == -1 ? _defaultTextColor : _customStatusColors[idx].Color;
 
             _messageText.text = stateMessage.Message;
+            
+            _restartButton.gameObject.SetActive(_collocationManager.CanRestart);
         }
         
         private void CloseMenu()
@@ -120,6 +126,11 @@ namespace VRSYS.Meta.Collocation
             Transform head = NetworkUser.LocalInstance.head;
 
             transform.position = head.position + head.forward * _distanceToHead;
+        }
+        
+        private void TryRestartCollocation()
+        {
+            _collocationManager.RestartCollocation();
         }
 
         #endregion

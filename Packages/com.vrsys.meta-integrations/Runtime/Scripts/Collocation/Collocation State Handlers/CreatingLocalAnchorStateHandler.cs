@@ -28,6 +28,8 @@ namespace VRSYS.Meta.Collocation
             {
                 _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Error,
                     "Required AnchorCreationManager component not found on local user."));
+                
+                _manager.SetIsFailed(true);
                 return;
             }
             _anchorCreationManager.OnUserDefinedAnchor.AddListener(OnUserDefinedAnchor);
@@ -45,7 +47,7 @@ namespace VRSYS.Meta.Collocation
             _manager.BroadcastState(stateMessage);
             
             // Then enter AligningToAnchorState
-            _manager.EnterState(_manager.AligningToAnchorStateHandler);
+            _manager.EnterState<AligningToAnchorStateHandler>();
         }
 
         #endregion

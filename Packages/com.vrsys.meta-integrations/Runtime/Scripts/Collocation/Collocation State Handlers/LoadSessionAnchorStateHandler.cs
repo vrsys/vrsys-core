@@ -56,6 +56,8 @@ namespace VRSYS.Meta.Collocation
                     stateMessage = new CollocationStateMessage(State, CollocationStateStatus.Failed,
                         $"Failed to load session anchor. Anchors found: {unboundAnchors.Count}, Result: {loadResult.Status}");
                     _manager.BroadcastState(stateMessage);
+                    
+                    _manager.SetIsFailed(true);
                     return;
                 }
 
@@ -106,6 +108,8 @@ namespace VRSYS.Meta.Collocation
                 stateMessage = new CollocationStateMessage(State, CollocationStateStatus.Failed,
                     "Failed to localize session anchor.");
                 _manager.BroadcastState(stateMessage);
+                
+                _manager.SetIsFailed(true);
                 return;
             }
 

@@ -61,7 +61,7 @@ namespace VRSYS.Meta.Collocation
             
             EndState();
             
-            _manager.EnterState(_manager.LoadSessionAnchorStateHandler);
+            _manager.EnterState<LoadSessionAnchorStateHandler>();
         }
 
         public void CreateNewSession()
@@ -72,7 +72,7 @@ namespace VRSYS.Meta.Collocation
             
             EndState();
             
-            _manager.EnterState(_manager.CreateSessionStateHandler);
+            _manager.EnterState<CreateSessionStateHandler>();
         }
 
         #endregion

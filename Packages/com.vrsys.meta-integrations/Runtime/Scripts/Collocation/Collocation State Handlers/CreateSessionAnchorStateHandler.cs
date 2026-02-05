@@ -36,7 +36,7 @@ namespace VRSYS.Meta.Collocation
                 "Successfully created session anchor.");
             _manager.BroadcastState(stateMessage);
             
-            _manager.EnterState(_manager.ShareSessionAnchorStateHandler);
+            _manager.EnterState<ShareSessionAnchorStateHandler>();
         }
 
         #endregion
@@ -111,6 +111,8 @@ namespace VRSYS.Meta.Collocation
                     stateMessage = new CollocationStateMessage(State, CollocationStateStatus.Error,
                         $"Error creating session anchor. Exception: {e.Message}");
                     _manager.BroadcastState(stateMessage);
+                    
+                    _manager.SetIsFailed(true);
                     return;
                 }
 

@@ -45,9 +45,9 @@ namespace VRSYS.Meta.Collocation
         /// Extend to perform teardown actions before entering the next state.
         /// </summary>
         /// <param name="nextStateHandler"></param>
-        protected virtual void EndState(CollocationStateHandler nextStateHandler)
+        protected virtual void EndState<T>() where T : CollocationStateHandler
         {
-            _manager.EnterState(nextStateHandler);
+            _manager.EnterState<T>();
         }
 
         #endregion

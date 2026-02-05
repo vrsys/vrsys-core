@@ -32,7 +32,7 @@ namespace VRSYS.Meta.Collocation
         {
             Object.Destroy(_createSessionUi.gameObject);
             
-            _manager.EnterState(_manager.CreateSessionAnchorStateHandler);
+            _manager.EnterState<CreateSessionAnchorStateHandler>();
         }
 
         #endregion
@@ -88,6 +88,8 @@ namespace VRSYS.Meta.Collocation
                     stateMessage = new CollocationStateMessage(State, CollocationStateStatus.Failed,
                         $"Failed to start collocation session {sessionName}");
                     _manager.BroadcastState(stateMessage);
+                    
+                    _manager.SetIsFailed(true);
                     return;
                 }
 

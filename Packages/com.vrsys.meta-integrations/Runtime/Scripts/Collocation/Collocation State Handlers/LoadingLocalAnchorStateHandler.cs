@@ -93,14 +93,9 @@ namespace VRSYS.Meta.Collocation
         /// </summary>
         private void OnConfirmAnchor()
         {
-            _confirmationUI.Hide();
-            GameObject.Destroy(_confirmationUI.gameObject); //TODO: This should happen in EndState I think...
-            
             _manager.SetCurrentAnchor(loadedAnchor);
             _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Success, "User confirmed loaded anchor."));
-            
-            // TODO: I want to call EndState here, but different next states are possible so I'm calling EnterState directly instead.
-            _manager.EnterState(_manager.AligningToAnchorStateHandler);
+            EndState(_manager.AligningToAnchorStateHandler);
         }
 
         /// <summary>
@@ -110,29 +105,32 @@ namespace VRSYS.Meta.Collocation
         {
             _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Running, "User rejected loaded anchor."));
             
-            Debug.Log($"{loadedAnchor}",loadedAnchor);
             var result = await loadedAnchor.EraseAnchorAsync();
             if (result.Success)
             {
-                _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Success, "Successfully erased the loaded spatial anchor."));
+                _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Success, "Successfully erased the loaded spatial anchor from persistent storage."));
             }
             else
             {
-                _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Failed, "Failed to erase the loaded spatial anchor."));
+                _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Failed, $"Failed to erase the loaded spatial anchor from persistent storage. {result.Status}"));
             }
             
             await SavedAnchorIDManager.DeleteIDfromSaved(loadedAnchor.Uuid);
             _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Success, "Deleted anchor ID."));
             
-            GameObject.Destroy(loadedAnchor);
+            GameObject.Destroy(loadedAnchor.gameObject);
             loadedAnchor = null;
-            // TODO: I want to call EndState here, but different next states are possible so I'm calling EnterState directly instead.
-            _manager.EnterState(_manager.CreatingLocalAnchorStateHandler);
+            
+            EndState(_manager.CreatingLocalAnchorStateHandler);
         }
 
-        protected override void EndState()
+        protected override void EndState(CollocationStateHandler nextStateHandler)
         {
-            throw new NotImplementedException();
+            // Teardown actions
+            _confirmationUI.Hide();
+            GameObject.Destroy(_confirmationUI.gameObject);
+            
+            base.EndState();
         }
 
         #endregion

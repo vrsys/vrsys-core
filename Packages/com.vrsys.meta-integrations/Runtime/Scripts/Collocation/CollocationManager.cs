@@ -14,10 +14,11 @@ namespace VRSYS.Meta.Collocation
     {
         #region Properties
 
+        /// <summary>
+        /// State of the Collocation Process
+        /// </summary>
         public CollocationState State => _currentState.State;
         [HideInInspector] public UnityEvent<CollocationStateMessage> OnStateChanged = new ();
-
-        
         
         [Header("Configuration")] 
         
@@ -207,6 +208,9 @@ namespace VRSYS.Meta.Collocation
             AligningToAnchorStateHandler = new AligningToAnchorStateHandler(this);
         }
         
+        /// <summary>
+        /// Entry point
+        /// </summary>
         private void StartCollocation()
         {
             if (_useLocalAnchor)

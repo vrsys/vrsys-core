@@ -4,6 +4,8 @@ using UnityEngine;
 using UnityEngine.Events;
 using VRSYS.Core.Logging;
 using VRSYS.Core.Networking;
+using System.IO;
+
 
 // TODO: Check that asset menu creation for prefab still works
 namespace VRSYS.Meta.Collocation
@@ -15,6 +17,8 @@ namespace VRSYS.Meta.Collocation
         public CollocationState State => _currentState.State;
         [HideInInspector] public UnityEvent<CollocationStateMessage> OnStateChanged = new ();
 
+        
+        
         [Header("Configuration")] 
         
         [Tooltip("Time in seconds defining how long existing collocation sessions are searched.")]
@@ -35,13 +39,19 @@ namespace VRSYS.Meta.Collocation
         
         [Header("Anchor configuration")]
         
-        [Tooltip("If true, session anchor is always created at DefaultAnchorWorldPosition.")]
-        [SerializeField] private bool _useDefaultAnchor = true;
-        public bool UseDefaultAnchor => _useDefaultAnchor;
+        [Tooltip("If true, local anchor is used to create collocation session.")]
+        [SerializeField] private bool _useLocalAnchor = false;
+
+        [Tooltip("If true, tries to load previous anchor automatically")] 
+        [SerializeField] private bool _tryLoadLocalAnchor = false;
+        
+        [Tooltip("If true, session anchor is always created at DefaultSessionAnchorWorldPosition.")]
+        [SerializeField] private bool _useDefaultSessionAnchor = true;
+        public bool UseDefaultSessionAnchor => _useDefaultSessionAnchor;
         
         [Tooltip("World position at which default anchor is created.")]
-        [SerializeField] private Vector3 _defaultAnchorWorldPosition = Vector3.zero;
-        public Vector3 DefaultAnchorWorldPosition => _defaultAnchorWorldPosition;
+        [SerializeField] private Vector3 _defaultSessionAnchorWorldPosition = Vector3.zero;
+        public Vector3 DefaultSessionAnchorWorldPosition => _defaultSessionAnchorWorldPosition;
 
         [Tooltip("Anchor prefab spawned to create anchor.")] 
         [SerializeField] private OVRSpatialAnchor _anchorPrefab;
@@ -57,11 +67,21 @@ namespace VRSYS.Meta.Collocation
         [SerializeField] private CreateSessionUi _createSessionUiPrefab;
         public CreateSessionUi CreateSessionUi => _createSessionUiPrefab;
         
+        [Tooltip("Prefab of UI used to confirm anchor alignment.")]
+        [SerializeField] private ConfirmationUI _confirmationUIPrefab;
+        public ConfirmationUI ConfirmationUIPrefab => _confirmationUIPrefab;
+        
         [Header("Debugging")] 
         
         [Tooltip("If true, Info logs are printed to the console. If false, only Warning and Error logs will be printed.")]
         [SerializeField] private bool _verbose = true;
 
+        #region Local Anchor Properties
+
+        public string AnchorIDsFilePath { get; private set; } // Persistent anchor storage path
+
+        #endregion
+        
         public List<OVRColocationSession.Data> SessionDatas { get; private set; }
 
         private OVRColocationSession.Data _joinedSessionData; // only set if session client
@@ -73,22 +93,26 @@ namespace VRSYS.Meta.Collocation
         
         public OVRSpatialAnchor CurrentAnchor { get; private set; }
         
+        public SavedAnchorIDManager SavedAnchorIDManager { get; private set; }
+        
         #endregion
 
         #region Collocation States
 
         private CollocationStateHandler _currentState;
-        
+
         public SearchSessionStateHandler SearchSessionStateHandler { get; private set; }
         
+        // Local Anchor States
+        public LoadingLocalAnchorStateHandler LoadingLocalAnchorStateHandler { get; private set; }
+        public CreatingLocalAnchorStateHandler CreatingLocalAnchorStateHandler { get; private set; }
+        public AligningToAnchorStateHandler AligningToAnchorStateHandler { get; private set; }
+        
+        // Meta Session States
         public DisplaySessionsStateHandler DisplaySessionsStateHandler { get; private set; }
-        
         public CreateSessionStateHandler CreateSessionStateHandler { get; private set; }
-        
         public LoadSessionAnchorStateHandler LoadSessionAnchorStateHandler { get; private set; }
-        
         public CreateSessionAnchorStateHandler CreateSessionAnchorStateHandler { get; private set; }
-        
         public ShareSessionAnchorStateHandler ShareSessionAnchorStateHandler { get; private set; }
 
         #endregion
@@ -99,6 +123,7 @@ namespace VRSYS.Meta.Collocation
         {
             if (_collocationRoles.Contains(NetworkUser.LocalInstance.userRole.Value))
             {
+                SavedAnchorIDManager = new SavedAnchorIDManager();
                 InitializeStates();
                 StartCollocation();
             }
@@ -169,19 +194,28 @@ namespace VRSYS.Meta.Collocation
         
         private void InitializeStates()
         {
+            // Local Anchor States
+            LoadingLocalAnchorStateHandler = new LoadingLocalAnchorStateHandler(this);
+            CreatingLocalAnchorStateHandler = new CreatingLocalAnchorStateHandler(this);
+            // Meta Shared Session States
             SearchSessionStateHandler = new SearchSessionStateHandler(this);
             DisplaySessionsStateHandler = new DisplaySessionsStateHandler(this);
             CreateSessionStateHandler = new CreateSessionStateHandler(this);
             LoadSessionAnchorStateHandler = new LoadSessionAnchorStateHandler(this);
             CreateSessionAnchorStateHandler = new CreateSessionAnchorStateHandler(this);
             ShareSessionAnchorStateHandler = new ShareSessionAnchorStateHandler(this);
+            // Aligning State
+            AligningToAnchorStateHandler = new AligningToAnchorStateHandler(this);
         }
         
         private void StartCollocation()
         {
-            if (ConnectionManager.Instance.offlineSession)
+            if (_useLocalAnchor)
             {
-                // TODO: Load local anchor state
+                if (_tryLoadLocalAnchor)
+                    EnterState(LoadingLocalAnchorStateHandler);
+                else
+                    EnterState(CreatingLocalAnchorStateHandler);
             }
             else
             {

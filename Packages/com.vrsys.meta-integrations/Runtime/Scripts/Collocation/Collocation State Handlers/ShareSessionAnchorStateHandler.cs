@@ -27,6 +27,8 @@ namespace VRSYS.Meta.Collocation
             CollocationStateMessage stateMessage = new CollocationStateMessage(State, CollocationStateStatus.Success,
                 "Successfully shared session anchor.");
             _manager.BroadcastState(stateMessage);
+            
+            // TODO enter align to anchor state
         }
 
         #endregion

@@ -1,12 +1,19 @@
 using System;
 using System.Threading.Tasks;
 using UnityEngine;
+using VRSYS.Core.Networking;
 using Object = UnityEngine.Object;
 
 namespace VRSYS.Meta.Collocation
 {
     public class CreateSessionAnchorStateHandler : CollocationStateHandler
     {
+        #region Properties
+
+        private AnchorCreationManager _anchorCreationManager;
+
+        #endregion
+        
         #region Constructor
 
         public CreateSessionAnchorStateHandler(CollocationManager manager) : base(manager)
@@ -48,8 +55,27 @@ namespace VRSYS.Meta.Collocation
             }
             else
             {
-                // TODO: implement anchor positioning mechanism
+                StartCustomAnchorCreation();
             }
+        }
+
+        private void StartCustomAnchorCreation()
+        {
+            _anchorCreationManager = NetworkUser.LocalInstance.GetComponent<AnchorCreationManager>();
+
+            if (_anchorCreationManager == null)
+            {
+                _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Error,
+                    "Required AnchorCreationManager component not found on local user."));
+
+                return;
+            }
+            
+            _anchorCreationManager.OnUserDefinedAnchor.AddListener(CreateAnchor);
+            _anchorCreationManager.SetupAnchorCreationMode();
+
+            _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Running,
+                "Started custom anchor creation process."));
         }
 
         private async void CreateAnchor(Vector3 targetWorldPosition, Quaternion targetWorldRotation)

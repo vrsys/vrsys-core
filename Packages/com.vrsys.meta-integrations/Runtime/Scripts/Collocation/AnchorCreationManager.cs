@@ -153,12 +153,9 @@ namespace VRSYS.Meta.Collocation
             _rayVisual.enabled = false;
             
             Destroy(_confirmationUI.gameObject);
-            _confirmationUI = null;
+            Destroy(_floorPlane);
             
             _anchorCreationAction.action.Disable();
-            
-            // Disable in hierarchy
-            this.gameObject.SetActive(false);
             
             OnUserDefinedAnchor.Invoke(_anchorPreview.transform.position, _anchorPreview.transform.rotation);
         }

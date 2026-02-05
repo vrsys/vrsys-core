@@ -30,8 +30,25 @@ namespace VRSYS.Meta.Collocation
         #region Public Methods
 
         public abstract void StartState();
-        
-        protected abstract void EndState();
+
+        /// <summary>
+        /// Base implementation that does not enter a next state.
+        /// Overrride to perform teardown actions.
+        /// </summary>
+        protected virtual void EndState()
+        {
+            return;
+        }
+
+        /// <summary>
+        /// Base implementation enters the given next state.
+        /// Extend to perform teardown actions before entering the next state.
+        /// </summary>
+        /// <param name="nextStateHandler"></param>
+        protected virtual void EndState(CollocationStateHandler nextStateHandler)
+        {
+            _manager.EnterState(nextStateHandler);
+        }
 
         #endregion
     }

@@ -22,13 +22,16 @@ namespace VRSYS.Meta.Collocation
             AlignScene();
         }
 
+        /// <summary>
+        /// e.g. call when user wants to go back to anchor creation / loading ...
+        /// </summary>
         protected override void EndState()
         {
             _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Running,
                 "Removing callback to TrackingOriginUpdates and resetting scene alignment."));
             _xrInputSubsystem.trackingOriginUpdated -= OnTrackingOriginUpdated;
-            // TODO: Is it desired to reset scene alignment here?
-            // ResetTrackingOrigin();
+            ResetTrackingOrigin();
+            // TODO: Anchor unloading?
         }
         
         private void InitializeXRInputSubsystem()
@@ -83,8 +86,8 @@ namespace VRSYS.Meta.Collocation
             
             Debug.Log($"Tracking origin now in: {NetworkUser.LocalInstance.transform.position}, anchor in {alignmentAnchor.transform.position}");
             
-            // origin.position = a.transform.position;
-            // origin.LookAt(b.transform.position, Vector3.up);
+            _manager.BroadcastState(new CollocationStateMessage(CollocationState.AligningToAnchor, CollocationStateStatus.Success,
+                "Colocated."));
         }
         
         private void OnTrackingOriginUpdated(XRInputSubsystem obj)

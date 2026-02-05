@@ -9,7 +9,7 @@ using VRSYS.Core.Networking;
 
 namespace VRSYS.Meta.Collocation
 {
-    public class CollocationStateUI : MonoBehaviour, INetworkUserCallbacks
+    public class CollocationStateUI : MonoBehaviour
     {
         #region Structs
 
@@ -40,14 +40,18 @@ namespace VRSYS.Meta.Collocation
         [Header("Input Actions")] 
         [SerializeField] private InputActionProperty _toggleUIAction;
 
+        [Header("Positioning")] 
+        [SerializeField] private bool _positionAtHeadOnToggle = true;
+        [SerializeField] private float _distanceToHead = .7f;
+
         [Header("Debugging")] 
         [SerializeField] private bool _verbose = false;
 
         #endregion
 
-        #region INetworkUserCallbacks
+        #region Mono- & NetworkBehaviour Methods
 
-        public void OnLocalNetworkUserSetup()
+        private void Start()
         {
             if (_collocationManager == null)
             {
@@ -61,33 +65,33 @@ namespace VRSYS.Meta.Collocation
                     return;
                 }
             }
-
-            if (!_collocationManager.CollocationRoles.Contains(NetworkUser.LocalInstance.userRole.Value))
-            {
-                if(_verbose)
-                    ExtendedLogger.LogInfo(GetType().Name, "Deactivating collocation state UI, since local user is not collocating.", this);
-                
-                gameObject.SetActive(false);
-                return;
-            }
             
             _collocationManager.OnStateChanged.AddListener(OnCollocationStateChanged);
             _closeButton.onClick.AddListener(CloseMenu);
 
             _toggleUIAction.action.Enable();
             _toggleUIAction.action.performed += ToggleUI;
+
+            Invoke(nameof(PositionUI), 2f);
             
             ExtendedLogger.LogInfo(GetType().Name, "Finished collocation state UI setup.", this);
         }
 
-        public void OnRemoteNetworkUserSetup(NetworkUser user)
+        #endregion
+
+        #region Public Methods
+
+        public void ToggleUI()
         {
-            // ...
+            gameObject.SetActive(!gameObject.activeSelf);
+
+            if (gameObject.activeSelf && _positionAtHeadOnToggle)
+                PositionUI();
         }
 
         #endregion
 
-        #region Custom Methods
+        #region Private Methods
 
         private void OnCollocationStateChanged(CollocationStateMessage stateMessage)
         {
@@ -108,10 +112,14 @@ namespace VRSYS.Meta.Collocation
         {
             gameObject.SetActive(false);
         }
-        
-        private void ToggleUI(InputAction.CallbackContext obj)
+
+        private void ToggleUI(InputAction.CallbackContext obj) => ToggleUI();
+
+        private void PositionUI()
         {
-            gameObject.SetActive(!gameObject.activeSelf);
+            Transform head = NetworkUser.LocalInstance.head;
+
+            transform.position = head.position + head.forward * _distanceToHead;
         }
 
         #endregion

@@ -4,7 +4,6 @@ using UnityEngine;
 using UnityEngine.Events;
 using VRSYS.Core.Logging;
 using VRSYS.Core.Networking;
-using System.IO;
 
 
 // TODO: Check that asset menu creation for prefab still works

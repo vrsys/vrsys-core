@@ -1055,7 +1055,7 @@ GameObject:
   - component: {fileID: 2280631695601023521}
   - component: {fileID: 335108745428173638}
   - component: {fileID: 5235061119587851741}
-  - component: {fileID: 2630468594894500120}
+  - component: {fileID: 7915913350356135342}
   m_Layer: 5
   m_Name: CollocationStateUI-Canvas
   m_TagString: Untagged
@@ -1072,7 +1072,7 @@ RectTransform:
   m_GameObject: {fileID: 5154039210359975997}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 1}
-  m_LocalScale: {x: 0.001, y: 0.001, z: 0.001}
+  m_LocalScale: {x: 0.0005, y: 0.0005, z: 0.0005}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 6904336404864262067}
@@ -1213,8 +1213,10 @@ MonoBehaviour:
         m_Flags: 0
       m_Flags: 0
     m_Reference: {fileID: 0}
+  _positionAtHeadOnToggle: 1
+  _distanceToHead: 0.7
   _verbose: 1
---- !u!114 &2630468594894500120
+--- !u!114 &7915913350356135342
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1223,15 +1225,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 5154039210359975997}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f0fc96fd397e15242b9322fabc916fee, type: 3}
+  m_Script: {fileID: 11500000, guid: 76357cc4528820c41a9e23ecda79a08c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _horizontalTargetDistance: 0.5
-  _verticalTargetDistance: 0
-  _resetDistance: 2
-  _resetAngle: 90
-  _resetMovementSpeed: 10
-  _resetRotationSpeed: 90
 --- !u!1 &5213104660193686996
 GameObject:
   m_ObjectHideFlags: 0

@@ -22,13 +22,13 @@ namespace VRSYS.Meta.Collocation
             ShareSessionAnchor();
         }
 
-        protected override void EndState()
+        protected override void EndState(CollocationStateHandler nextStateHandler)
         {
             CollocationStateMessage stateMessage = new CollocationStateMessage(State, CollocationStateStatus.Success,
                 "Successfully shared session anchor.");
             _manager.BroadcastState(stateMessage);
             
-            // TODO enter align to anchor state
+            base.EndState(nextStateHandler);
         }
 
         #endregion
@@ -71,7 +71,7 @@ namespace VRSYS.Meta.Collocation
                 return;
             }
             
-            EndState();
+            EndState(_manager.AligningToAnchorStateHandler);
         }
 
         #endregion

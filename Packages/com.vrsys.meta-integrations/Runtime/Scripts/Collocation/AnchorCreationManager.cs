@@ -182,14 +182,13 @@ namespace VRSYS.Meta.Collocation
         /// </summary>
         private void AnchorConfirmed()
         {
-            // Teardown
-            _anchorPreview.SetActive(false);
             _rayVisual.enabled = false;
+            _anchorCreationAction.action.Disable();
             
+            // Teardown
+            Destroy(_anchorPreview);
             Destroy(_confirmationUI.gameObject);
             Destroy(_floorPlane);
-            
-            _anchorCreationAction.action.Disable();
             
             OnUserDefinedAnchor.Invoke(_anchorPreview.transform.position, _anchorPreview.transform.rotation);
         }

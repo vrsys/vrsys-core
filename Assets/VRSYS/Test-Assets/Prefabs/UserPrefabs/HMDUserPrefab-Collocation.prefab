@@ -292,6 +292,18 @@ PrefabInstance:
       propertyPath: raycastMask.m_Bits
       value: 96
       objectReference: {fileID: 0}
+    - target: {fileID: 5773340341098818946, guid: 13ae61ea84116d34497c03f1f19c380d, type: 3}
+      propertyPath: 'localBehaviours.Array.data[6]'
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 5773340341098818946, guid: 13ae61ea84116d34497c03f1f19c380d, type: 3}
+      propertyPath: 'localBehaviours.Array.data[7]'
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 5773340341098818946, guid: 13ae61ea84116d34497c03f1f19c380d, type: 3}
+      propertyPath: 'localBehaviours.Array.data[8]'
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 7216047633976425185, guid: 13ae61ea84116d34497c03f1f19c380d, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -346,7 +358,13 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 594239884952932559, guid: 13ae61ea84116d34497c03f1f19c380d, type: 3}
-    m_RemovedGameObjects: []
+    - {fileID: 4048174999287893325, guid: 13ae61ea84116d34497c03f1f19c380d, type: 3}
+    - {fileID: 7627770897703282757, guid: 13ae61ea84116d34497c03f1f19c380d, type: 3}
+    m_RemovedGameObjects:
+    - {fileID: 8148517820153512077, guid: 13ae61ea84116d34497c03f1f19c380d, type: 3}
+    - {fileID: 8667059120951939741, guid: 13ae61ea84116d34497c03f1f19c380d, type: 3}
+    - {fileID: 5751438388406612291, guid: 13ae61ea84116d34497c03f1f19c380d, type: 3}
+    - {fileID: 2222433847067186254, guid: 13ae61ea84116d34497c03f1f19c380d, type: 3}
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 7216047633976425185, guid: 13ae61ea84116d34497c03f1f19c380d, type: 3}
       insertIndex: -1

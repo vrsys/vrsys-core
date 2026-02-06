@@ -70,6 +70,9 @@ namespace VRSYS.Meta.Collocation
 
         protected override void EndState()
         {
+            if(_anchorCreationManager != null)
+                _anchorCreationManager.OnUserDefinedAnchor.RemoveListener(CreateAnchor);
+            
             CollocationStateMessage stateMessage = new CollocationStateMessage(State, CollocationStateStatus.Success,
                 "Successfully created session anchor.");
             _manager.BroadcastState(stateMessage);

@@ -186,6 +186,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a1c6982b2f6fbf14a9f66a31861853a7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _sessionNameText: {fileID: 2777001415353542600}
+  _sessionUuidText: {fileID: 6873486358452572633}
+  _joinSessionButton: {fileID: 8309433308823715502}
 --- !u!1 &2509053316649744347
 GameObject:
   m_ObjectHideFlags: 0

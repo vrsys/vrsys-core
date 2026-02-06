@@ -95,7 +95,6 @@ namespace VRSYS.Meta.Collocation
             
             _manager.SetIsSuccessfullyCollocated(false);
             _manager.SetIsFailed(false);
-            
             EndState();
         }
 

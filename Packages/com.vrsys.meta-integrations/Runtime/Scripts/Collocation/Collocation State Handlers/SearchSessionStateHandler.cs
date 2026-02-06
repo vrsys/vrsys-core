@@ -106,11 +106,11 @@ public class SearchSessionStateHandler : CollocationStateHandler
             
             if (_retryCount == _manager.MaxRetries)
             {
+                _manager.SetIsFailed(true);
+                
                 stateMessage = new CollocationStateMessage(State, CollocationStateStatus.Failed,
                     $"Failed to start collocation session discovery. Result: {discoveryStartResult.Status}. Stopping collocation process.");
                 _manager.BroadcastState(stateMessage);
-                
-                _manager.SetIsFailed(true);
                 
                 return;
             }

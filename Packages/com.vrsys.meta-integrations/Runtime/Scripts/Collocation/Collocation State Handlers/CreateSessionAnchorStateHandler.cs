@@ -146,11 +146,11 @@ namespace VRSYS.Meta.Collocation
             {
                 if (_retryCount == _manager.MaxRetries)
                 {
+                    _manager.SetIsFailed(true);
                     stateMessage = new CollocationStateMessage(State, CollocationStateStatus.Error,
                         $"Error creating session anchor. Exception: {e.Message}");
                     _manager.BroadcastState(stateMessage);
                     
-                    _manager.SetIsFailed(true);
                     return;
                 }
 

@@ -123,11 +123,11 @@ namespace VRSYS.Meta.Collocation
             {
                 if (_retryCount == _manager.MaxRetries)
                 {
+                    _manager.SetIsFailed(true);
                     stateMessage = new CollocationStateMessage(State, CollocationStateStatus.Failed,
                         $"Failed to start collocation session {sessionName}");
                     _manager.BroadcastState(stateMessage);
                     
-                    _manager.SetIsFailed(true);
                     return;
                 }
 

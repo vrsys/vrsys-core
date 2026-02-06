@@ -64,10 +64,10 @@ namespace VRSYS.Meta.Collocation
             _anchorCreationManager = NetworkUser.LocalInstance.GetComponent<AnchorCreationManager>();
             if (_anchorCreationManager == null)
             {
+                _manager.SetIsFailed(true);
                 _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Error,
                     "Required AnchorCreationManager component not found on local user."));
                 
-                _manager.SetIsFailed(true);
                 return;
             }
             _anchorCreationManager.OnUserDefinedAnchor.AddListener(OnUserDefinedAnchor);

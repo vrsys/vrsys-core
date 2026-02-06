@@ -36,13 +36,14 @@
 //   Date:           2025
 //-----------------------------------------------------------------
 
-using System.Threading.Tasks;
+using System;
 using UnityEngine;
 using VRSYS.Core.Logging;
 using VRSYS.Core.Networking;
 
 namespace VRSYS.Meta.Collocation
 {
+    [Obsolete("This class is used by the old CollocationManager, which shouldn't be used anymore.")]
     public static class AlignmentManager
     {
         private static string _logTag = nameof(AlignmentManager);

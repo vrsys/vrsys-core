@@ -32,7 +32,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //-----------------------------------------------------------------
-//   Authors:        Tony Jan Zoeppig, Sebastian Muehlhaus
+//   Authors:        Tony Jan Zoeppig
 //   Date:           2025
 //-----------------------------------------------------------------
 
@@ -49,6 +49,7 @@ using VRSYS.Core.Networking;
 
 namespace VRSYS.Meta.Collocation
 {
+    [Obsolete("This class uses an old and outdated collocation workflow. Use the CollocationManager instead.")]
     public class CollocationManagerOld : MonoBehaviour, INetworkUserCallbacks
     {
         #region Member Variables

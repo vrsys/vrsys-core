@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using TMPro;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
@@ -50,10 +51,16 @@ namespace VRSYS.Meta.Collocation
 
         #endregion
 
-        #region Mono- & NetworkBehaviour Methods
+        #region MonoBehaviour Methods
 
         private void Start()
         {
+            if (!GetComponentInParent<NetworkObject>().IsOwner)
+            {
+                Destroy(gameObject);
+                return;
+            }
+            
             if (_collocationManager == null)
             {
                 _collocationManager = FindAnyObjectByType<CollocationManager>();

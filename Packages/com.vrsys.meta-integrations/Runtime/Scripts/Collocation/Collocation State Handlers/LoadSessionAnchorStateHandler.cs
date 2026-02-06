@@ -65,7 +65,7 @@ namespace VRSYS.Meta.Collocation
             CollocationStateMessage stateMessage = new CollocationStateMessage(State, CollocationStateStatus.Success,
                 "Successfully loaded and localized session anchor.");
             
-            // TODO: enter alignment state
+            _manager.EnterState<AligningToAnchorStateHandler>();
         }
 
         #endregion

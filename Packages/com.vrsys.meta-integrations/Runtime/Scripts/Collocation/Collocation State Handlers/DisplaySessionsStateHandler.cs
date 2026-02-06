@@ -113,6 +113,16 @@ namespace VRSYS.Meta.Collocation
             _manager.EnterState<CreateSessionStateHandler>();
         }
 
+        public void SearchSessions()
+        {
+            _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Success,
+                "Triggered search sessions again."));
+            
+            EndState();
+            
+            _manager.EnterState<SearchSessionStateHandler>();
+        }
+
         #endregion
     }
 }

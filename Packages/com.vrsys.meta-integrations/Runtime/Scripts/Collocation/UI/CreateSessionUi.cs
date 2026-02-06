@@ -17,6 +17,7 @@ namespace VRSYS.Meta.Collocation
         [SerializeField] private TMP_InputField _sessionNameInputField;
         [SerializeField] private Button _createButton;
         [SerializeField] private GameObject _warningText;
+        [SerializeField] private Button _searchAgainButton;
 
         #endregion
 
@@ -37,6 +38,7 @@ namespace VRSYS.Meta.Collocation
             
             _sessionNameInputField.onValueChanged.AddListener(OnSessionNameInputChanged);
             _createButton.onClick.AddListener(OnClickCreateSession);
+            _searchAgainButton.onClick.AddListener(_stateHandler.SearchSessions);
         }
 
         #endregion

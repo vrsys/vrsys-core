@@ -15,6 +15,7 @@ namespace VRSYS.Meta.Collocation
         [SerializeField] private Transform _tileRoot;
         [SerializeField] private GameObject _sessionTilePrefab;
         [SerializeField] private Button _createSessionButton;
+        [SerializeField] private Button _searchSessionsButton;
 
         #endregion
 
@@ -41,6 +42,7 @@ namespace VRSYS.Meta.Collocation
             }
             
             _createSessionButton.onClick.AddListener(_stateHandler.CreateNewSession);
+            _searchSessionsButton.onClick.AddListener(_stateHandler.SearchSessions);
         }
 
         #endregion

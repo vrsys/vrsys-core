@@ -143,6 +143,16 @@ namespace VRSYS.Meta.Collocation
             }
         }
 
+        public void SearchSessions()
+        {
+            _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Success,
+                "Triggered retry of session search."));
+            
+            Object.Destroy(_createSessionUi.gameObject);
+            
+            _manager.EnterState<SearchSessionStateHandler>();
+        }
+
         #endregion
     }
 }

@@ -569,6 +569,7 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   _fidelityLevel: 0
   _handRoot: {fileID: 3774078857044054742}
+  _handRenderer: {fileID: 340470309898529175}
   _fingerLerpSpeed: 20
   _curlSpeed: 12
   _minCurlUpdateDelta: 0.1

@@ -44,6 +44,7 @@ GameObject:
   - component: {fileID: 5787842637700984674}
   - component: {fileID: 1606019078664938453}
   - component: {fileID: 731259985226065612}
+  - component: {fileID: 2053580105964695774}
   m_Layer: 0
   m_Name: VRSYS-RightTrackedHand
   m_TagString: Untagged
@@ -180,6 +181,135 @@ MonoBehaviour:
   m_HandMeshRenderer: {fileID: 6709899279335206288}
   m_ShowMeshWhenTrackingIsAcquired: 1
   m_HideMeshWhenTrackingIsLost: 1
+--- !u!114 &2053580105964695774
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 484355194272411927}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 28f4d37992173ed4e978257ac8ad167d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
+  _fidelityLevel: 0
+  _handRoot: {fileID: 3331042861511984088}
+  _fingerLerpSpeed: 20
+  _curlSpeed: 12
+  _minCurlUpdateDelta: 0.1
+  _fingerNames:
+  - Thumb
+  - Index
+  - Middle
+  - Ring
+  - Little
+  _fingerStartJointIds: 03000000070000000c0000001100000016000000
+  _handFidelityOptions:
+  - fingerJoints:
+    - fingerName: Thumb
+      curlAmount: 0
+      jointTransformReferences:
+      - m_XRHandJointID: 3
+        m_JointTransform: {fileID: 6173830209495206488}
+      - m_XRHandJointID: 4
+        m_JointTransform: {fileID: 6407262733955281293}
+      - m_XRHandJointID: 5
+        m_JointTransform: {fileID: 6664694341096480490}
+    - fingerName: Index
+      curlAmount: 0
+      jointTransformReferences:
+      - m_XRHandJointID: 7
+        m_JointTransform: {fileID: 8224725923420511801}
+      - m_XRHandJointID: 8
+        m_JointTransform: {fileID: 2701721902042984321}
+      - m_XRHandJointID: 9
+        m_JointTransform: {fileID: 2161052773101594645}
+      - m_XRHandJointID: 10
+        m_JointTransform: {fileID: 6413309939984968476}
+    - fingerName: Middle
+      curlAmount: 0
+      jointTransformReferences:
+      - m_XRHandJointID: 12
+        m_JointTransform: {fileID: 2616449332906635454}
+      - m_XRHandJointID: 13
+        m_JointTransform: {fileID: 153268583453783244}
+      - m_XRHandJointID: 14
+        m_JointTransform: {fileID: 3973348618047021752}
+      - m_XRHandJointID: 15
+        m_JointTransform: {fileID: 4282439700291552064}
+    - fingerName: Ring
+      curlAmount: 0
+      jointTransformReferences:
+      - m_XRHandJointID: 17
+        m_JointTransform: {fileID: 67003221083962842}
+      - m_XRHandJointID: 18
+        m_JointTransform: {fileID: 5661096648563806093}
+      - m_XRHandJointID: 19
+        m_JointTransform: {fileID: 340960287082758702}
+      - m_XRHandJointID: 20
+        m_JointTransform: {fileID: 6351623092649935508}
+    - fingerName: Little
+      curlAmount: 0
+      jointTransformReferences:
+      - m_XRHandJointID: 22
+        m_JointTransform: {fileID: 1084453829315160001}
+      - m_XRHandJointID: 23
+        m_JointTransform: {fileID: 1207605230694084921}
+      - m_XRHandJointID: 24
+        m_JointTransform: {fileID: 3632118694433487545}
+      - m_XRHandJointID: 25
+        m_JointTransform: {fileID: 3683542507110539276}
+  - fingerJoints:
+    - fingerName: Thumb
+      curlAmount: 0
+      jointTransformReferences:
+      - m_XRHandJointID: 4
+        m_JointTransform: {fileID: 6407262733955281293}
+      - m_XRHandJointID: 5
+        m_JointTransform: {fileID: 6664694341096480490}
+    - fingerName: Index
+      curlAmount: 0
+      jointTransformReferences:
+      - m_XRHandJointID: 8
+        m_JointTransform: {fileID: 2701721902042984321}
+      - m_XRHandJointID: 9
+        m_JointTransform: {fileID: 2161052773101594645}
+      - m_XRHandJointID: 10
+        m_JointTransform: {fileID: 6413309939984968476}
+    - fingerName: Middle
+      curlAmount: 0
+      jointTransformReferences:
+      - m_XRHandJointID: 13
+        m_JointTransform: {fileID: 153268583453783244}
+      - m_XRHandJointID: 14
+        m_JointTransform: {fileID: 3973348618047021752}
+      - m_XRHandJointID: 15
+        m_JointTransform: {fileID: 4282439700291552064}
+    - fingerName: Ring
+      curlAmount: 0
+      jointTransformReferences:
+      - m_XRHandJointID: 18
+        m_JointTransform: {fileID: 5661096648563806093}
+      - m_XRHandJointID: 19
+        m_JointTransform: {fileID: 340960287082758702}
+      - m_XRHandJointID: 20
+        m_JointTransform: {fileID: 6351623092649935508}
+    - fingerName: Little
+      curlAmount: 0
+      jointTransformReferences:
+      - m_XRHandJointID: 23
+        m_JointTransform: {fileID: 1207605230694084921}
+      - m_XRHandJointID: 24
+        m_JointTransform: {fileID: 3632118694433487545}
+      - m_XRHandJointID: 25
+        m_JointTransform: {fileID: 3683542507110539276}
+  _minMaxEulerX: {x: 0, y: 100}
+  _localBehaviours:
+  - {fileID: 731259985226065612}
+  - {fileID: 1606019078664938453}
+  - {fileID: 5787842637700984674}
 --- !u!1 &594549569374112612
 GameObject:
   m_ObjectHideFlags: 0

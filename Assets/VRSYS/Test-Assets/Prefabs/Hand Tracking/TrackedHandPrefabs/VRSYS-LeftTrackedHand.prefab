@@ -317,7 +317,7 @@ GameObject:
   - component: {fileID: 3728356473252144702}
   - component: {fileID: 5953958831105096904}
   - component: {fileID: 3635037356941911633}
-  - component: {fileID: 4475335784169524983}
+  - component: {fileID: 9096060966861077357}
   m_Layer: 0
   m_Name: VRSYS-LeftTrackedHand
   m_TagString: Untagged
@@ -454,7 +454,7 @@ MonoBehaviour:
   m_HandMeshRenderer: {fileID: 7503359953193887855}
   m_ShowMeshWhenTrackingIsAcquired: 1
   m_HideMeshWhenTrackingIsLost: 1
---- !u!114 &4475335784169524983
+--- !u!114 &9096060966861077357
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -579,10 +579,7 @@ MonoBehaviour:
       - m_XRHandJointID: 25
         m_JointTransform: {fileID: 9079140225462359225}
   _minMaxEulerX: {x: 0, y: 100}
-  _localBehaviours:
-  - {fileID: 3635037356941911633}
-  - {fileID: 5953958831105096904}
-  - {fileID: 3728356473252144702}
+  _localBehaviours: []
 --- !u!1 &3132545125110242262
 GameObject:
   m_ObjectHideFlags: 0

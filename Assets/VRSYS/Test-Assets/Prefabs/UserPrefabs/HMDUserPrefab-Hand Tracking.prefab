@@ -150,6 +150,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: VRSYS-LeftTrackedHand
       objectReference: {fileID: 0}
+    - target: {fileID: 3728356473252144702, guid: d4aa0d949d8e4474b8e754c47c2d0a61, type: 3}
+      propertyPath: m_UpdateType
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7410845119943724098, guid: d4aa0d949d8e4474b8e754c47c2d0a61, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.XR.Hands;
@@ -53,11 +52,17 @@ namespace VRSYS.Core.Networking
 
         #region Properties
         
+        [Header("Fidelity Level Settings")]
         [SerializeField] private FidelityLevel _fidelityLevel;
 
+        [Header("Hand Components")]
         [SerializeField, Tooltip("Specifies where the root of the hand is.")] 
         private Transform _handRoot;
 
+        [SerializeField, Tooltip("Renderer used to visualize tracked hand.")]
+        private SkinnedMeshRenderer _handRenderer;
+
+        [Header("Update Configurations")]
         [SerializeField, Tooltip("Defines how fast the finger rotate.")]
         private float _fingerLerpSpeed = 20.0f;
         
@@ -66,6 +71,7 @@ namespace VRSYS.Core.Networking
         
         [SerializeField] float _minCurlUpdateDelta = 0.1f;
 
+        [Header("Hand Configurations")]
         [SerializeField, Tooltip("Specifies the names of the fingers.")]
         private string[] _fingerNames = { "Thumb", "Index", "Middle", "Ring", "Little" };
 
@@ -82,6 +88,7 @@ namespace VRSYS.Core.Networking
         [SerializeField, Tooltip("Sets the Min/Max eule rotation of the fingers.")]
         private Vector2 _minMaxEulerX = new Vector2(0, 100);
 
+        [Header("Others")]
         [SerializeField, Tooltip("Components that get destroyed on remote users.")]
         private List<Behaviour> _localBehaviours;
 
@@ -89,9 +96,15 @@ namespace VRSYS.Core.Networking
 
         #region Networked Properties
 
-        private NetworkList<Vector3> _fingerRotations;
+        private NetworkVariable<bool> _initialized = new(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
 
-        private NetworkList<float> _fingerCurls;
+        private NetworkVariable<Vector3> _rootPosition = new(Vector3.zero, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+
+        private NetworkVariable<Quaternion> _rootRotation = new(Quaternion.identity, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+
+        private NetworkList<Vector3> _fingerRotations = new (new List<Vector3>(), NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+
+        private NetworkList<float> _fingerCurls = new (new List<float>(), NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
 
         #endregion
 
@@ -101,27 +114,27 @@ namespace VRSYS.Core.Networking
         {
             if (_handFidelityOptions == null)
                 SetupHandFidelityOptions();
-
-            _fingerRotations = new NetworkList<Vector3>(new List<Vector3>(), NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
-
-            _fingerCurls = new NetworkList<float>(new List<float>(), NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
-
         }
 
         public override void OnNetworkSpawn()
         {
             if (IsOwner)
             {
-                InitializeNetworkListValues();
+                InitializeNetworkProperties();
             }
             else
             {
-                RemoveLocalComponents();
+                SetupRemoteUser();
             }
         }
 
         private void Update()
         {
+            if(!_initialized.Value)
+                return;
+            
+            SyncRootNode();
+            
             switch (_fidelityLevel)
             {
                 case FidelityLevel.JointRotations:
@@ -245,6 +258,27 @@ namespace VRSYS.Core.Networking
             }
         }
 
+        private void SyncRootNode()
+        {
+            if (IsOwner)
+                WriteRootNodeValues();
+            else
+            {
+                ReadRootNodeValues();
+            }
+        }
+
+        private void WriteRootNodeValues()
+        {
+            _rootPosition.Value = _handRoot.position;
+            _rootRotation.Value = _handRoot.rotation;
+        }
+
+        private void ReadRootNodeValues()
+        {
+            _handRoot.SetPositionAndRotation(_rootPosition.Value, _rootRotation.Value);
+        }
+
         private void SyncFingerRotations()
         {
             if (IsOwner)
@@ -337,8 +371,11 @@ namespace VRSYS.Core.Networking
                 _fingerCurls[finger] = value;
         }
 
-        private void InitializeNetworkListValues()
+        private void InitializeNetworkProperties()
         {
+            _rootPosition.Value = _handRoot.position;
+            _rootRotation.Value = _handRoot.rotation;
+            
             foreach (var finger in _handFidelityOptions[0].fingerJoints)
             {
                 foreach (var joint in finger.jointTransformReferences)
@@ -351,15 +388,21 @@ namespace VRSYS.Core.Networking
             {
                 _fingerCurls.Add(0.0f);
             }
+
+            _initialized.Value = true;
         }
 
-        private void RemoveLocalComponents()
+        private void SetupRemoteUser()
         {
+            // Delete components, only required on local user
             while (_localBehaviours.Count > 0)
             {
                 DestroyImmediate(_localBehaviours[0]);
                 _localBehaviours.RemoveAt(0);
             }
+
+            // Set renderer active by default
+            _handRenderer.enabled = true;
         }
 
         #endregion

@@ -6,7 +6,7 @@ using UnityEngine.XR.Hands;
 using VRSYS.Core.Logging;
 
 
-namespace VRSYS.Core.Networking
+namespace VRSYS.Core.Avatar
 {
     public class TrackedHandSerializer : NetworkBehaviour
     {

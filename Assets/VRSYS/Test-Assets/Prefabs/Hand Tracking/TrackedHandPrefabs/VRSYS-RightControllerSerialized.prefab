@@ -812,7 +812,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
-  _controllerAnimator: {fileID: 8769164051061662719}
+  _controllerVisuals: {fileID: 6978339190867692771}
 --- !u!1 &7590839848825958488
 GameObject:
   m_ObjectHideFlags: 0

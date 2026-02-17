@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.XR.Hands;
+using UnityEngine.XR.Interaction.Toolkit.Inputs;
 using VRSYS.Core.Logging;
 
 
@@ -55,12 +56,16 @@ namespace VRSYS.Core.Avatar
         [Header("Fidelity Level Settings")]
         [SerializeField] private FidelityLevel _fidelityLevel;
 
-        [Header("Hand Components")]
-        [SerializeField, Tooltip("Specifies where the root of the hand is.")] 
+        [Header("Hand Components")] [SerializeField, Tooltip("Specifies the root node of the tracked hand visuals.")]
+        private GameObject _handVisuals;
+        
+        [SerializeField, Tooltip("Specifies where the root bone of the hand is.")] 
         private Transform _handRoot;
 
         [SerializeField, Tooltip("Renderer used to visualize tracked hand.")]
         private SkinnedMeshRenderer _handRenderer;
+
+        private XRInputModalityManager _modalityManager;
 
         [Header("Update Configurations")]
         [SerializeField, Tooltip("Defines how fast the finger rotate.")]
@@ -98,6 +103,8 @@ namespace VRSYS.Core.Avatar
 
         private NetworkVariable<bool> _initialized = new(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
 
+        private NetworkVariable<bool> _isActive = new(true, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+
         private NetworkVariable<Vector3> _rootPosition = new(Vector3.zero, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
 
         private NetworkVariable<Quaternion> _rootRotation = new(Quaternion.identity, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
@@ -108,7 +115,7 @@ namespace VRSYS.Core.Avatar
 
         #endregion
 
-        #region MonoBehaviour Methods
+        #region Mono- & NetworkBehaviour Methods
 
         private void Awake()
         {
@@ -121,6 +128,14 @@ namespace VRSYS.Core.Avatar
             if (IsOwner)
             {
                 InitializeNetworkProperties();
+
+                _modalityManager = GetComponentInParent<XRInputModalityManager>();
+
+                if (_modalityManager != null)
+                {
+                    _modalityManager.trackedHandModeStarted.AddListener(OnTrackedHandModeStarted);
+                    _modalityManager.trackedHandModeEnded.AddListener(OnTrackedHandModeEnded);
+                }
             }
             else
             {
@@ -130,7 +145,7 @@ namespace VRSYS.Core.Avatar
 
         private void Update()
         {
-            if(!_initialized.Value)
+            if(!_initialized.Value || !_isActive.Value)
                 return;
             
             SyncRootNode();
@@ -401,9 +416,25 @@ namespace VRSYS.Core.Avatar
                 _localBehaviours.RemoveAt(0);
             }
 
+            // setup hand active handling
+            _isActive.OnValueChanged += OnIsActiveChanged;
+            UpdateHandVisualsActive();
+
             // Set renderer active by default
             _handRenderer.enabled = true;
         }
+
+        private void UpdateHandVisualsActive() => _handVisuals.SetActive(_isActive.Value);
+
+        #endregion
+
+        #region Event Callbacks
+
+        private void OnTrackedHandModeStarted() => _isActive.Value = true;
+
+        private void OnTrackedHandModeEnded() => _isActive.Value = false;
+
+        private void OnIsActiveChanged(bool previousValue, bool newValue) => UpdateHandVisualsActive();
 
         #endregion
     }

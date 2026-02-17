@@ -436,7 +436,7 @@ GameObject:
   - component: {fileID: 8276368692243880754}
   - component: {fileID: 2932173144617173124}
   m_Layer: 0
-  m_Name: LeftController-Visuals
+  m_Name: LeftController
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -678,7 +678,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5059190712956874628}
   m_Layer: 0
-  m_Name: UniversalController
+  m_Name: Controller-Visuals
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

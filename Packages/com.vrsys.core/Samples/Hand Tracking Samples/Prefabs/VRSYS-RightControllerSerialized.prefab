@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5225035611988341952}
   m_Layer: 0
-  m_Name: UniversalController
+  m_Name: Controller-Visuals
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -599,7 +599,7 @@ GameObject:
   - component: {fileID: 5432145730475057594}
   - component: {fileID: 8769164051061662719}
   m_Layer: 0
-  m_Name: RightController-Visuals
+  m_Name: RightController
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

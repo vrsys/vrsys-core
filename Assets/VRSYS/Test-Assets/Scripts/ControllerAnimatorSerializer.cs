@@ -9,8 +9,8 @@ namespace VRSYS.Core.Avatar
     {
         #region Properties
 
-        [SerializeField, Tooltip("Root GameObject of controller visuals.")]
-        private GameObject _controllerVisuals;
+        [SerializeField, Tooltip("Root GameObject of actual controller.")]
+        private GameObject _controller;
 
         private ControllerAnimator _controllerAnimator;
 
@@ -34,7 +34,7 @@ namespace VRSYS.Core.Avatar
 
         public override void OnNetworkSpawn()
         {
-            _controllerAnimator = _controllerVisuals.GetComponent<ControllerAnimator>();
+            _controllerAnimator = _controller.GetComponent<ControllerAnimator>();
             
             if (!_initialized)
             {
@@ -92,7 +92,7 @@ namespace VRSYS.Core.Avatar
             _controllerAnimator.SetControllerValues(_controllerValueData.Value);
         }
 
-        private void UpdateControllerVisualsActive() => _controllerVisuals.SetActive(_isActive.Value);
+        private void UpdateControllerVisualsActive() => _controller.SetActive(_isActive.Value);
 
         #endregion
 

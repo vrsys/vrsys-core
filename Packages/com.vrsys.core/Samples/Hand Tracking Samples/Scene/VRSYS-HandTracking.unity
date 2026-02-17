@@ -134,11 +134,19 @@ PrefabInstance:
     - target: {fileID: 6294951967490542898, guid: b8a9590d6dc70a8468106d09c025c654, type: 3}
       propertyPath: lobbySettings
       value: 
-      objectReference: {fileID: 11400000, guid: e954b3170a3f13f4a9345996ce326b1c, type: 2}
+      objectReference: {fileID: 11400000, guid: 6a5c93b10cf443f4ebd24e2a81a0039a, type: 2}
     - target: {fileID: 6294951967490542898, guid: b8a9590d6dc70a8468106d09c025c654, type: 3}
       propertyPath: userSpawnInfo
       value: 
-      objectReference: {fileID: 11400000, guid: bcedfdf63296c4e42aa8e55b990fd29d, type: 2}
+      objectReference: {fileID: 11400000, guid: e802edc2479e5324ea30845a7029df88, type: 2}
+    - target: {fileID: 6294951967490542898, guid: b8a9590d6dc70a8468106d09c025c654, type: 3}
+      propertyPath: localNetworkSettings
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 6294951967490542898, guid: b8a9590d6dc70a8468106d09c025c654, type: 3}
+      propertyPath: dedicatedServerSettings
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 6429539504836963235, guid: b8a9590d6dc70a8468106d09c025c654, type: 3}
       propertyPath: m_Name
       value: VRSYS-ConnectionManager

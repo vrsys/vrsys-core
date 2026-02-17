@@ -56,8 +56,8 @@ namespace VRSYS.Core.Avatar
         [Header("Fidelity Level Settings")]
         [SerializeField] private FidelityLevel _fidelityLevel;
 
-        [Header("Hand Components")] [SerializeField, Tooltip("Specifies the root node of the tracked hand visuals.")]
-        private GameObject _handVisuals;
+        [Header("Hand Components")] [SerializeField, Tooltip("Specifies the root node of the actual tracked hand.")]
+        private GameObject _hand;
         
         [SerializeField, Tooltip("Specifies where the root bone of the hand is.")] 
         private Transform _handRoot;
@@ -424,7 +424,7 @@ namespace VRSYS.Core.Avatar
             _handRenderer.enabled = true;
         }
 
-        private void UpdateHandVisualsActive() => _handVisuals.SetActive(_isActive.Value);
+        private void UpdateHandVisualsActive() => _hand.SetActive(_isActive.Value);
 
         #endregion
 

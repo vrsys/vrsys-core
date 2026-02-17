@@ -568,6 +568,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
   _fidelityLevel: 0
+  _handVisuals: {fileID: 150915797564159782}
   _handRoot: {fileID: 3774078857044054742}
   _handRenderer: {fileID: 340470309898529175}
   _fingerLerpSpeed: 20

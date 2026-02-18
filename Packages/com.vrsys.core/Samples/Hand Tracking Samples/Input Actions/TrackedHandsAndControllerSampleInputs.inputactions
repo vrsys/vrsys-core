@@ -537,15 +537,15 @@
                 },
                 {
                     "name": "UI Select Value",
-                    "type": "Button",
+                    "type": "Value",
                     "id": "1a8c33d6-c749-4084-9b2e-6e2b4d0a7cce",
-                    "expectedControlType": "",
+                    "expectedControlType": "Axis",
                     "processors": "",
                     "interactions": "",
-                    "initialStateCheck": false
+                    "initialStateCheck": true
                 },
                 {
-                    "name": "Aim Position",
+                    "name": "Pointer Position",
                     "type": "Value",
                     "id": "07ed3fc8-501f-442b-a25c-e9192aea49bd",
                     "expectedControlType": "Vector3",
@@ -554,7 +554,7 @@
                     "initialStateCheck": true
                 },
                 {
-                    "name": "Aim Rotation",
+                    "name": "Pointer Rotation",
                     "type": "Value",
                     "id": "3d47ffe6-9765-4795-9034-aeec35d56471",
                     "expectedControlType": "Quaternion",
@@ -673,7 +673,7 @@
                 {
                     "name": "",
                     "id": "3fddbb76-c342-458d-9db3-03960587e93f",
-                    "path": "",
+                    "path": "<TrackedDevice>/{PinchValue}",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
@@ -683,23 +683,23 @@
                 },
                 {
                     "name": "",
-                    "id": "0d5c5329-0224-4f27-9485-cbbce8ea6786",
-                    "path": "<XRHandDevice>{RightHand}/aimPosition",
+                    "id": "356decd0-8402-445f-975a-480882965c40",
+                    "path": "<HandInteraction>{RightHand}/pointer/position",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "Aim Position",
+                    "action": "Pointer Position",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
                 {
                     "name": "",
-                    "id": "c5057c94-e1fc-4436-8d5a-f39fb20b920e",
-                    "path": "<XRHandDevice>{RightHand}/aimRotation",
+                    "id": "5712adfa-afe6-47d5-a23e-5f529b58a25d",
+                    "path": "<HandInteraction>{RightHand}/pointer/rotation",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "Aim Rotation",
+                    "action": "Pointer Rotation",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -795,7 +795,7 @@
                     "initialStateCheck": true
                 },
                 {
-                    "name": "Aim Position",
+                    "name": "Pointer Position",
                     "type": "Value",
                     "id": "09995caa-185e-4967-802c-d5591271b436",
                     "expectedControlType": "Vector3",
@@ -804,7 +804,7 @@
                     "initialStateCheck": true
                 },
                 {
-                    "name": "Aim Rotation",
+                    "name": "Pointer Rotation",
                     "type": "Value",
                     "id": "d6878872-94de-43f2-9972-26390611e938",
                     "expectedControlType": "Quaternion",
@@ -933,23 +933,12 @@
                 },
                 {
                     "name": "",
-                    "id": "0ad92a30-d9b6-4c26-bd60-4e2e482fe4fc",
-                    "path": "<XRHandDevice>{LeftHand}/aimPosition",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Aim Position",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
                     "id": "03483746-ffae-4429-8fe3-04fb978de517",
-                    "path": "<XRHandDevice>{LeftHand}/aimRotation",
+                    "path": "<HandInteraction>{LeftHand}/pointer/rotation",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "Aim Rotation",
+                    "action": "Pointer Rotation",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -972,6 +961,17 @@
                     "processors": "",
                     "groups": "",
                     "action": "Hand Rotation",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "af1e28a8-879c-4673-8239-6ecf2ea342fc",
+                    "path": "<HandInteraction>{LeftHand}/pointer/position",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Pointer Position",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

@@ -523,7 +523,6 @@ GameObject:
   - component: {fileID: 1976054175032196086}
   - component: {fileID: 5823270967864963424}
   - component: {fileID: 1413886959386895998}
-  - component: {fileID: 8844914827343611438}
   m_Layer: 0
   m_Name: Ray Interactor
   m_TagString: Untagged
@@ -1126,13 +1125,45 @@ MonoBehaviour:
   m_OverrideInteractorLineOrigin: 1
   m_LineOriginTransform: {fileID: 0}
   m_LineOriginOffset: 0
---- !u!114 &8844914827343611438
+--- !u!1 &2659777864536677400
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1831145366290462287}
+  - component: {fileID: 1836493579822843207}
+  m_Layer: 0
+  m_Name: Ray Serializer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1831145366290462287
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2659777864536677400}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1996755615205710490}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1836493579822843207
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2642238213134489421}
+  m_GameObject: {fileID: 2659777864536677400}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4f0b20a0fe6a5a44cb22779dd32c576b, type: 3}
@@ -1140,6 +1171,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
   useEndPointsOnly: 0
+  ray: {fileID: 5823270967864963424}
 --- !u!1 &3113985362480842701
 GameObject:
   m_ObjectHideFlags: 0
@@ -1513,6 +1545,7 @@ Transform:
   m_Children:
   - {fileID: 8276368692243880754}
   - {fileID: 3033203440800691602}
+  - {fileID: 1831145366290462287}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &5317986926511364331

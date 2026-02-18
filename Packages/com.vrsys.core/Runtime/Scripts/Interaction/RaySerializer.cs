@@ -43,7 +43,6 @@ using VRSYS.Core.Utility;
 
 namespace VRSYS.Core.Interaction
 {
-    [RequireComponent(typeof(LineRenderer))]
     public class RaySerializer : NetworkBehaviour
     {
         #region Serialized Data Type
@@ -110,7 +109,9 @@ namespace VRSYS.Core.Interaction
 
         public bool useEndPointsOnly = false;
 
+        [SerializeField, Tooltip("Line renderer that is being serialized. If null, tries to find LineRenderer on GameObject")] 
         private LineRenderer ray;
+        
         private NetworkVariable<RayData> rayData = new NetworkVariable<RayData>(default,
             NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
     
@@ -120,7 +121,9 @@ namespace VRSYS.Core.Interaction
 
         public override void OnNetworkSpawn()
         {
-            ray = GetComponent<LineRenderer>();
+            if(ray == null)
+                ray = GetComponent<LineRenderer>();
+            
             ray.positionCount = 2;
             
             if (IsOwner)

@@ -94,13 +94,17 @@ namespace VRSYS.Core.Avatar
         private void UpdateUserName()
         {
             string userName = _networkUser.userName.Value.ToString();
-            _labelText.text = userName;
-            _iconText.text = userName[0].ToString();
+            
+            if(_labelText != null)
+                _labelText.text = userName;
+            
+            if(_iconText != null)
+                _iconText.text = userName[0].ToString();
         }
 
         private void UpdateBackground()
         {
-            if (_applyUserColorToIcon)
+            if (_applyUserColorToIcon && _iconBackground != null)
                 _iconBackground.color = _networkUser.userColor.Value;
         }
 

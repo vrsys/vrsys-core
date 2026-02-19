@@ -2513,6 +2513,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3952627373642115511, guid: 273626d798a2a4c48ad9b129aa98d06b, type: 3}
+      propertyPath: _collocationSettings
+      value: 
+      objectReference: {fileID: 11400000, guid: 25ee5fd1c71dbb642b6ddfdc1b77ef37, type: 2}
     - target: {fileID: 7834600193280349486, guid: 273626d798a2a4c48ad9b129aa98d06b, type: 3}
       propertyPath: m_Name
       value: VRSYS-CollocationManager

@@ -4,6 +4,7 @@ using TMPro;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 using VRSYS.Core.Logging;
 using VRSYS.Core.Networking;
@@ -33,7 +34,8 @@ namespace VRSYS.Meta.Collocation
         [SerializeField] private TextMeshProUGUI _statusText;
         [SerializeField] private TextMeshProUGUI _messageText;
         [SerializeField] private Button _closeButton;
-        [SerializeField] private Button _restartButton;
+        [SerializeField] private Button _restartWithLocalAnchorButton;
+        [SerializeField] private Button _restartWithSessionAnchorButton;
         
         [Header("UI Configuration")]
         [SerializeField] private Color _defaultTextColor = Color.white;
@@ -77,8 +79,11 @@ namespace VRSYS.Meta.Collocation
             _collocationManager.OnStateChanged.AddListener(OnCollocationStateChanged);
             _closeButton.onClick.AddListener(CloseMenu);
             
-            _restartButton.gameObject.SetActive(_collocationManager.CanRestart);
-            _restartButton.onClick.AddListener(TryRestartCollocation);
+            _restartWithLocalAnchorButton.gameObject.SetActive(_collocationManager.CanRestart);
+            _restartWithLocalAnchorButton.onClick.AddListener(TryRestartLocalAnchorCollocation);
+            
+            _restartWithSessionAnchorButton.gameObject.SetActive(_collocationManager.CanRestart);
+            _restartWithSessionAnchorButton.onClick.AddListener(TryRestartSessionAnchorCollocation);
 
             _toggleUIAction.action.Enable();
             _toggleUIAction.action.performed += ToggleUI;
@@ -118,7 +123,8 @@ namespace VRSYS.Meta.Collocation
 
             _messageText.text = stateMessage.Message;
             
-            _restartButton.gameObject.SetActive(_collocationManager.CanRestart);
+            _restartWithLocalAnchorButton.gameObject.SetActive(_collocationManager.CanRestart);
+            _restartWithSessionAnchorButton.gameObject.SetActive(_collocationManager.CanRestart);
         }
         
         private void CloseMenu()
@@ -135,9 +141,14 @@ namespace VRSYS.Meta.Collocation
             transform.position = head.position + head.forward * _distanceToHead;
         }
         
-        private void TryRestartCollocation()
+        private void TryRestartLocalAnchorCollocation()
         {
-            _collocationManager.RestartCollocation();
+            _collocationManager.RestartCollocationWithLocalAnchor(true);
+        }
+
+        private void TryRestartSessionAnchorCollocation()
+        {
+            _collocationManager.RestartCollocationWithSessionAnchor();
         }
 
         #endregion

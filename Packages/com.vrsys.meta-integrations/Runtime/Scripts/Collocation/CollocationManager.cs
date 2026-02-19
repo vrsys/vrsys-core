@@ -59,40 +59,29 @@ namespace VRSYS.Meta.Collocation
         [HideInInspector] public UnityEvent<CollocationStateMessage> OnStateChanged = new ();
 
         [HideInInspector] public UnityEvent OnRestart = new();
-        
-        [Header("Configuration")] 
-        
-        [Tooltip("Time in seconds defining how long existing collocation sessions are searched.")]
-        [SerializeField] private float _discoveryTime = 10f;
-        public float DiscoverTime => _discoveryTime;
-        
-        [Tooltip("Time in seconds defining how long system waits before retrying failed action.")]
-        [SerializeField] private float _retryTime = 1;
-        public float RetryTime => _retryTime;
-        
-        [Tooltip("Defines how often failed actions are retried, before process stops.")]
-        [SerializeField] private int _maxRetries = 5;
-        public int MaxRetries => _maxRetries;
+
+        [Header("Configuration")]
+        [SerializeField, Tooltip("Scriptbale object containing configuration values that defines the collocation behaviour.")]
+        private CollocationSettings _collocationSettings;
+        public CollocationSettings collocationSettings => _collocationSettings;
         
         [Tooltip("User roles that try to collocate themselves.")]
         [SerializeField] [UserRoleSelector] private List<UserRole> _collocationRoles;
         public List<UserRole> CollocationRoles => _collocationRoles;
         
-        [Header("Anchor configuration")]
+        public float DiscoverTime => _collocationSettings.DiscoverTime;
         
-        [Tooltip("If true, local anchor is used to create collocation session.")]
-        [SerializeField] private bool _useLocalAnchor = false;
+        public float RetryTime => _collocationSettings.RetryTime;
+        
+        public int MaxRetries => _collocationSettings.MaxRetries;
+        
+        private bool _useLocalAnchor => _collocationSettings.UseLocalAnchor;
 
-        [Tooltip("If true, tries to load previous anchor automatically")] 
-        [SerializeField] private bool _tryLoadLocalAnchor = false;
+        private bool _tryLoadLocalAnchor => _collocationSettings.TryLoadLocalAnchor;
         
-        [Tooltip("If true, session anchor is always created at DefaultSessionAnchorWorldPosition.")]
-        [SerializeField] private bool _useDefaultSessionAnchor = true;
-        public bool UseDefaultSessionAnchor => _useDefaultSessionAnchor;
+        public bool UseDefaultSessionAnchor => _collocationSettings.UserDefaultSessionAnchor;
         
-        [Tooltip("World position at which default anchor is created.")]
-        [SerializeField] private Vector3 _defaultSessionAnchorWorldPosition = Vector3.zero;
-        public Vector3 DefaultSessionAnchorWorldPosition => _defaultSessionAnchorWorldPosition;
+        public Vector3 DefaultSessionAnchorWorldPosition => _collocationSettings.DefaultSessionAnchorWorldPos;
 
         [Tooltip("Anchor prefab spawned to create anchor.")] 
         [SerializeField] private OVRSpatialAnchor _anchorPrefab;
@@ -220,6 +209,31 @@ namespace VRSYS.Meta.Collocation
             OnRestart.Invoke();
 
             _currentState = new RestartCollocationStateHandler(this, StartCollocation);
+            _currentState.StartState();
+        }
+
+        public void RestartCollocationWithLocalAnchor(bool tryLoadLocalAnchors)
+        {
+            if(!CanRestart)
+                return;
+
+            OnRestart.Invoke();
+
+            _currentState = new RestartCollocationStateHandler(this,
+                tryLoadLocalAnchors
+                    ? EnterState<LoadingLocalAnchorStateHandler>
+                    : EnterState<CreatingLocalAnchorStateHandler>);
+            _currentState.StartState();
+        }
+
+        public void RestartCollocationWithSessionAnchor()
+        {
+            if(!CanRestart)
+                return;
+            
+            OnRestart.Invoke();
+
+            _currentState = new RestartCollocationStateHandler(this, EnterState<SearchSessionStateHandler>);
             _currentState.StartState();
         }
 

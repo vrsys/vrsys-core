@@ -555,7 +555,8 @@
         "com.unity.xr.interaction.toolkit": "3.0.8",
         "com.unity.xr.management": "4.5.1",
         "com.unity.xr.openxr": "1.14.3",
-        "com.unity.ugui": "2.0.0"
+        "com.unity.ugui": "2.0.0",
+        "com.unity.xr.hands": "1.7.3"
       }
     },
     "com.vrsys.meta-integrations": {

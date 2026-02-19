@@ -311,6 +311,9 @@ MonoBehaviour:
         byte0029: 0
   userId:
     m_InternalValue: 0
+  userRole:
+    m_InternalValue:
+      Name: 
 --- !u!114 &7797834381806960285
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -664,6 +667,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: UserNameLabel
       objectReference: {fileID: 0}
+    - target: {fileID: 1337369462205068733, guid: 4e8ba716061dc2f4c9fee51712d121c5, type: 3}
+      propertyPath: m_PresetInfoIsWorld
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 1943740249231692607, guid: 4e8ba716061dc2f4c9fee51712d121c5, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -690,11 +697,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1943740249231692607, guid: 4e8ba716061dc2f4c9fee51712d121c5, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 600
+      value: 900
       objectReference: {fileID: 0}
     - target: {fileID: 1943740249231692607, guid: 4e8ba716061dc2f4c9fee51712d121c5, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 100
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 1943740249231692607, guid: 4e8ba716061dc2f4c9fee51712d121c5, type: 3}
       propertyPath: m_LocalPosition.x

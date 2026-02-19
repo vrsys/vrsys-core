@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   userRole:
     Name: HMD
-  userName: 
-  userColor: {r: 0, g: 0, b: 0, a: 0}
+  userName: Tony
+  userColor: {r: 0.08298873, g: 0.59748423, b: 0.08079178, a: 1}

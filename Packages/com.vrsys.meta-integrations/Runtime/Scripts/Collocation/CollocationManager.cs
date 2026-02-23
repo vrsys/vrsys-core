@@ -75,9 +75,9 @@ namespace VRSYS.Meta.Collocation
         
         public int MaxRetries => _collocationSettings.MaxRetries;
         
-        private bool _useLocalAnchor => _collocationSettings.UseLocalAnchor;
+        public bool UseLocalAnchor => _collocationSettings.UseLocalAnchor;
 
-        private bool _tryLoadLocalAnchor => _collocationSettings.TryLoadLocalAnchor;
+        public bool TryLoadLocalAnchor => _collocationSettings.TryLoadLocalAnchor;
         
         public bool UseDefaultSessionAnchor => _collocationSettings.UserDefaultSessionAnchor;
         
@@ -266,9 +266,9 @@ namespace VRSYS.Meta.Collocation
         /// </summary>
         private void StartCollocation()
         {
-            if (_useLocalAnchor)
+            if (UseLocalAnchor)
             {
-                if (_tryLoadLocalAnchor)
+                if (TryLoadLocalAnchor)
                     EnterState<LoadingLocalAnchorStateHandler>();
                 else
                     EnterState<CreatingLocalAnchorStateHandler>();

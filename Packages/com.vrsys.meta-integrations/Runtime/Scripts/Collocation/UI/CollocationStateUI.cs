@@ -4,10 +4,11 @@ using TMPro;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
 using VRSYS.Core.Logging;
 using VRSYS.Core.Networking;
+
+using Label = TMPro.TextMeshProUGUI;
 
 namespace VRSYS.Meta.Collocation
 {
@@ -27,19 +28,36 @@ namespace VRSYS.Meta.Collocation
         #region Properties
 
         [Header("Collocation Manager")]
-        [Tooltip("If set to None, first CollocationManager found in scene will be used.")] [SerializeField] private CollocationManager _collocationManager;
+        [SerializeField, Tooltip("If set to None, first CollocationManager found in scene will be used.")] private CollocationManager _collocationManager;
 
-        [Header("UI Elements")] 
+        [Header("State UI Elements & Configuration")] 
+        [SerializeField] private GameObject _stateUi;
+        [SerializeField] private Button _stateUiButton;
         [SerializeField] private TextMeshProUGUI _stateText;
         [SerializeField] private TextMeshProUGUI _statusText;
         [SerializeField] private TextMeshProUGUI _messageText;
-        [SerializeField] private Button _closeButton;
         [SerializeField] private Button _restartWithLocalAnchorButton;
         [SerializeField] private Button _restartWithSessionAnchorButton;
-        
-        [Header("UI Configuration")]
         [SerializeField] private Color _defaultTextColor = Color.white;
         [SerializeField] private List<StatusColor> _customStatusColors;
+
+        [Header("Settings UI Elements & Configuration")] 
+        [SerializeField] private GameObject _settingsUi;
+        [SerializeField] private Button _settingsUiButton;
+        [SerializeField] private Slider _discoveryTimeSlider;
+        [SerializeField] private Label _discoveryTimeLabel;
+        [SerializeField] private Slider _retryTimeSlider;
+        [SerializeField] private Label _retryTimeLabel;
+        [SerializeField] private Slider _maxRetriesSlider;
+        [SerializeField] private Label _maxRetriesLabel;
+        [SerializeField] private Toggle _useLocalAnchorToggle;
+        [SerializeField] private Toggle _tryLoadLocalAnchorToggle;
+        [SerializeField] private Toggle _useDefaultSessionAnchorToggle;
+        [SerializeField] private TMP_InputField _xPosInputField;
+        [SerializeField] private TMP_InputField _yPosInputField;
+        [SerializeField] private TMP_InputField _zPosInputField;
+        [SerializeField] private Button _saveValuesButton;
+        
 
         [Header("Input Actions")] 
         [SerializeField] private InputActionProperty _toggleUIAction;
@@ -50,6 +68,8 @@ namespace VRSYS.Meta.Collocation
 
         [Header("Debugging")] 
         [SerializeField] private bool _verbose = false;
+
+        private Color _defaultUiToggleButtonColor;
 
         #endregion
 
@@ -63,6 +83,7 @@ namespace VRSYS.Meta.Collocation
                 return;
             }
             
+            // Collocation Manager Setup
             if (_collocationManager == null)
             {
                 _collocationManager = FindAnyObjectByType<CollocationManager>();
@@ -77,14 +98,16 @@ namespace VRSYS.Meta.Collocation
             }
             
             _collocationManager.OnStateChanged.AddListener(OnCollocationStateChanged);
-            _closeButton.onClick.AddListener(CloseMenu);
-            
-            _restartWithLocalAnchorButton.gameObject.SetActive(_collocationManager.CanRestart);
-            _restartWithLocalAnchorButton.onClick.AddListener(TryRestartLocalAnchorCollocation);
-            
-            _restartWithSessionAnchorButton.gameObject.SetActive(_collocationManager.CanRestart);
-            _restartWithSessionAnchorButton.onClick.AddListener(TryRestartSessionAnchorCollocation);
 
+            ColorUtility.TryParseHtmlString("006189", out _defaultUiToggleButtonColor);
+            
+            SetupStateUI();
+            
+            SetupSettingsUI();
+            
+            
+
+            // Toggle Action Setup
             _toggleUIAction.action.Enable();
             _toggleUIAction.action.performed += ToggleUI;
 
@@ -93,21 +116,111 @@ namespace VRSYS.Meta.Collocation
             ExtendedLogger.LogInfo(GetType().Name, "Finished collocation state UI setup.", this);
         }
 
+        private void OnEnable()
+        {
+            if(_settingsUi.activeSelf)
+                UpdateSettingUIElements();
+        }
+
         #endregion
 
-        #region Public Methods
+        #region Private Methods
 
-        public void ToggleUI()
+        private void SetupStateUI()
+        {
+            _stateUiButton.onClick.AddListener(SetStateUIActive);
+            
+            _restartWithLocalAnchorButton.gameObject.SetActive(_collocationManager.CanRestart);
+            _restartWithLocalAnchorButton.onClick.AddListener(TryRestartLocalAnchorCollocation);
+            
+            _restartWithSessionAnchorButton.gameObject.SetActive(_collocationManager.CanRestart);
+            _restartWithSessionAnchorButton.onClick.AddListener(TryRestartSessionAnchorCollocation);
+        }
+
+        private void SetupSettingsUI()
+        {
+            _settingsUiButton.onClick.AddListener(SetSettingsUIActive);
+            
+            UpdateSettingUIElements();
+
+            _discoveryTimeSlider.onValueChanged.AddListener((newValue) =>
+            {
+                _discoveryTimeLabel.text = newValue + " sec.";
+            });
+            
+            _retryTimeSlider.onValueChanged.AddListener(newValue =>
+            {
+                _retryTimeLabel.text = newValue + " sec.";
+            });
+            
+            _maxRetriesSlider.onValueChanged.AddListener(newValue =>
+            {
+                _maxRetriesLabel.text = newValue.ToString();
+            });
+            
+            _saveValuesButton.onClick.AddListener(SaveSettingValues);
+        }
+
+        private void SetStateUIActive()
+        {
+            _stateUi.SetActive(true);
+            _stateUiButton.image.color = Color.white;
+            
+            _settingsUi.SetActive(false);
+            _settingsUiButton.image.color = _defaultUiToggleButtonColor;
+        }
+
+        private void SetSettingsUIActive()
+        {
+            UpdateSettingUIElements();
+            
+            _settingsUi.SetActive(true);
+            _settingsUiButton.image.color = Color.white;
+            
+            _stateUi.SetActive(false);
+            _stateUiButton.image.color = _defaultUiToggleButtonColor;
+        }
+
+        private void UpdateSettingUIElements()
+        {
+            _discoveryTimeSlider.value = _collocationManager.DiscoverTime;
+            _retryTimeSlider.value = _collocationManager.RetryTime;
+            _maxRetriesSlider.value = _collocationManager.MaxRetries;
+
+            _useLocalAnchorToggle.isOn = _collocationManager.UseLocalAnchor;
+            _tryLoadLocalAnchorToggle.isOn = _collocationManager.TryLoadLocalAnchor;
+            _useDefaultSessionAnchorToggle.isOn = _collocationManager.UseDefaultSessionAnchor;
+
+            _xPosInputField.text = _collocationManager.DefaultSessionAnchorWorldPosition.x.ToString();
+            _yPosInputField.text = _collocationManager.DefaultSessionAnchorWorldPosition.y.ToString();
+            _zPosInputField.text = _collocationManager.DefaultSessionAnchorWorldPosition.z.ToString();
+        }
+        
+        private void SaveSettingValues()
+        {
+            _collocationManager.collocationSettings.DiscoverTime = _discoveryTimeSlider.value;
+            _collocationManager.collocationSettings.RetryTime = _retryTimeSlider.value;
+            _collocationManager.collocationSettings.MaxRetries = (int)_maxRetriesSlider.value;
+
+            _collocationManager.collocationSettings.UseLocalAnchor = _useLocalAnchorToggle.isOn;
+            _collocationManager.collocationSettings.TryLoadLocalAnchor = _tryLoadLocalAnchorToggle.isOn;
+            _collocationManager.collocationSettings.UserDefaultSessionAnchor = _useDefaultSessionAnchorToggle.isOn;
+
+            Vector3 pos = new Vector3(
+                float.Parse(_xPosInputField.text),
+                float.Parse(_yPosInputField.text),
+                float.Parse(_zPosInputField.text));
+
+            _collocationManager.collocationSettings.DefaultSessionAnchorWorldPos = pos;
+        }
+        
+        private void ToggleUI()
         {
             gameObject.SetActive(!gameObject.activeSelf);
 
             if (gameObject.activeSelf && _positionAtHeadOnToggle)
                 PositionUI();
         }
-
-        #endregion
-
-        #region Private Methods
 
         private void OnCollocationStateChanged(CollocationStateMessage stateMessage)
         {
@@ -125,11 +238,6 @@ namespace VRSYS.Meta.Collocation
             
             _restartWithLocalAnchorButton.gameObject.SetActive(_collocationManager.CanRestart);
             _restartWithSessionAnchorButton.gameObject.SetActive(_collocationManager.CanRestart);
-        }
-        
-        private void CloseMenu()
-        {
-            gameObject.SetActive(false);
         }
 
         private void ToggleUI(InputAction.CallbackContext obj) => ToggleUI();

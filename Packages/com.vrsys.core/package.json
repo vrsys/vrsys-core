@@ -1,6 +1,6 @@
 {
   "name" : "com.vrsys.core",
-  "version" : "1.0.6",
+  "version" : "1.0.7",
   "displayName" : "VRSYS Core",
   "description": "Core elements of VRSYS framework.",
   "documentationUrl" : "https://vrsys.gitbook.io/vrsys",
@@ -11,13 +11,19 @@
     "com.unity.xr.interaction.toolkit": "3.0.8",
     "com.unity.xr.management": "4.5.1",
     "com.unity.xr.openxr": "1.14.3",
-    "com.unity.ugui": "2.0.0"
+    "com.unity.ugui": "2.0.0",
+    "com.unity.xr.hands": "1.7.3"
   },
   "samples": [
     {
       "displayName": "Sample Scene Setups",
       "description": "Contains sample scenes that show how to setup basic scenes with VRSYS-Core.",
       "path": "Samples~/Sample Scene Setups"
+    },
+    {
+      "displayName": "Hand Tracking & Animated Controller Samples",
+      "description": "Contains a sample scene and prefabs that show how to setup animated controllers and tracked hands using VRSYS-Core.",
+      "path": "Samples~/Hand Tracking and Animated Controller Samples"      
     }
   ],
   "author": {

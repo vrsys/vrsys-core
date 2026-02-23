@@ -51,10 +51,11 @@ namespace VRSYS.Core.Avatar
 
         [Header("UI Elements")]
         [SerializeField] private TextMeshProUGUI _labelText;
-        [SerializeField] private Image _labelBackground;
+        [SerializeField] private TextMeshProUGUI _iconText;
+        [SerializeField] private Image _iconBackground;
 
         [Header("Behaviour Configuration")] 
-        [SerializeField] private bool _applyUserColor = false;
+        [SerializeField] private bool _applyUserColorToIcon = false;
 
         private NetworkUser _networkUser;
 
@@ -90,12 +91,21 @@ namespace VRSYS.Core.Avatar
             UpdateBackground();
         }
 
-        private void UpdateUserName() => _labelText.text = _networkUser.userName.Value.ToString();
+        private void UpdateUserName()
+        {
+            string userName = _networkUser.userName.Value.ToString();
+            
+            if(_labelText != null)
+                _labelText.text = userName;
+            
+            if(_iconText != null)
+                _iconText.text = userName[0].ToString();
+        }
 
         private void UpdateBackground()
         {
-            if (_applyUserColor)
-                _labelBackground.color = _networkUser.userColor.Value;
+            if (_applyUserColorToIcon && _iconBackground != null)
+                _iconBackground.color = _networkUser.userColor.Value;
         }
 
         #endregion

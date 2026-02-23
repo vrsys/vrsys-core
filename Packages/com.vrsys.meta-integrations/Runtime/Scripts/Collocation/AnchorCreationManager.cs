@@ -94,13 +94,17 @@ namespace VRSYS.Meta.Collocation
                 
                 if (interactionState != AnchorCreationState.Idle)
                 {
-                    _rayVisual.enabled = true;
+                    _rayVisual.enabled = false;
                     _anchorPreview.SetActive(false);
                     
                     interactionState = AnchorCreationState.Idle;
                 }
-                
-                UpdateVisuals(input);
+
+                if (interactionState == AnchorCreationState.Idle)
+                {
+                    _rayVisual.enabled = true;
+                    UpdateVisuals(input);
+                }
             }
             else if (input >= 0.2f && input < 0.9f)
             {

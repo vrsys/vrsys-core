@@ -99,7 +99,7 @@ namespace VRSYS.Meta.Collocation
             
             _collocationManager.OnStateChanged.AddListener(OnCollocationStateChanged);
 
-            ColorUtility.TryParseHtmlString("006189", out _defaultUiToggleButtonColor);
+            ColorUtility.TryParseHtmlString("#006189", out _defaultUiToggleButtonColor);
             
             SetupStateUI();
             

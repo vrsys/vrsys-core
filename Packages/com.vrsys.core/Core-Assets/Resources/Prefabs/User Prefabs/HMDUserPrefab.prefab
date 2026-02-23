@@ -917,6 +917,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
   useEndPointsOnly: 0
+  ray: {fileID: 0}
 --- !u!114 &4978313537426335174
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1233,6 +1234,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
   useEndPointsOnly: 1
+  ray: {fileID: 0}
 --- !u!1 &3169307180014289271
 GameObject:
   m_ObjectHideFlags: 0
@@ -2469,6 +2471,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
   useEndPointsOnly: 0
+  ray: {fileID: 0}
 --- !u!114 &7757356723528134816
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3883,6 +3886,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: UserNameLabel
       objectReference: {fileID: 0}
+    - target: {fileID: 1337369462205068733, guid: 4e8ba716061dc2f4c9fee51712d121c5, type: 3}
+      propertyPath: m_PresetInfoIsWorld
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 1943740249231692607, guid: 4e8ba716061dc2f4c9fee51712d121c5, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -3909,11 +3916,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1943740249231692607, guid: 4e8ba716061dc2f4c9fee51712d121c5, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 600
+      value: 900
       objectReference: {fileID: 0}
     - target: {fileID: 1943740249231692607, guid: 4e8ba716061dc2f4c9fee51712d121c5, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 100
+      value: 200
       objectReference: {fileID: 0}
     - target: {fileID: 1943740249231692607, guid: 4e8ba716061dc2f4c9fee51712d121c5, type: 3}
       propertyPath: m_LocalPosition.x

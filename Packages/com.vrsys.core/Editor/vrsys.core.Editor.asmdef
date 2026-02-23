@@ -2,7 +2,9 @@
     "name": "vrsys.core.Editor",
     "rootNamespace": "",
     "references": [
-        "GUID:9d44f9d7f3932da4c84af6164f11d5e5"
+        "GUID:9d44f9d7f3932da4c84af6164f11d5e5",
+        "GUID:343deaaf83e0cee4ca978e7df0b80d21",
+        "GUID:1491147abca9d7d4bb7105af628b223e"
     ],
     "includePlatforms": [
         "Editor"

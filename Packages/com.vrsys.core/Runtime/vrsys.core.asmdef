@@ -12,7 +12,8 @@
         "Unity.TextMeshPro",
         "Unity.Services.Core",
         "Unity.Collections",
-        "Unity.Networking.Transport"
+        "Unity.Networking.Transport",
+        "Unity.XR.Hands"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

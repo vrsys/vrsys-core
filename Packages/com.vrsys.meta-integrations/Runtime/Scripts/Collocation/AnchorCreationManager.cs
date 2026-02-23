@@ -45,6 +45,8 @@ namespace VRSYS.Meta.Collocation
 {
     public class AnchorCreationManager : MonoBehaviour
     {
+        #region Properties
+
         [HideInInspector] public UnityEvent<Vector3,Quaternion> OnUserDefinedAnchor = new UnityEvent<Vector3,Quaternion>();
         
         [SerializeField] private ConfirmationUI _confirmationUIPrefab;
@@ -69,22 +71,10 @@ namespace VRSYS.Meta.Collocation
             Locked
         }
         private AnchorCreationState interactionState;
-        
 
-        public void SetupAnchorCreationMode()
-        {
-            // Setup UI and Interation
-            _isAnchorCreationActive = true;
-            _anchorCreationAction.action.Enable();
-            _anchorPreview = Instantiate(_anchorPrefab);
-            _anchorPrefab.SetActive(false);
-            
-            _confirmationUI = Instantiate(_confirmationUIPrefab);
-            _confirmationUI.Initialize(AnchorConfirmed, RedoAnchor);
-            
-            // Place floor plane on ground height of user
-            _floorPlane = Instantiate(_floorPlanePrefab, NetworkUser.LocalInstance.transform.position, Quaternion.identity);
-        }
+        #endregion
+
+        #region MonoBehaviour Methods
 
         private void Update()
         {
@@ -104,11 +94,13 @@ namespace VRSYS.Meta.Collocation
                 
                 if (interactionState != AnchorCreationState.Idle)
                 {
-                    _rayVisual.enabled = false;
+                    _rayVisual.enabled = true;
                     _anchorPreview.SetActive(false);
                     
                     interactionState = AnchorCreationState.Idle;
                 }
+                
+                UpdateVisuals(input);
             }
             else if (input >= 0.2f && input < 0.9f)
             {
@@ -141,6 +133,29 @@ namespace VRSYS.Meta.Collocation
                 UpdateVisuals(input);
             }
         }
+
+        #endregion
+
+        #region Public Methods
+
+        public void SetupAnchorCreationMode()
+        {
+            // Setup UI and Interation
+            _isAnchorCreationActive = true;
+            _anchorCreationAction.action.Enable();
+            _anchorPreview = Instantiate(_anchorPrefab);
+            _anchorPrefab.SetActive(false);
+            
+            _confirmationUI = Instantiate(_confirmationUIPrefab);
+            _confirmationUI.Initialize(AnchorConfirmed, RedoAnchor);
+            
+            // Place floor plane on ground height of user
+            _floorPlane = Instantiate(_floorPlanePrefab, NetworkUser.LocalInstance.transform.position, Quaternion.identity);
+        }
+
+        #endregion
+
+        #region Private Methods
 
         private void UpdateVisuals(float input)
         {
@@ -204,37 +219,7 @@ namespace VRSYS.Meta.Collocation
             // retry anchor creation
             _isAnchorCreationActive = true;
         }
-        
-        // EXAMPLE from https://developers.meta.com/horizon/documentation/unity/unity-mr-utility-kit-environment-raycast
 
-        // public Transform rightControllerAnchor;
-        // public GameObject prefabToPlace;
-        //
-        // private void Update()
-        // {
-        //     if (OVRInput.GetDown(OVRInput.RawButton.RIndexTrigger))
-        //     {
-        //         var ray = new Ray(
-        //             rightControllerAnchor.position,
-        //             rightControllerAnchor.forward
-        //         );
-        //
-        //         TryPlace(ray);
-        //     }
-        // }
-        //
-        // private void TryPlace(Ray ray)
-        // {
-        //     if (Raycast(ray, out var hit))
-        //     {
-        //         var objectToPlace = Instantiate(prefabToPlace);
-        //         objectToPlace.transform.SetPositionAndRotation(
-        //             hit.point,
-        //             Quaternion.LookRotation(hit.normal, Vector3.up)
-        //         );
-        //
-        //         objectToPlace.AddComponent<OVRSpatialAnchor>();
-        //     }
-        // }
+        #endregion
     }
 }

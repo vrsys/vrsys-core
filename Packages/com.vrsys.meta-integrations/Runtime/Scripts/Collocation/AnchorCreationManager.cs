@@ -1,0 +1,229 @@
+﻿// VRSYS plugin of Virtual Reality and Visualization Group (Bauhaus-University Weimar)
+//  _    ______  _______  _______
+// | |  / / __ \/ ___/\ \/ / ___/
+// | | / / /_/ /\__ \  \  /\__ \ 
+// | |/ / _, _/___/ /  / /___/ / 
+// |___/_/ |_|/____/  /_//____/  
+//
+//  __                            __                       __   __   __    ___ .  . ___
+// |__)  /\  |  | |__|  /\  |  | /__`    |  | |\ | | \  / |__  |__) /__` |  |   /\   |  
+// |__) /~~\ \__/ |  | /~~\ \__/ .__/    \__/ | \| |  \/  |___ |  \ .__/ |  |  /~~\  |  
+//
+//       ___               __                                                           
+// |  | |__  |  |\/|  /\  |__)                                                          
+// |/\| |___ |  |  | /~~\ |  \                                                                                                                                                                                     
+//
+// Copyright (c) 2023 Virtual Reality and Visualization Group
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+//-----------------------------------------------------------------
+//   Authors:        Tony Zoeppig, Karoline Brehm
+//   Date:           2025
+//-----------------------------------------------------------------
+
+using UnityEngine;
+using UnityEngine.Events;
+using UnityEngine.InputSystem;
+using VRSYS.Core.Networking;
+
+namespace VRSYS.Meta.Collocation
+{
+    public class AnchorCreationManager : MonoBehaviour
+    {
+        #region Properties
+
+        [HideInInspector] public UnityEvent<Vector3,Quaternion> OnUserDefinedAnchor = new UnityEvent<Vector3,Quaternion>();
+        
+        [SerializeField] private ConfirmationUI _confirmationUIPrefab;
+        [SerializeField] private GameObject _floorPlanePrefab;
+        [SerializeField] private GameObject _anchorPrefab;
+
+        [SerializeField] private InputActionProperty _anchorCreationAction;
+        [SerializeField] private LayerMask anchorLayerMask;
+
+        [SerializeField] private LineRenderer _rayVisual;
+        [SerializeField] private Transform _userHand;
+        
+        private GameObject _floorPlane;
+        private ConfirmationUI _confirmationUI;
+        private GameObject _anchorPreview;
+        private bool _isAnchorCreationActive;
+        
+        private enum AnchorCreationState
+        {
+            Idle,
+            Aiming,
+            Locked
+        }
+        private AnchorCreationState interactionState;
+
+        #endregion
+
+        #region MonoBehaviour Methods
+
+        private void Update()
+        {
+            // While UI active, do not process raycast
+            if (!_isAnchorCreationActive)
+                return;
+            
+            float input = _anchorCreationAction.action.ReadValue<float>();
+
+            if (input < 0.2f)
+            {
+                if (interactionState == AnchorCreationState.Locked)
+                {
+                    ShowAnchorConfirmationUI();
+                    return;
+                }
+                
+                if (interactionState != AnchorCreationState.Idle)
+                {
+                    _rayVisual.enabled = false;
+                    _anchorPreview.SetActive(false);
+                    
+                    interactionState = AnchorCreationState.Idle;
+                }
+
+                if (interactionState == AnchorCreationState.Idle)
+                {
+                    _rayVisual.enabled = true;
+                    UpdateVisuals(input);
+                }
+            }
+            else if (input >= 0.2f && input < 0.9f)
+            {
+                if (interactionState == AnchorCreationState.Locked)
+                {
+                    ShowAnchorConfirmationUI();
+                    return;
+                }
+                
+                if (interactionState != AnchorCreationState.Aiming)
+                {
+                    _rayVisual.enabled = true;
+                    _anchorPreview.SetActive(true);
+                    
+                    interactionState = AnchorCreationState.Aiming;
+                }
+
+                UpdateVisuals(input);
+            }
+            else if (input >= 0.9f)
+            {
+                if (interactionState != AnchorCreationState.Locked)
+                {
+                    _rayVisual.enabled = true;
+                    _anchorPreview.SetActive(true);
+                    
+                    interactionState = AnchorCreationState.Locked;
+                }
+                
+                UpdateVisuals(input);
+            }
+        }
+
+        #endregion
+
+        #region Public Methods
+
+        public void SetupAnchorCreationMode()
+        {
+            // Setup UI and Interation
+            _isAnchorCreationActive = true;
+            _anchorCreationAction.action.Enable();
+            _anchorPreview = Instantiate(_anchorPrefab);
+            _anchorPrefab.SetActive(false);
+            
+            _confirmationUI = Instantiate(_confirmationUIPrefab);
+            _confirmationUI.Initialize(AnchorConfirmed, RedoAnchor);
+            
+            // Place floor plane on ground height of user
+            _floorPlane = Instantiate(_floorPlanePrefab, NetworkUser.LocalInstance.transform.position, Quaternion.identity);
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        private void UpdateVisuals(float input)
+        {
+            _rayVisual.SetPosition(0, _userHand.position);
+            
+            if (Physics.Raycast(_userHand.position, _userHand.forward,  out RaycastHit hit, 100f, anchorLayerMask))
+            {
+                _rayVisual.SetPosition(1, hit.point);
+                
+                if(interactionState == AnchorCreationState.Aiming)
+                {
+                    // update position
+                    _anchorPreview.transform.position = hit.point;
+                }
+                else if(interactionState == AnchorCreationState.Locked)
+                {
+                    // rotate
+                    _anchorPreview.transform.LookAt(hit.point, _floorPlane.transform.up);
+                }
+            }
+            else
+            {
+                _rayVisual.SetPosition(1, _userHand.position + _userHand.forward);
+            }
+        }
+        
+        private void ShowAnchorConfirmationUI()
+        {
+            _isAnchorCreationActive = false; // for now disable anchor creation mode
+            _rayVisual.enabled = false; // do not show ray
+            
+            interactionState = AnchorCreationState.Idle;
+            
+            _confirmationUI.Show();
+        }
+        
+        /// <summary>
+        ///  Callback to User confirming selected anchors
+        /// </summary>
+        private void AnchorConfirmed()
+        {
+            _rayVisual.enabled = false;
+            _anchorCreationAction.action.Disable();
+            
+            // Teardown
+            Destroy(_anchorPreview);
+            Destroy(_confirmationUI.gameObject);
+            Destroy(_floorPlane);
+            
+            OnUserDefinedAnchor.Invoke(_anchorPreview.transform.position, _anchorPreview.transform.rotation);
+        }
+
+        /// <summary>
+        ///  Callback to User confirming selected anchors
+        /// </summary>
+        private void RedoAnchor()
+        {
+            _confirmationUI.Hide();
+            _anchorPreview.SetActive(false);
+            
+            // retry anchor creation
+            _isAnchorCreationActive = true;
+        }
+
+        #endregion
+    }
+}

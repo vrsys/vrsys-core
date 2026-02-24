@@ -9,10 +9,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dd18db4c29a918a4b8ed9ef80ff012e8, type: 3}
-  m_Name: VRSYSMetaCollocation-LobbySettings
+  m_Script: {fileID: 11500000, guid: 2b17725413d55df45b5ed4b622959e9f, type: 3}
+  m_Name: Test Collocation Settings
   m_EditorClassIdentifier: 
-  autoStart: 1
-  lobbyName: Meta Collocation
-  maxUsers: 10
-  isPrivate: 0
+  _discoveryTime: 10
+  _retryTime: 1
+  _maxRetries: 5
+  _useLocalAnchor: 0
+  _tryLoadLocalAnchor: 0
+  _useDefaultSessionAnchor: 0
+  _defaultSessionAnchorWorldPos: {x: 0, y: 0, z: 0}

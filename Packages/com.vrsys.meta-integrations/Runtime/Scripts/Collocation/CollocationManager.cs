@@ -32,83 +32,118 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //-----------------------------------------------------------------
-//   Authors:        Tony Jan Zoeppig, Sebastian Muehlhaus
+//   Authors:        Tony Zoeppig, Karoline Brehm
 //   Date:           2025
 //-----------------------------------------------------------------
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.Serialization;
 using VRSYS.Core.Logging;
 using VRSYS.Core.Networking;
+using Object = System.Object;
 
+
+// TODO: Check that asset menu creation for prefab still works
 namespace VRSYS.Meta.Collocation
 {
     public class CollocationManager : MonoBehaviour, INetworkUserCallbacks
     {
-        #region Member Variables
+        #region Properties
 
-        [FormerlySerializedAs("_userCollocationDiscovery")]
-        [Header("Collocation Configuration")]
+        /// <summary>
+        /// State of the Collocation Process
+        /// </summary>
+        public CollocationState State => _currentState.State;
+        [HideInInspector] public UnityEvent<CollocationStateMessage> OnStateChanged = new ();
+
+        [HideInInspector] public UnityEvent OnRestart = new();
+
+        [Header("Configuration")]
+        [SerializeField, Tooltip("Scriptbale object containing configuration values that defines the collocation behaviour.")]
+        private CollocationSettings _collocationSettings;
+        public CollocationSettings collocationSettings => _collocationSettings;
         
-        [Tooltip("If set to true, Metas collocation discovery sessions will be used to share spatial anchors. Should be used if multiple collocated setups join same network session")]
-        [SerializeField] private bool _useCollocationDiscovery = true;
-
-        [Tooltip("User role responsible for hosting collocation session and creating spatial anchor.")]
-        [SerializeField] [UserRoleSelector] private UserRole _hostRole;
-
-        [Tooltip("User roles that use collocation")] 
-        [SerializeField] [UserRoleSelector] private List<UserRole> _collcoationUserRoles;
-
-        [Tooltip("Time that users with host role wait initially to discover potentially existing collocation sessions before starting their own one.")]
-        [SerializeField] private float _discoveryTime = 10f;
-
-        private bool _sessionDiscovered;
-        private bool _isAdvertising;
-        private Guid _currentSessionUUID;
-
-        [Header("Shared Spatial Anchors Configuration")]
+        [Tooltip("User roles that try to collocate themselves.")]
+        [SerializeField] [UserRoleSelector] private List<UserRole> _collocationRoles;
+        public List<UserRole> CollocationRoles => _collocationRoles;
         
-        [Tooltip("Prefab instantiated for spatial anchor.")]
+        public float DiscoverTime => _collocationSettings.DiscoverTime;
+        
+        public float RetryTime => _collocationSettings.RetryTime;
+        
+        public int MaxRetries => _collocationSettings.MaxRetries;
+        
+        public bool UseLocalAnchor => _collocationSettings.UseLocalAnchor;
+
+        public bool TryLoadLocalAnchor => _collocationSettings.TryLoadLocalAnchor;
+        
+        public bool UseDefaultSessionAnchor => _collocationSettings.UserDefaultSessionAnchor;
+        
+        public Vector3 DefaultSessionAnchorWorldPosition => _collocationSettings.DefaultSessionAnchorWorldPos;
+
+        [Tooltip("Anchor prefab spawned to create anchor.")] 
         [SerializeField] private OVRSpatialAnchor _anchorPrefab;
+        public OVRSpatialAnchor AnchorPrefab => _anchorPrefab;
 
-        [Tooltip("Time to wait before retrying to load and align anchor in case of failure")] 
-        [SerializeField] private float _retryTime = 5f;
+        [Header("UI")] 
         
-        // static events
-        public static UnityEvent<Guid> CollocationSessionStarted = new UnityEvent<Guid>();
-        public static UnityEvent<Guid> CollocationSessionDiscovered = new UnityEvent<Guid>();
+        [Tooltip("Prefab of UI used to display available collocation sessions.")]
+        [SerializeField] private SessionListUi _sessionListUiPrefab;
+        public SessionListUi SessionListUiPrefab => _sessionListUiPrefab;
 
-        [Header("Debug")] 
+        [Tooltip("Prefab of UI used to create a new collocation session.")]
+        [SerializeField] private CreateSessionUi _createSessionUiPrefab;
+        public CreateSessionUi CreateSessionUi => _createSessionUiPrefab;
         
-        [Tooltip("If true, warning and info logs will be printed to console. If false, only error logs will be logged.")]
-        [SerializeField] private bool _verbose = false;
+        [Tooltip("Prefab of UI used to confirm anchor alignment.")]
+        [SerializeField] private ConfirmationUI _confirmationUIPrefab;
+        public ConfirmationUI ConfirmationUIPrefab => _confirmationUIPrefab;
+        
+        [Header("Debugging")] 
+        
+        [Tooltip("If true, Info logs are printed to the console. If false, only Warning and Error logs will be printed.")]
+        [SerializeField] private bool _verbose = true;
 
-        private OVRSpatialAnchor _currentAnchor;
+        #region Local Anchor Properties
+
+        public string AnchorIDsFilePath { get; private set; } // Persistent anchor storage path
 
         #endregion
+        
+        public List<OVRColocationSession.Data> SessionDatas { get; private set; }
 
-        #region MonoBehaviour Callbacks
+        private OVRColocationSession.Data _joinedSessionData; // only set if session client
+        public OVRColocationSession.Data JoinedSessionData => _joinedSessionData;
+        
+        public bool IsSessionHost { get; private set; }
+        
+        public Guid HostedSessionId { get; private set; }
+        
+        public OVRSpatialAnchor CurrentAnchor { get; private set; }
+        
+        public SavedAnchorIDManager SavedAnchorIDManager { get; private set; }
 
-        private void OnDestroy()
-        {
-            if (_isAdvertising)
-                OVRColocationSession.StopAdvertisementAsync();
-        }
+        private bool _isSuccessfullyCollocated = false;
 
+        private bool _isFailed = false;
+
+        public bool CanRestart => _isSuccessfullyCollocated || _isFailed;
+        
+        private CollocationStateHandler _currentState;
+        
         #endregion
 
         #region INetworkUserCallbacks
 
         public void OnLocalNetworkUserSetup()
         {
-            if (_collcoationUserRoles.Contains(NetworkUser.LocalInstance.userRole.Value))
-                InitializeCollocation();
+            if (_collocationRoles.Contains(NetworkUser.LocalInstance.userRole.Value))
+            {
+                SavedAnchorIDManager = new SavedAnchorIDManager();
+                StartCollocation();
+            }
         }
 
         public void OnRemoteNetworkUserSetup(NetworkUser user)
@@ -120,224 +155,127 @@ namespace VRSYS.Meta.Collocation
 
         #region Public Methods
 
-        public void Realign()
+        public void BroadcastState(CollocationStateMessage message)
         {
-            if(_collcoationUserRoles.Contains(NetworkUser.LocalInstance.userRole.Value) && _currentAnchor != null)
-                AlignmentManager.AlignUserToAnchor(_currentAnchor);
+            OnStateChanged.Invoke(message);
+            LogStateMessage(message);
+        }
+
+        public void EnterState<T>() where T : CollocationStateHandler
+        {
+            _currentState = (T)Activator.CreateInstance(typeof(T), args: new object[]{this});
+            _currentState.StartState();
+        }
+
+        public void AddAvailableSession(OVRColocationSession.Data sessionData)
+        {
+            if (SessionDatas == null)
+                SessionDatas = new List<OVRColocationSession.Data>();
+            
+            SessionDatas.Add(sessionData);
+        }
+
+        public void SetJoinedSession(OVRColocationSession.Data data) =>_joinedSessionData = data;
+
+        public void ResetSessionData()
+        {
+            SessionDatas = null;
+            _joinedSessionData = default;
+        }
+
+        public void SetHostInformation(Guid sessionId)
+        {
+            IsSessionHost = true;
+            HostedSessionId = sessionId;
+        }
+
+        public void ResetHostInformation()
+        {
+            IsSessionHost = false;
+            HostedSessionId = default;
+        }
+
+        public void SetCurrentAnchor(OVRSpatialAnchor anchor) => CurrentAnchor = anchor;
+
+        public void SetIsSuccessfullyCollocated(bool isCollocated) => _isSuccessfullyCollocated = isCollocated;
+
+        public void SetIsFailed(bool isFailed) => _isFailed = isFailed;
+
+        public void RestartCollocation()
+        {
+            if (!CanRestart)
+                return;
+            
+            OnRestart.Invoke();
+
+            _currentState = new RestartCollocationStateHandler(this, StartCollocation);
+            _currentState.StartState();
+        }
+
+        public void RestartCollocationWithLocalAnchor(bool tryLoadLocalAnchors)
+        {
+            if(!CanRestart)
+                return;
+
+            OnRestart.Invoke();
+
+            _currentState = new RestartCollocationStateHandler(this,
+                tryLoadLocalAnchors
+                    ? EnterState<LoadingLocalAnchorStateHandler>
+                    : EnterState<CreatingLocalAnchorStateHandler>);
+            _currentState.StartState();
+        }
+
+        public void RestartCollocationWithSessionAnchor()
+        {
+            if(!CanRestart)
+                return;
+            
+            OnRestart.Invoke();
+
+            _currentState = new RestartCollocationStateHandler(this, EnterState<SearchSessionStateHandler>);
+            _currentState.StartState();
         }
 
         #endregion
 
         #region Private Methods
 
-        private async void InitializeCollocation()
+        private void LogStateMessage(CollocationStateMessage message)
         {
-            OVRColocationSession.ColocationSessionDiscovered += OnCollocationSessionDiscovered; // assign callback to session discovered event
-            var discoveryResult = await OVRColocationSession.StartDiscoveryAsync(); // start actual discovery
-
-            if (discoveryResult.Status == OVRColocationSession.Result.Failure)
+            switch (message.Status)
             {
-                ExtendedLogger.LogError(GetType().Name, $"Failed to start collocation session discovery with status: {discoveryResult.Status}", this);
-                return;
-            }
-            
-            if(_verbose)
-                ExtendedLogger.LogInfo(GetType().Name, $"Session discovery started. Status: {discoveryResult.Status}", this);
-            
-            if(NetworkUser.LocalInstance.userRole.Value == _hostRole) // if host role --> search for existing session, start own session if none found in given discoveryTime
-                StartCoroutine(WaitForDiscoveryResult());
-        }
-
-        private void OnCollocationSessionDiscovered(OVRColocationSession.Data session)
-        {
-            OVRColocationSession.StopDiscoveryAsync(); // stop discovering collocation session
-            OVRColocationSession.ColocationSessionDiscovered -= OnCollocationSessionDiscovered; // deregister event
-
-            _currentSessionUUID = session.AdvertisementUuid; // get uuid of discovered session
-            CollocationSessionDiscovered.Invoke(_currentSessionUUID); // invoke event with uuid of discovered session
-
-            _sessionDiscovered = true;
-            
-            if(_verbose)
-                ExtendedLogger.LogInfo(GetType().Name, $"Discovered collocation session with UUID {_currentSessionUUID}", this);
-
-            LoadAndAlignToAnchor();
-        }
-
-        private async void LoadAndAlignToAnchor()
-        {
-            try
-            {
-                if(_verbose)
-                    ExtendedLogger.LogInfo(GetType().Name, $"Loading anchors for group UUID {_currentSessionUUID}", this);
-
-                // Load anchors shared in discovered collocation session
-                var unboundAnchors = new List<OVRSpatialAnchor.UnboundAnchor>();
-                var result = await OVRSpatialAnchor.LoadUnboundSharedAnchorsAsync(_currentSessionUUID, unboundAnchors);
-
-                // retry loading anchors if load process failed or no anchors have been shared so far
-                if (!result.Success || unboundAnchors.Count == 0)
-                {
-                    ExtendedLogger.LogError(GetType().Name, $"Failed to load anchors. Loading success: {result.Success}, Anchor Count: {unboundAnchors.Count}", this);
-                    
+                case CollocationStateStatus.Failed:
+                    ExtendedLogger.LogInfo(GetType().Name, $"[{message.State}] [{message.Status}] {message.Message}",
+                        this);
+                    break;
+                case CollocationStateStatus.Error:
+                    ExtendedLogger.LogError(GetType().Name, $"[{message.State}] [{message.Status}] {message.Message}",
+                        this);
+                    break;
+                default:
                     if(_verbose)
-                        ExtendedLogger.LogInfo(GetType().Name, $"Restarting loading anchors in {_retryTime} seconds.", this);
-                    
-                    Invoke(nameof(LoadAndAlignToAnchor), _retryTime);
-                }
-                
-                // if anchors could be loaded, first anchor in array is considered as alignment anchor --> trigger localization of anchor
-                if (await unboundAnchors[0].LocalizeAsync())
-                {
-                    if(_verbose)
-                        ExtendedLogger.LogInfo(GetType().Name, $"Anchor localized successfully. Anchor UUID: {unboundAnchors[0].Uuid}", this);
-                    
-                    // Instantiate spatial anchor in scne
-                    var spatialAnchor = Instantiate(_anchorPrefab);
-                    // Bind localized anchor to instantiated anchor in scene
-                    unboundAnchors[0].BindTo(spatialAnchor);
-
-                    _currentAnchor = spatialAnchor;
-                    
-                    // Trigger alignment of user to anchor
-                    AlignmentManager.AlignUserToAnchor(_currentAnchor);
-                    return;
-                }
-                
-                ExtendedLogger.LogError(GetType().Name, $"Failed to localize anchor. UUID: {unboundAnchors[0].Uuid}", this);
-            }
-            catch (Exception e)
-            {
-                ExtendedLogger.LogError(GetType().Name, $"Error during anchor loading and alignment: {e.Message}", this);
+                        ExtendedLogger.LogInfo(GetType().Name, $"[{message.State}] [{message.Status}] {message.Message}",
+                            this);
+                    break;
             }
         }
-
-        private async void StartCollocationSession()
+        
+        /// <summary>
+        /// Entry point
+        /// </summary>
+        private void StartCollocation()
         {
-            // start session advertisement
-            byte[] advertisementData = Encoding.UTF8.GetBytes("SharedSpatialAnchorsSession");
-            var startAdvertisementResult = await OVRColocationSession.StartAdvertisementAsync(advertisementData);
-
-            if (startAdvertisementResult.Success)
+            if (UseLocalAnchor)
             {
-                if(_verbose)
-                    ExtendedLogger.LogInfo(GetType().Name, "Successfully started collocation session advertisement.", this);
-
-                _isAdvertising = true; // mark local user as advertising
-                _currentSessionUUID = startAdvertisementResult.Value; // get uuid of started session
-                
-                CollocationSessionStarted.Invoke(_currentSessionUUID);
-                
-                if(_verbose)
-                    ExtendedLogger.LogInfo(GetType().Name, $"Collocation session UUID: {_currentSessionUUID}", this);
-                
-                // Create alignment anchor
-                CreateAndShareAlignmentAnchor();
+                if (TryLoadLocalAnchor)
+                    EnterState<LoadingLocalAnchorStateHandler>();
+                else
+                    EnterState<CreatingLocalAnchorStateHandler>();
             }
-        }
-
-        private async void CreateAndShareAlignmentAnchor()
-        {
-            try
+            else
             {
-                if (_verbose)
-                    ExtendedLogger.LogInfo(GetType().Name, "Creating alignment anchor...", this);
-                
-                // create anchor at world root
-                var anchor = await CreateAnchor(Vector3.zero, Quaternion.identity);
-                
-                if (anchor == null)
-                {
-                    ExtendedLogger.LogError(GetType().Name, "Failed to create alignment anchor.", this);
-                    return;
-                }
-
-                if (!anchor.Localized)
-                {
-                    ExtendedLogger.LogError(GetType().Name,
-                        "Alignment anchor is not localized. Cannot proceed with sharing.", this);
-                    return;
-                }
-
-                // save anchor to meta cloud
-                var saveResult = await anchor.SaveAnchorAsync();
-
-                if (!saveResult.Success)
-                {
-                    ExtendedLogger.LogError(GetType().Name,
-                        $"Failed to save alignment anchor. Error: {saveResult.Status}", this);
-                    return;
-                }
-
-                if (_verbose)
-                    ExtendedLogger.LogInfo(GetType().Name, $"Aligment anchor saved successfully. UUID: {anchor.Uuid}", this);
-
-                // share anchor in collcoation session
-                var shareResult = await OVRSpatialAnchor.ShareAsync(new List<OVRSpatialAnchor> { anchor }, _currentSessionUUID);
-
-                if (!shareResult.Success)
-                {
-                    ExtendedLogger.LogError(GetType().Name, $"Failed to share alignment anchor. Error: {shareResult.Status}", this);
-                    return;
-                }
-
-                _currentAnchor = anchor;
-
-                if (_verbose)
-                    ExtendedLogger.LogInfo(GetType().Name, $"Alignment anchor shared successfully. Group UUID: {_currentSessionUUID}", this);
-            }
-            catch (Exception e)
-            {
-                ExtendedLogger.LogError(GetType().Name, $"Error during anchor creation and sharing: {e.Message}", this);
-            }
-        }
-
-        private async Task<OVRSpatialAnchor> CreateAnchor(Vector3 position, Quaternion rotation)
-        {
-            try
-            {
-                // create anchor at given position and rotation
-                var anchor = Instantiate(_anchorPrefab, position, rotation);
-
-                // wait for anchor to initialize
-                while (!anchor.Created)
-                {
-                    await Task.Yield();
-                }
-
-                if (_verbose)
-                    ExtendedLogger.LogInfo(GetType().Name, $"Anchor created successfully. UUID: {anchor.Uuid}", this);
-
-                return anchor;
-            }
-            catch (Exception e)
-            {
-                ExtendedLogger.LogError(GetType().Name, $"Error during anchor creation: {e.Message}", this);
-                return null;
-            }
-        }
-
-        #endregion
-
-        #region Coroutines
-
-        private IEnumerator WaitForDiscoveryResult()
-        {
-            // wait if session is found
-            yield return new WaitForSeconds(_discoveryTime);
-            
-            // if no session was discovered, start own
-            if (!_sessionDiscovered)
-            {
-                if(_verbose)
-                    ExtendedLogger.LogInfo(GetType().Name, $"No collocation session found in given discovery time of {_discoveryTime} seconds.", this);
-                
-                // stop session discovery and deregister success callback
-                OVRColocationSession.StartDiscoveryAsync();
-                OVRColocationSession.ColocationSessionDiscovered -= OnCollocationSessionDiscovered;
-                
-                // start own session
-                StartCollocationSession();
+                EnterState<SearchSessionStateHandler>();
             }
         }
 

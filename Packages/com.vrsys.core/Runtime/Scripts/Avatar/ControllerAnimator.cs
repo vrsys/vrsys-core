@@ -206,7 +206,7 @@ namespace VRSYS.Core.Avatar
             _thumbstuickTransform.localRotation = Quaternion.Euler(
                 -_controllerValueData.stickValue.y * _stickRotationRange.x, 
                 0f,
-                _controllerValueData.stickValue.x * _stickRotationRange.y);
+                -_controllerValueData.stickValue.x * _stickRotationRange.y);
 
             _triggerTransform.localRotation = Quaternion.Euler(
                 Mathf.Lerp(_triggerXAxisRotationRange.x, _triggerXAxisRotationRange.y, _controllerValueData.triggerValue), 

@@ -1222,7 +1222,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _thumbstuickTransform: {fileID: 7368435747911090211}
-  _stickRotationRange: {x: 30, y: 30}
+  _stickRotationRange: {x: 30, y: -30}
   _stickInput:
     m_InputSourceMode: 2
     m_InputAction:

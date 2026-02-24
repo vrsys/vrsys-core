@@ -37,14 +37,94 @@
 //-----------------------------------------------------------------
 
 using UnityEngine;
+using UnityEngine.XR.Interaction.Toolkit.Inputs;
+using VRSYS.Core.Logging;
 
 namespace VRSYS.Core.Avatar
 {
     public class AvatarHMDAnatomy : AvatarAnatomy
     {
+        #region Properties
+
         public Transform body;
-        public Transform leftHand;
-        public Transform rightHand;
+        public Transform leftHand { get; private set; }
+
+        public Transform rightHand { get; private set; }
+
+        [SerializeField, Tooltip("Transform that receives tracking for left hand. Used when no XRInputModalityManager is attached.")] 
+        private Transform _defaultLeftHand;
+        
+        [SerializeField, Tooltip("Transform that receives tracking for right hand. Used when no XRInputModalityManager is attached.")] 
+        private Transform _defaultRightHand;
+
+        [SerializeField, Tooltip("Transform that receives tracking for left controller. Used when XRInputModalityManager is attached and controllers are active.")] 
+        private Transform _leftController;
+        
+        [SerializeField, Tooltip("Transform that receives tracking for right controller. Used when XRInputModalityManager is attached and controllers are active.")] 
+        private Transform _rightController;
+
+        [SerializeField, Tooltip("Transform that receives tracking for left tracked hand. Used when XRInputModalityManager is attached and tracked hands are active.")] 
+        private Transform _leftTrackedHand;
+        
+        [SerializeField, Tooltip("Transform that receives tracking for right tracked hand. Used when XRInputModalityManager is attached and tracked hands are active.")] 
+        private Transform _rightTrackedHand;
+
+        private XRInputModalityManager _modalityManager;
+
+        #endregion
+
+        #region MonoBehaviour Methods
+
+        private void Awake()
+        {
+            _modalityManager = GetComponent<XRInputModalityManager>();
+
+            if (_modalityManager == null)
+            {
+                ExtendedLogger.LogWarning(GetType().Name, "No XRInputModalityManager attached. LeftHand and rightHand fallback to assigned default transforms.");
+
+                leftHand = _defaultLeftHand;
+                rightHand = _defaultRightHand;
+                
+                return;
+            }
+            
+            _modalityManager.motionControllerModeStarted.AddListener(MotionControllersActivated);
+            _modalityManager.motionControllerModeEnded.AddListener(MotionControllersDeactivated);
+            
+            _modalityManager.trackedHandModeStarted.AddListener(TrackedHandsActivated);
+            _modalityManager.trackedHandModeEnded.AddListener(TrackedHandsDeactivated);
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        private void MotionControllersActivated()
+        {
+            leftHand = _leftController;
+            rightHand = _rightController;
+        }
+
+        private void MotionControllersDeactivated()
+        {
+            leftHand = null;
+            rightHand = null;
+        }
+
+        private void TrackedHandsActivated()
+        {
+            leftHand = _leftTrackedHand;
+            rightHand = _rightTrackedHand;
+        }
+
+        private void TrackedHandsDeactivated()
+        {
+            leftHand = null;
+            rightHand = null;
+        }
+
+        #endregion
     }
 }
 

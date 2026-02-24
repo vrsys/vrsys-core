@@ -579,6 +579,24 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": true
+                },
+                {
+                    "name": "Pinch-Grab Position",
+                    "type": "Value",
+                    "id": "5b912002-1cea-41e0-a4f3-c04b46e90e77",
+                    "expectedControlType": "Vector3",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "Pinch-Grab Rotation",
+                    "type": "Value",
+                    "id": "f4cc6f2e-7d2a-45c7-a356-49476a04239c",
+                    "expectedControlType": "Quaternion",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
                 }
             ],
             "bindings": [
@@ -724,6 +742,72 @@
                     "action": "Hand Rotation",
                     "isComposite": false,
                     "isPartOfComposite": false
+                },
+                {
+                    "name": "Vector 3 Fallback",
+                    "id": "c5508ff0-cb56-4bdc-bcb3-b066209bea6d",
+                    "path": "Vector3Fallback",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Pinch-Grab Position",
+                    "isComposite": true,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "first",
+                    "id": "1ef39537-0268-478c-9293-58c32e43f0bb",
+                    "path": "<XRHandDevice>{RightHand}/pinchPosition",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Pinch-Grab Position",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "second",
+                    "id": "b0941943-79aa-446d-90b5-ac84ab505f42",
+                    "path": "<XRHandDevice>{RightHand}/gripPosition",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Pinch-Grab Position",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "Quaternion Fallback",
+                    "id": "522f9d53-4dc2-406a-849e-b75ca9257f03",
+                    "path": "QuaternionFallback",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Pinch-Grab Rotation",
+                    "isComposite": true,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "first",
+                    "id": "f3d90a53-9f35-46ca-9e4c-7ad81858c1dc",
+                    "path": "<XRHandDevice>{RightHand}/pinchRotation",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Pinch-Grab Rotation",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "second",
+                    "id": "ec8d35f5-b8ad-458b-bd08-b8074ebb6d34",
+                    "path": "<XRHandDevice>{RightHand}/gripRotation",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Pinch-Grab Rotation",
+                    "isComposite": false,
+                    "isPartOfComposite": true
                 }
             ]
         },
@@ -825,6 +909,24 @@
                     "name": "Hand Rotation",
                     "type": "Value",
                     "id": "77dd4661-b9d1-4b70-8a55-9e369de181a7",
+                    "expectedControlType": "Quaternion",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "Pinch-Grab Position",
+                    "type": "Value",
+                    "id": "5421968e-395d-4056-a2de-4885279f0b63",
+                    "expectedControlType": "Vector3",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "Pinch-Grab Rotation",
+                    "type": "Value",
+                    "id": "ddddfc7d-3118-4ec4-bf7b-32dd8f428f39",
                     "expectedControlType": "Quaternion",
                     "processors": "",
                     "interactions": "",
@@ -974,6 +1076,72 @@
                     "action": "Pointer Position",
                     "isComposite": false,
                     "isPartOfComposite": false
+                },
+                {
+                    "name": "Vector 3 Fallback",
+                    "id": "d432e1ef-ed07-4832-acd5-d59b44daec21",
+                    "path": "Vector3Fallback",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Pinch-Grab Position",
+                    "isComposite": true,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "first",
+                    "id": "1743bcf0-af42-4c54-8cda-ce46bbe2c680",
+                    "path": "<XRHandDevice>{LeftHand}/pinchPosition",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Pinch-Grab Position",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "second",
+                    "id": "49db1af7-5a49-483c-9c47-50feb2790a7a",
+                    "path": "<XRHandDevice>{LeftHand}/gripPosition",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Pinch-Grab Position",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "Quaternion Fallback",
+                    "id": "0bf6f2c8-e1de-4046-99ae-096110fd559b",
+                    "path": "QuaternionFallback",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Pinch-Grab Rotation",
+                    "isComposite": true,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "first",
+                    "id": "73af57b4-fa99-4d99-ab2e-f9238cc5767d",
+                    "path": "<XRHandDevice>{LeftHand}/pinchRotation",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Pinch-Grab Rotation",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "second",
+                    "id": "cbb55888-9ad2-4bbe-8a38-7221f7d56a80",
+                    "path": "<XRHandDevice>{LeftHand}/gripRotation",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Pinch-Grab Rotation",
+                    "isComposite": false,
+                    "isPartOfComposite": true
                 }
             ]
         }

@@ -63,6 +63,9 @@ namespace VRSYS.Meta.Collocation
         
         #region Properties
 
+        [SerializeField, Tooltip("If true, values get stored in PlayerPrefs when changed and loaded from PlayerPrefs when accessed.")]
+        private bool _usePlayerPrefs = false;
+
         [SerializeField, Tooltip("Time in seconds defining how long existing collocation sessions are searched.")] 
         private float _discoveryTime = 10f;
         public float DiscoverTime
@@ -71,7 +74,9 @@ namespace VRSYS.Meta.Collocation
             set
             {
                 _discoveryTime = value;
-                PlayerPrefs.SetFloat(DISCOVERY_TIME_KEY, _discoveryTime);
+                
+                if(_usePlayerPrefs)
+                    PlayerPrefs.SetFloat(DISCOVERY_TIME_KEY, _discoveryTime);
             }
         }
 
@@ -83,7 +88,9 @@ namespace VRSYS.Meta.Collocation
             set
             {
                 _retryTime = value;
-                PlayerPrefs.SetFloat(RETRY_TIME_KEY, _retryTime);
+                
+                if(_usePlayerPrefs)
+                    PlayerPrefs.SetFloat(RETRY_TIME_KEY, _retryTime);
             }
         }
 
@@ -95,7 +102,9 @@ namespace VRSYS.Meta.Collocation
             set
             {
                 _maxRetries = value;
-                PlayerPrefs.SetInt(MAX_RETRIES_KEY, _maxRetries);
+                
+                if(_usePlayerPrefs)
+                    PlayerPrefs.SetInt(MAX_RETRIES_KEY, _maxRetries);
             }
         }
 
@@ -107,7 +116,9 @@ namespace VRSYS.Meta.Collocation
             set
             {
                 _useLocalAnchor = value;
-                PlayerPrefs.SetString(USE_LOCAL_ANCHOR_KEY, BoolToString(_useLocalAnchor));
+                
+                if(_usePlayerPrefs)
+                    PlayerPrefs.SetString(USE_LOCAL_ANCHOR_KEY, BoolToString(_useLocalAnchor));
             }
         }
 
@@ -119,7 +130,9 @@ namespace VRSYS.Meta.Collocation
             set
             {
                 _tryLoadLocalAnchor = value;
-                PlayerPrefs.SetString(TRY_LOAD_LOCAL_ANCHOR_KEY, BoolToString(_tryLoadLocalAnchor));
+                
+                if(_usePlayerPrefs)
+                    PlayerPrefs.SetString(TRY_LOAD_LOCAL_ANCHOR_KEY, BoolToString(_tryLoadLocalAnchor));
             }
         }
 
@@ -131,7 +144,9 @@ namespace VRSYS.Meta.Collocation
             set
             {
                 _useDefaultSessionAnchor = value;
-                PlayerPrefs.SetString(USE_DEFAULT_SESSION_ANCHOR_KEY, BoolToString(_useDefaultSessionAnchor));
+                
+                if(_usePlayerPrefs)
+                    PlayerPrefs.SetString(USE_DEFAULT_SESSION_ANCHOR_KEY, BoolToString(_useDefaultSessionAnchor));
             }
         }
         
@@ -148,11 +163,13 @@ namespace VRSYS.Meta.Collocation
             set
             {
                 _defaultSessionAnchorWorldPos = value;
-                SetVector3Value(
-                    DEFAULT_SESSION_ANCHOR_WORLD_POS_X, 
-                    DEFAULT_SESSION_ANCHOR_WORLD_POS_Y,
-                    DEFAULT_SESSION_ANCHOR_WORLD_POS_Z, 
-                    _defaultSessionAnchorWorldPos);
+                
+                if(_usePlayerPrefs)
+                    SetVector3Value(
+                        DEFAULT_SESSION_ANCHOR_WORLD_POS_X, 
+                        DEFAULT_SESSION_ANCHOR_WORLD_POS_Y,
+                        DEFAULT_SESSION_ANCHOR_WORLD_POS_Z, 
+                        _defaultSessionAnchorWorldPos);
             }
         }
 
@@ -162,6 +179,9 @@ namespace VRSYS.Meta.Collocation
 
         private float GetFloatValue(string playerPrefKey, float currentValue)
         {
+            if (!_usePlayerPrefs)
+                return currentValue;
+            
             float value = PlayerPrefs.GetFloat(playerPrefKey);
 
             if (value == 0.0f)
@@ -175,6 +195,9 @@ namespace VRSYS.Meta.Collocation
 
         private int GetIntValue(string playerPrefKey, int currentValue)
         {
+            if (!_usePlayerPrefs)
+                return currentValue;
+            
             int value = PlayerPrefs.GetInt(playerPrefKey);
 
             if (value == 0)
@@ -188,6 +211,9 @@ namespace VRSYS.Meta.Collocation
 
         private string GetStringValue(string playerPrefKey, string currentValue)
         {
+            if (!_usePlayerPrefs)
+                return currentValue;
+            
             string value = PlayerPrefs.GetString(playerPrefKey);
 
             if (string.IsNullOrEmpty(value))
@@ -201,6 +227,9 @@ namespace VRSYS.Meta.Collocation
 
         private bool GetBoolValue(string playerPrefKey, bool currentValue)
         {
+            if (!_usePlayerPrefs)
+                return currentValue;
+            
             bool value;
             
             string s = GetStringValue(playerPrefKey, "");
@@ -224,6 +253,9 @@ namespace VRSYS.Meta.Collocation
 
         private Vector3 GetVector3Value(string xKey, string yKey, string zKey, Vector3 currentValue)
         {
+            if (!_usePlayerPrefs)
+                return currentValue;
+            
             Vector3 value = new Vector3(
                 PlayerPrefs.GetFloat(xKey),
                 PlayerPrefs.GetFloat(yKey),

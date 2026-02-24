@@ -1,8 +1,12 @@
 fileFormatVersion: 2
+<<<<<<<< HEAD:Assets/VRSYS/Test-Assets/Scriptable Object Instances/Test Collocation Settings.asset.meta
+guid: b7c66834fb9644a41bcb1de4f70f7791
+========
 guid: 3f1527385cef24f9ab581b9e266924ba
+>>>>>>>> main:Assets/Samples/XR Hands/1.7.3/HandVisualizer/Materials/AxisMesh.asset.meta
 NativeFormatImporter:
   externalObjects: {}
-  mainObjectFileID: 0
+  mainObjectFileID: 11400000
   userData: 
   assetBundleName: 
   assetBundleVariant: 

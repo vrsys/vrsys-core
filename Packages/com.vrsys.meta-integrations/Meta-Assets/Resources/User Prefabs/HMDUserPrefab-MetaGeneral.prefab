@@ -3468,7 +3468,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
-  verbose: 0
   localBehaviours:
   - {fileID: 2134315573362347306}
   - {fileID: 1496439500430404069}
@@ -3480,6 +3479,8 @@ MonoBehaviour:
   - {fileID: 7757356723528134816}
   - {fileID: 3529796471382873052}
   - {fileID: 7757224813935989230}
+  disconnectNow: 0
+  verbose: 0
   userColor:
     m_InternalValue: {r: 0, g: 0, b: 0, a: 0}
   userName:
@@ -3517,12 +3518,11 @@ MonoBehaviour:
         byte0027: 0
         byte0028: 0
         byte0029: 0
-  userRole: {fileID: 0}
-  userID: 0
-  onLocalUserSetup:
-    m_PersistentCalls:
-      m_Calls: []
-  disconnectNow: 0
+  userId:
+    m_InternalValue: 0
+  userRole:
+    m_InternalValue:
+      Name: 
 --- !u!114 &9029850245739658440
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3535,7 +3535,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3979921fb69fad844930aabddd06d63c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  userNameLabel: {fileID: 7612263404875043853}
   colorableParts:
   - {fileID: 3458282584458215857}
   head: {fileID: 6119491212947893417}

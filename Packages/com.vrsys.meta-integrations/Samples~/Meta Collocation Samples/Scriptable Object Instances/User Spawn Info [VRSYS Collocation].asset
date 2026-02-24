@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7e246273c0618914f81db5889cdd9f45, type: 3}
-  m_Name: VRSYSMetaCollocation-NetworkUserSpawnInfo
+  m_Name: 'User Spawn Info [VRSYS Collocation]'
   m_EditorClassIdentifier: 
   userRole:
     Name: HMD
   userName: 
-  userColor: {r: 0, g: 0, b: 0, a: 0}
+  userColor: {r: 0, g: 0.22674453, b: 0.4811321, a: 1}

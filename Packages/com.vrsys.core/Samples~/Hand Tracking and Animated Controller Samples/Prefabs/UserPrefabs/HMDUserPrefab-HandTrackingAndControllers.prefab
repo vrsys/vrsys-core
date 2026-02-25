@@ -346,6 +346,30 @@ PrefabInstance:
       propertyPath: rightHand
       value: 
       objectReference: {fileID: 2688783060895351749}
+    - target: {fileID: 9029850245739658440, guid: 809cce775431de842bae2eca7c27e046, type: 3}
+      propertyPath: _leftController
+      value: 
+      objectReference: {fileID: 2256712162602446659}
+    - target: {fileID: 9029850245739658440, guid: 809cce775431de842bae2eca7c27e046, type: 3}
+      propertyPath: _defaultLeftHand
+      value: 
+      objectReference: {fileID: 2256712162602446659}
+    - target: {fileID: 9029850245739658440, guid: 809cce775431de842bae2eca7c27e046, type: 3}
+      propertyPath: _leftTrackedHand
+      value: 
+      objectReference: {fileID: 6733861587150427223}
+    - target: {fileID: 9029850245739658440, guid: 809cce775431de842bae2eca7c27e046, type: 3}
+      propertyPath: _rightController
+      value: 
+      objectReference: {fileID: 2688783060895351749}
+    - target: {fileID: 9029850245739658440, guid: 809cce775431de842bae2eca7c27e046, type: 3}
+      propertyPath: _defaultRightHand
+      value: 
+      objectReference: {fileID: 2688783060895351749}
+    - target: {fileID: 9029850245739658440, guid: 809cce775431de842bae2eca7c27e046, type: 3}
+      propertyPath: _rightTrackedHand
+      value: 
+      objectReference: {fileID: 8801496809734480077}
     m_RemovedComponents: []
     m_RemovedGameObjects:
     - {fileID: 4284957711837968130, guid: 809cce775431de842bae2eca7c27e046, type: 3}
@@ -721,6 +745,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4253f32900bcc4d499d675566142ded0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!4 &6733861587150427223 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3774078857044054742, guid: 71acd7268325b9644bf65ede3b395e2f, type: 3}
+  m_PrefabInstance: {fileID: 7571469988713956993}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &9026248916292806716 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1463931863666044605, guid: 71acd7268325b9644bf65ede3b395e2f, type: 3}
@@ -881,3 +910,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c2fadf230d1919748a9aa21d40f74619, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!4 &8801496809734480077 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1249967118551580600, guid: a9493a11ac970134bab46f3fbafed3bd, type: 3}
+  m_PrefabInstance: {fileID: 7745616106489536373}
+  m_PrefabAsset: {fileID: 0}

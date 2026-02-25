@@ -3224,8 +3224,12 @@ MonoBehaviour:
   - {fileID: 8653293852527732979}
   head: {fileID: 7216047633375872280}
   body: {fileID: 2087305518309097475}
-  leftHand: {fileID: 5601115267561759158}
-  rightHand: {fileID: 2679059498078427805}
+  _defaultLeftHand: {fileID: 5601115267561759158}
+  _defaultRightHand: {fileID: 2679059498078427805}
+  _leftController: {fileID: 0}
+  _rightController: {fileID: 0}
+  _leftTrackedHand: {fileID: 0}
+  _rightTrackedHand: {fileID: 0}
 --- !u!114 &3359338612747561171
 MonoBehaviour:
   m_ObjectHideFlags: 0

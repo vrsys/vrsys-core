@@ -60,7 +60,7 @@ namespace VRSYS.Core.Avatar
 
         #region Network Properties
 
-        private NetworkVariable<bool> _isActive = new(true, NetworkVariableReadPermission.Everyone,
+        private NetworkVariable<bool> _isActive = new(false, NetworkVariableReadPermission.Everyone,
             NetworkVariableWritePermission.Owner);
 
         private NetworkVariable<ControllerAnimator.ControllerValueData> _controllerValueData =

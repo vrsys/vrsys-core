@@ -178,7 +178,7 @@ namespace VRSYS.Core.Navigation
                         direction = navigationHand == HandType.Left ? leftHand.forward : rightHand.forward;
                         break;
                 }
-
+                
                 if (!verticalSteering)
                     direction.y = 0f;
                 
@@ -268,7 +268,7 @@ namespace VRSYS.Core.Navigation
             Vector2 input = navigationHand == HandType.Left
                 ? leftThumbstick.action.ReadValue<Vector2>()
                 : rightThumbstick.action.ReadValue<Vector2>();
-
+            
             Vector3 direction = GetSteeringDirection(input);
 
             steeringTarget.position += direction * (steeringSpeed * input.magnitude * Time.deltaTime);

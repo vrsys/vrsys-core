@@ -98,7 +98,7 @@ namespace VRSYS.Core.Avatar
             if(_labelText != null)
                 _labelText.text = userName;
             
-            if(_iconText != null)
+            if(_iconText != null && !string.IsNullOrEmpty(userName))
                 _iconText.text = userName[0].ToString();
         }
 

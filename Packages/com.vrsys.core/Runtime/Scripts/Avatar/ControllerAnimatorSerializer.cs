@@ -36,6 +36,7 @@
 //   Date:           2026
 //-----------------------------------------------------------------
 
+using System.Collections;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit.Inputs;
@@ -60,7 +61,7 @@ namespace VRSYS.Core.Avatar
 
         #region Network Properties
 
-        private NetworkVariable<bool> _isActive = new(false, NetworkVariableReadPermission.Everyone,
+        private NetworkVariable<bool> _isActive = new(true, NetworkVariableReadPermission.Everyone,
             NetworkVariableWritePermission.Owner);
 
         private NetworkVariable<ControllerAnimator.ControllerValueData> _controllerValueData =
@@ -90,7 +91,10 @@ namespace VRSYS.Core.Avatar
                 {
                     _modalityManager.motionControllerModeStarted.AddListener(OnControllerModeStarted);
                     _modalityManager.motionControllerModeEnded.AddListener(OnControllerModeEnded);
+                    _modalityManager.trackedHandModeStarted.AddListener(OnTrackedHandModeStarted);
                 }
+
+                StartCoroutine(ActiveStateSanityCheck());
             }
             else
             {
@@ -140,7 +144,24 @@ namespace VRSYS.Core.Avatar
 
         private void OnControllerModeEnded() => _isActive.Value = false;
 
+        private void OnTrackedHandModeStarted() => _isActive.Value = false;
+
         private void OnisActiveChanged(bool previousValue, bool newValue) => UpdateControllerVisualsActive();
+
+        #endregion
+
+        #region Coroutines
+
+        private IEnumerator ActiveStateSanityCheck()
+        {
+            while (true)
+            {
+                if (_isActive.Value != _controller.activeSelf)
+                    _isActive.Value = _controller.activeSelf;
+
+                yield return new WaitForSeconds(1f);
+            }
+        }
 
         #endregion
     }

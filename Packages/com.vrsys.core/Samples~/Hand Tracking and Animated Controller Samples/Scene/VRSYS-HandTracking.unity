@@ -1816,6 +1816,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: VRSYS-ExtendedLoggerToServer
       objectReference: {fileID: 0}
+    - target: {fileID: 6968346195853434940, guid: c2931169575e1aa47a0d8d1c5fa91c8d, type: 3}
+      propertyPath: _printAllLogs
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6968346195853434940, guid: c2931169575e1aa47a0d8d1c5fa91c8d, type: 3}
+      propertyPath: _printUnityLogs
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

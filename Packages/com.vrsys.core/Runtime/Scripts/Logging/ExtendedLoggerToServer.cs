@@ -38,6 +38,7 @@
 
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.Serialization;
 using VRSYS.Core.Networking;
 
 namespace VRSYS.Core.Logging
@@ -47,7 +48,7 @@ namespace VRSYS.Core.Logging
         #region Member Variables
 
         [SerializeField] private LogLevel _logLevel = LogLevel.Info;
-        [SerializeField] private bool _printAllLogs = false;
+        [SerializeField] private bool _printUnityLogs = false;
 
         private string _logTag
         {
@@ -59,6 +60,8 @@ namespace VRSYS.Core.Logging
                 return $"<color=white>[<color=purple>Client {NetworkManager.LocalClientId}</color>]</color>";
             }
         }
+
+        private bool _canLog => !NetworkManager.Singleton.ShutdownInProgress && NetworkManager.IsConnectedClient;
         
         #endregion
 
@@ -73,7 +76,7 @@ namespace VRSYS.Core.Logging
             ExtendedLogger.OnWarningLog.AddListener(LogWarning);
             ExtendedLogger.OnErrorLog.AddListener(LogError);
 
-            if(_printAllLogs)
+            if(_printUnityLogs)
                 Application.logMessageReceived += OnUnityLogReceived;
         }
 
@@ -95,6 +98,9 @@ namespace VRSYS.Core.Logging
 
         private void LogInfo(string message)
         {
+            if(!_canLog)
+                return;
+            
             if (_logLevel < LogLevel.Warning)
             {
                 string log = _logTag + message;
@@ -106,6 +112,9 @@ namespace VRSYS.Core.Logging
 
         private void LogWarning(string message)
         {
+            if(!_canLog)
+                return;
+            
             if (_logLevel < LogLevel.Error)
             {
                 string log = _logTag + message;
@@ -117,6 +126,9 @@ namespace VRSYS.Core.Logging
 
         private void LogError(string message)
         {
+            if(!_canLog)
+                return;
+            
             if (_logLevel < LogLevel.None)
             {
                 string log = _logTag + message;

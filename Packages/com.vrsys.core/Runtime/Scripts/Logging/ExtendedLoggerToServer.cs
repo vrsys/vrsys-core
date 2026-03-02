@@ -38,6 +38,7 @@
 
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.Serialization;
 using VRSYS.Core.Networking;
 
 namespace VRSYS.Core.Logging
@@ -46,7 +47,8 @@ namespace VRSYS.Core.Logging
     {
         #region Member Variables
 
-        [SerializeField] private LogLevel _logLevel;
+        [SerializeField] private LogLevel _logLevel = LogLevel.Info;
+        [SerializeField] private bool _printUnityLogs = false;
 
         private string _logTag
         {
@@ -58,6 +60,8 @@ namespace VRSYS.Core.Logging
                 return $"<color=white>[<color=purple>Client {NetworkManager.LocalClientId}</color>]</color>";
             }
         }
+
+        private bool _canLog => NetworkManager.Singleton != null && !NetworkManager.Singleton.ShutdownInProgress && NetworkManager.IsConnectedClient;
         
         #endregion
 
@@ -71,6 +75,9 @@ namespace VRSYS.Core.Logging
             ExtendedLogger.OnInfoLog.AddListener(LogInfo);
             ExtendedLogger.OnWarningLog.AddListener(LogWarning);
             ExtendedLogger.OnErrorLog.AddListener(LogError);
+
+            if(_printUnityLogs)
+                Application.logMessageReceived += OnUnityLogReceived;
         }
 
         public override void OnNetworkDespawn()
@@ -87,34 +94,71 @@ namespace VRSYS.Core.Logging
 
         #region Private Methods
 
-        private void LogInfo(ExtendedLoggerLogInformation logInfo)
+        private void LogInfo(ExtendedLoggerLogInformation logInfo) => LogInfo(logInfo.FormattedMessage);
+
+        private void LogInfo(string message)
         {
+            if(!_canLog)
+                return;
+            
             if (_logLevel < LogLevel.Warning)
             {
-                string log = _logTag + logInfo.FormattedMessage;
+                string log = _logTag + message;
                 LogInfoRpc(log);
             }
         }
 
-        private void LogWarning(ExtendedLoggerLogInformation logInfo)
+        private void LogWarning(ExtendedLoggerLogInformation logInfo) => LogWarning(logInfo.FormattedMessage);
+
+        private void LogWarning(string message)
         {
+            if(!_canLog)
+                return;
+            
             if (_logLevel < LogLevel.Error)
             {
-                string log = _logTag + logInfo.FormattedMessage;
+                string log = _logTag + message;
                 LogWarningRpc(log);
             }
         }
 
-        private void LogError(ExtendedLoggerLogInformation logInfo)
+        private void LogError(ExtendedLoggerLogInformation logInfo) => LogError(logInfo.FormattedMessage);
+
+        private void LogError(string message)
         {
+            if(!_canLog)
+                return;
+            
             if (_logLevel < LogLevel.None)
             {
-                string log = _logTag + logInfo.FormattedMessage;
+                string log = _logTag + message;
                 
                 LogErrorRpc(log);
             }
         }
-
+        
+        private void OnUnityLogReceived(string condition, string stacktrace, LogType type)
+        {
+            switch (type)
+            {
+                case LogType.Log:
+                    LogInfo(condition);
+                    break;
+                case LogType.Warning:
+                    LogWarning(condition);
+                    break;
+                case LogType.Error:
+                    LogError(condition + "\n" + stacktrace);
+                    break;
+                case LogType.Exception:
+                    LogError(condition + "\n" + stacktrace);
+                    break;
+                default:
+                    LogInfo(condition + "\n" + stacktrace);
+                    break;
+            }
+        }
+        
         #endregion
 
         #region RPCs

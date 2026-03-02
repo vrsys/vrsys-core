@@ -108,8 +108,8 @@ namespace VRSYS.Core.Avatar
 
         private void MotionControllersDeactivated()
         {
-            leftHand = null;
-            rightHand = null;
+            leftHand = _defaultLeftHand;
+            rightHand = _defaultRightHand;
         }
 
         private void TrackedHandsActivated()
@@ -120,8 +120,8 @@ namespace VRSYS.Core.Avatar
 
         private void TrackedHandsDeactivated()
         {
-            leftHand = null;
-            rightHand = null;
+            leftHand = _defaultLeftHand;
+            rightHand = _defaultRightHand;
         }
 
         #endregion

@@ -46,8 +46,8 @@ namespace VRSYS.Core.Logging
     {
         #region Member Variables
 
-        [SerializeField] private LogLevel _logLevel;
-        [SerializeField] private bool _printAllLogs;
+        [SerializeField] private LogLevel _logLevel = LogLevel.Info;
+        [SerializeField] private bool _printAllLogs = false;
 
         private string _logTag
         {

@@ -61,7 +61,7 @@ namespace VRSYS.Core.Logging
             }
         }
 
-        private bool _canLog => !NetworkManager.Singleton.ShutdownInProgress && NetworkManager.IsConnectedClient;
+        private bool _canLog => NetworkManager.Singleton != null && !NetworkManager.Singleton.ShutdownInProgress && NetworkManager.IsConnectedClient;
         
         #endregion
 

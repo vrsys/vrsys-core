@@ -37,6 +37,7 @@
 //-----------------------------------------------------------------
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
@@ -175,6 +176,8 @@ namespace VRSYS.Core.Avatar
                 }
 
                 InitializeNetworkProperties();
+
+                StartCoroutine(ActiveStateSanityCheck());
             }
             else
             {
@@ -476,6 +479,21 @@ namespace VRSYS.Core.Avatar
         private void OnControllerModeStarted() => _isActive.Value = false;
 
         private void OnIsActiveChanged(bool previousValue, bool newValue) => UpdateHandVisualsActive();
+
+        #endregion
+
+        #region Coroutines
+
+        private IEnumerator ActiveStateSanityCheck()
+        {
+            while (true)
+            {
+                if (_isActive.Value != _hand.activeSelf)
+                    _isActive.Value = _hand.activeSelf;
+
+                yield return new WaitForSeconds(1f);
+            }
+        }
 
         #endregion
     }

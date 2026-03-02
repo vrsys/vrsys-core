@@ -36,6 +36,7 @@
 //   Date:           2026
 //-----------------------------------------------------------------
 
+using System.Collections;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit.Inputs;
@@ -92,6 +93,8 @@ namespace VRSYS.Core.Avatar
                     _modalityManager.motionControllerModeEnded.AddListener(OnControllerModeEnded);
                     _modalityManager.trackedHandModeStarted.AddListener(OnTrackedHandModeStarted);
                 }
+
+                StartCoroutine(ActiveStateSanityCheck());
             }
             else
             {
@@ -144,6 +147,21 @@ namespace VRSYS.Core.Avatar
         private void OnTrackedHandModeStarted() => _isActive.Value = false;
 
         private void OnisActiveChanged(bool previousValue, bool newValue) => UpdateControllerVisualsActive();
+
+        #endregion
+
+        #region Coroutines
+
+        private IEnumerator ActiveStateSanityCheck()
+        {
+            while (true)
+            {
+                if (_isActive.Value != _controller.activeSelf)
+                    _isActive.Value = _controller.activeSelf;
+
+                yield return new WaitForSeconds(1f);
+            }
+        }
 
         #endregion
     }

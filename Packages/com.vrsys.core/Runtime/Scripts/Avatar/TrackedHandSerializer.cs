@@ -141,7 +141,7 @@ namespace VRSYS.Core.Avatar
 
         private NetworkVariable<bool> _initialized = new(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
 
-        private NetworkVariable<bool> _isActive = new(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+        private NetworkVariable<bool> _isActive = new(true, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
 
         private NetworkVariable<Vector3> _rootPosition = new(Vector3.zero, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
 
@@ -165,15 +165,16 @@ namespace VRSYS.Core.Avatar
         {
             if (IsOwner)
             {
-                InitializeNetworkProperties();
-
                 _modalityManager = GetComponentInParent<XRInputModalityManager>();
 
                 if (_modalityManager != null)
                 {
                     _modalityManager.trackedHandModeStarted.AddListener(OnTrackedHandModeStarted);
                     _modalityManager.trackedHandModeEnded.AddListener(OnTrackedHandModeEnded);
+                    _modalityManager.motionControllerModeStarted.AddListener(OnControllerModeStarted);
                 }
+
+                InitializeNetworkProperties();
             }
             else
             {
@@ -471,6 +472,8 @@ namespace VRSYS.Core.Avatar
         private void OnTrackedHandModeStarted() => _isActive.Value = true;
 
         private void OnTrackedHandModeEnded() => _isActive.Value = false;
+
+        private void OnControllerModeStarted() => _isActive.Value = false;
 
         private void OnIsActiveChanged(bool previousValue, bool newValue) => UpdateHandVisualsActive();
 

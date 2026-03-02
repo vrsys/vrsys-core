@@ -60,7 +60,7 @@ namespace VRSYS.Core.Avatar
 
         #region Network Properties
 
-        private NetworkVariable<bool> _isActive = new(false, NetworkVariableReadPermission.Everyone,
+        private NetworkVariable<bool> _isActive = new(true, NetworkVariableReadPermission.Everyone,
             NetworkVariableWritePermission.Owner);
 
         private NetworkVariable<ControllerAnimator.ControllerValueData> _controllerValueData =
@@ -90,6 +90,7 @@ namespace VRSYS.Core.Avatar
                 {
                     _modalityManager.motionControllerModeStarted.AddListener(OnControllerModeStarted);
                     _modalityManager.motionControllerModeEnded.AddListener(OnControllerModeEnded);
+                    _modalityManager.trackedHandModeStarted.AddListener(OnTrackedHandModeStarted);
                 }
             }
             else
@@ -139,6 +140,8 @@ namespace VRSYS.Core.Avatar
         private void OnControllerModeStarted() => _isActive.Value = true;
 
         private void OnControllerModeEnded() => _isActive.Value = false;
+
+        private void OnTrackedHandModeStarted() => _isActive.Value = false;
 
         private void OnisActiveChanged(bool previousValue, bool newValue) => UpdateControllerVisualsActive();
 

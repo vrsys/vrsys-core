@@ -138,9 +138,10 @@ namespace VRSYS.Core.Navigation
         private bool initialized = false;
         
         // Variables related to determining steering/teleportation direction
-        private Transform head;
-        private Transform leftHand;
-        private Transform rightHand;
+        private AvatarHMDAnatomy _anatomy;
+        private Transform head => _anatomy.head;
+        private Transform leftHand => _anatomy.leftHand;
+        private Transform rightHand => _anatomy.rightHand;
 
         private Transform forwardIndicator
         {
@@ -238,9 +239,9 @@ namespace VRSYS.Core.Navigation
 
         private void Initialize()
         {
-            AvatarHMDAnatomy anatomy = GetComponent<AvatarHMDAnatomy>();
+            _anatomy = GetComponent<AvatarHMDAnatomy>();
             
-            if (anatomy == null)
+            if (_anatomy == null)
             {
                 ExtendedLogger.LogError(GetType().Name, "This component has to be attached to the root of a HMD user with a NetworkUser and AvatarHMDAnatomy component.", this);
                 return;
@@ -254,10 +255,6 @@ namespace VRSYS.Core.Navigation
 
             if (rotationReference == null)
                 rotationReference = transform;
-            
-            head = anatomy.head;
-            leftHand = anatomy.leftHand;
-            rightHand = anatomy.rightHand;
 
             initialized = true;
         }

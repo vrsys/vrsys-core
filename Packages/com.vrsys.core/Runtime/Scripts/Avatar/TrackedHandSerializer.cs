@@ -41,6 +41,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.XR.Hands;
 using UnityEngine.XR.Interaction.Toolkit.Inputs;
 using VRSYS.Core.Logging;
@@ -87,7 +88,7 @@ namespace VRSYS.Core.Avatar
         {
             public FingerJoints[] fingerJoints;
         }
-
+        
         #endregion
 
         #region Properties
@@ -136,6 +137,9 @@ namespace VRSYS.Core.Avatar
         [SerializeField, Tooltip("Components that get destroyed on remote users.")]
         private List<Behaviour> _localBehaviours;
 
+        [SerializeField, Tooltip("The inputAction that provides the isTracked state of the hand.")]
+        private InputActionReference _isTrackedAction;
+        
         #endregion
 
         #region Networked Properties
@@ -143,6 +147,8 @@ namespace VRSYS.Core.Avatar
         private NetworkVariable<bool> _initialized = new(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
 
         private NetworkVariable<bool> _isActive = new(true, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+        
+        private NetworkVariable<bool> _isTracked = new(true, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
 
         private NetworkVariable<Vector3> _rootPosition = new(Vector3.zero, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
 
@@ -191,6 +197,12 @@ namespace VRSYS.Core.Avatar
                 return;
             
             SyncRootNode();
+
+            // Sync isTracked state
+            if (_isTrackedAction != null)
+            {
+                _isTracked.Value = _isTrackedAction.action.ReadValue<bool>();
+            }
             
             switch (_fidelityLevel)
             {
@@ -460,25 +472,51 @@ namespace VRSYS.Core.Avatar
 
             // setup hand active handling
             _isActive.OnValueChanged += OnIsActiveChanged;
+            
+            // setup hand tracke state handling
+            if (_isTrackedAction != null)
+            {
+                _isTracked.OnValueChanged += OnIsTrackedChanged;
+            }
+            
             UpdateHandVisualsActive();
 
             // Set renderer active by default
             _handRenderer.enabled = true;
         }
 
-        private void UpdateHandVisualsActive() => _hand.SetActive(_isActive.Value);
-
+        // Only show the hand if it is active and tracked. If it is active but not tracked, hide.
+        // TODO: Logic for placing hand in default pose if active but tracking lost
+        private void UpdateHandVisualsActive()
+        {
+            if (_isTrackedAction != null)
+            {
+                _hand.SetActive(_isActive.Value && _isTracked.Value);
+            }
+            else
+            {
+                _hand.SetActive(_isActive.Value);
+            }
+        }
+        
         #endregion
 
         #region Event Callbacks
 
         private void OnTrackedHandModeStarted() => _isActive.Value = true;
 
-        private void OnTrackedHandModeEnded() => _isActive.Value = false;
+        private void OnTrackedHandModeEnded()
+        {
+            Debug.Log("Tracked Hand Mode Ended", this);
+            _isActive.Value = false;
+        }
+
 
         private void OnControllerModeStarted() => _isActive.Value = false;
 
         private void OnIsActiveChanged(bool previousValue, bool newValue) => UpdateHandVisualsActive();
+
+        private void OnIsTrackedChanged(bool previousValue, bool newValue) => UpdateHandVisualsActive();
 
         #endregion
 

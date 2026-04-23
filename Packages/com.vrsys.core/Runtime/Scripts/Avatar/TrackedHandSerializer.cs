@@ -387,43 +387,26 @@ namespace VRSYS.Core.Avatar
         
         void OnHandTrackingAcquired(XRHand hand)
         {
-            switch (hand.handedness)
+            if (SameHandednessAsXRHand(hand))
             {
-                case Handedness.Left:
-                    if (!_isTracked.Value)
-                    {
-                        _isTracked.Value = true;
-                    }
-                    break;
-
-                case Handedness.Right:
-                    if (!_isTracked.Value)
-                    {
-                        _isTracked.Value = true;
-                    }
-                    break;
+                if (!_isTracked.Value)
+                    _isTracked.Value = true;
             }
         }
         
         void OnHandTrackingLost(XRHand hand)
         {
-            switch (hand.handedness)
+            if (SameHandednessAsXRHand(hand))
             {
-                case Handedness.Left:
-                    if (_isTracked.Value)
-                    {
-                        _isTracked.Value = false;
-                    }
-                    break;
-
-                case Handedness.Right:
-                    if (_isTracked.Value)
-                    {
-                        _isTracked.Value = false;
-                    }
-                    break;
+                if (_isTracked.Value)
+                    _isTracked.Value = false;
             }
         }
+        
+        private bool SameHandednessAsXRHand(XRHand hand) =>
+            (hand.handedness == Handedness.Left && _handedness == HandType.Left) ||
+            (hand.handedness == Handedness.Right && _handedness == HandType.Right);
+        
 
         private void WriteRootNodeValues()
         {

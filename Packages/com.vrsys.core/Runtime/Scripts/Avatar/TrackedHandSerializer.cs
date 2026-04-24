@@ -587,7 +587,12 @@ namespace VRSYS.Core.Avatar
             UnsubscribeHandSubsystem();
         }
 
-        private void OnIsActiveChanged(bool previousValue, bool newValue) => UpdateHandVisualsActive();
+        private void OnIsActiveChanged(bool previousValue, bool newValue)
+        {
+            string isactive = newValue ? "active" : "inactive";
+            Debug.Log($"{_handedness.ToString()} Hand {isactive}");
+            UpdateHandVisualsActive();   
+        }
         
         #endregion
 

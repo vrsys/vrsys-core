@@ -763,6 +763,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 8227117706658105047}
     m_Modifications:
+    - target: {fileID: 7900714928115990799, guid: a9493a11ac970134bab46f3fbafed3bd, type: 3}
+      propertyPath: _handedness
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8761415486757727434, guid: a9493a11ac970134bab46f3fbafed3bd, type: 3}
       propertyPath: m_Name
       value: VRSYS-RightTrackedHand-Serialized

@@ -190,7 +190,7 @@ namespace VRSYS.Core.Avatar
 
                 InitializeNetworkProperties();
 
-                StartCoroutine(ActiveStateSanityCheck());
+                // StartCoroutine(ActiveStateSanityCheck());
             }
             else
             {
@@ -582,15 +582,15 @@ namespace VRSYS.Core.Avatar
         
         private void OnControllerModeStarted()
         {
-            _handtrackingIsActive = false;
-            _handIsTracked = false;
-            UnsubscribeHandSubsystem();
+            // This sometimes seems to be called while handtracking is still active??
+            // Threrefore keep tracking hand unless OnTrackedHandModeEnded
+            // _handtrackingIsActive = false;
+            // _handIsTracked = false;
+            // UnsubscribeHandSubsystem();
         }
 
         private void OnIsActiveChanged(bool previousValue, bool newValue)
         {
-            string isactive = newValue ? "active" : "inactive";
-            Debug.Log($"{_handedness.ToString()} Hand {isactive}");
             UpdateHandVisualsActive();   
         }
         

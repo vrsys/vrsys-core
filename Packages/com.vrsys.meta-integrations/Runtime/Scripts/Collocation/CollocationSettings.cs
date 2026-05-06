@@ -56,6 +56,9 @@ namespace VRSYS.Meta.Collocation
         private const string DEFAULT_SESSION_ANCHOR_WORLD_POS_Y = "DefaultSessionAnchorWorldPosY";
         private const string DEFAULT_SESSION_ANCHOR_WORLD_POS_Z = "DefaultSessionAnchorWorldPosZ";
 
+        private const string AUTO_START_SESSION_KEY = "AutoStartCollocationSession";
+        private const string DEFAULT_SESSION_NAME_KEY = "DefaultCollocationSessionName";
+
         private const string TRUE_KEY = "True";
         private const string FALSE_KEY = "False";
 
@@ -170,6 +173,35 @@ namespace VRSYS.Meta.Collocation
                         DEFAULT_SESSION_ANCHOR_WORLD_POS_Y,
                         DEFAULT_SESSION_ANCHOR_WORLD_POS_Z, 
                         _defaultSessionAnchorWorldPos);
+            }
+        }
+
+        [SerializeField, Tooltip("If true, a session with the given default name is auto started/joined. " +
+                                 "Session creation steps are skipped.")]
+        private bool _autoStartSession = false;
+        public bool AutoStartSession
+        {
+            get => GetBoolValue(AUTO_START_SESSION_KEY, _autoStartSession);
+            set
+            {
+                _autoStartSession = value;
+                
+                if(_usePlayerPrefs)
+                    PlayerPrefs.SetString(AUTO_START_SESSION_KEY, BoolToString(_autoStartSession));
+            }
+        }
+
+        [SerializeField, Tooltip("Session name used, if collocation session is auto started/joined.")]
+        private string _defaultSessionName = "VRSYS-Collocation";
+        public string DefaultSessionName
+        {
+            get => GetStringValue(DEFAULT_SESSION_NAME_KEY, _defaultSessionName);
+            set
+            {
+                _defaultSessionName = value;
+                
+                if(_usePlayerPrefs)
+                    PlayerPrefs.SetString(DEFAULT_SESSION_NAME_KEY, _defaultSessionName);
             }
         }
 

@@ -63,6 +63,12 @@ namespace VRSYS.Meta.Collocation
 
         public override void StartState()
         {
+            if (_manager.AutoStartSession)
+            {
+                CreateSession(_manager.DefaultSessionName);
+                return;
+            }
+            
             InitializeCreateSessionUi();
         }
 

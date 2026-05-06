@@ -80,6 +80,10 @@ namespace VRSYS.Meta.Collocation
         public bool TryLoadLocalAnchor => _collocationSettings.TryLoadLocalAnchor;
         
         public bool UseDefaultSessionAnchor => _collocationSettings.UserDefaultSessionAnchor;
+
+        public bool AutoStartSession => _collocationSettings.AutoStartSession;
+
+        public string DefaultSessionName => _collocationSettings.DefaultSessionName;
         
         public Vector3 DefaultSessionAnchorWorldPosition => _collocationSettings.DefaultSessionAnchorWorldPos;
 

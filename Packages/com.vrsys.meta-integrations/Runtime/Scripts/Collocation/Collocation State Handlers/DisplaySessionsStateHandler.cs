@@ -36,6 +36,7 @@
 //   Date:           2025
 //-----------------------------------------------------------------
 
+using System.Text;
 using UnityEngine;
 
 namespace VRSYS.Meta.Collocation
@@ -61,6 +62,12 @@ namespace VRSYS.Meta.Collocation
 
         public override void StartState()
         {
+            if (_manager.AutoStartSession)
+            {
+                AutoStart();
+                return;
+            }
+            
             InitializeSessionListUi();
         }
 
@@ -72,6 +79,24 @@ namespace VRSYS.Meta.Collocation
         #endregion
 
         #region Private Methods
+
+        private void AutoStart()
+        {
+            foreach (var data in _manager.SessionDatas)
+            {
+                string sessionName = Encoding.UTF8.GetString(data.Metadata);
+
+                if (sessionName.Equals(_manager.DefaultSessionName))
+                {
+                    // if default session found => join
+                    JoinSession(data);
+                    return;
+                }
+            }
+            
+            // if default session not found => create
+            CreateNewSession();
+        }
 
         private void InitializeSessionListUi()
         {

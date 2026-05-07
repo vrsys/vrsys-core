@@ -12,10 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b17725413d55df45b5ed4b622959e9f, type: 3}
   m_Name: Test Collocation Settings
   m_EditorClassIdentifier: 
+  _usePlayerPrefs: 0
   _discoveryTime: 10
   _retryTime: 1
   _maxRetries: 5
   _useLocalAnchor: 0
   _tryLoadLocalAnchor: 0
-  _useDefaultSessionAnchor: 0
+  _useDefaultSessionAnchor: 1
   _defaultSessionAnchorWorldPos: {x: 0, y: 0, z: 0}
+  _autoStartSession: 1
+  _defaultSessionName: VRSYS-Collocation

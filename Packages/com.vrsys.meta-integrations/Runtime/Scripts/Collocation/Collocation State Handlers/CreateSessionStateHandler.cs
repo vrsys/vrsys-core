@@ -74,7 +74,8 @@ namespace VRSYS.Meta.Collocation
 
         protected override void EndState()
         {
-            Object.Destroy(_createSessionUi.gameObject);
+            if(_createSessionUi != null)
+                Object.Destroy(_createSessionUi.gameObject);
             
             _manager.EnterState<CreateSessionAnchorStateHandler>();
         }

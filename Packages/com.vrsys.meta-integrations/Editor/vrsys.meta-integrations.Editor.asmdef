@@ -2,7 +2,8 @@
     "name": "vrsys.meta-integrations.Editor",
     "rootNamespace": "",
     "references": [
-        "GUID:ac01565a04399734bb677048f126c135"
+        "GUID:ac01565a04399734bb677048f126c135",
+        "GUID:4e6c03f2d3cf2f34eaf97737a291cdc8"
     ],
     "includePlatforms": [
         "Editor"

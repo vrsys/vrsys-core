@@ -111,7 +111,7 @@ namespace VRSYS.Core.Keyboard
                     gameObject.SetActive(false);
                     break;
                 case VRKeyboardActionType.Shift:
-                    VRKeyboardInputKey[] keys = FindObjectsOfType<VRKeyboardInputKey>();
+                    VRKeyboardInputKey[] keys = FindObjectsByType<VRKeyboardInputKey>();
                     foreach (VRKeyboardInputKey key in keys)
                     {
                         key.TriggerCase();

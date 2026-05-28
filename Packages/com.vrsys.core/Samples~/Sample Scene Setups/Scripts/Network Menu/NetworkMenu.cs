@@ -109,7 +109,7 @@ namespace VRSYS.Core.Networking
                 return;
             }
 
-            lobbyListUpdater = FindFirstObjectOfType<LobbyListUpdater>();
+            lobbyListUpdater = FindFirstObjectByType<LobbyListUpdater>();
             
             SetupUIElements();
             SetupUIEvents();

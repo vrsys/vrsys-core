@@ -65,6 +65,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   _remoteAvatarUpdateInterval: 0.08
+  _verbose: 0
 --- !u!1 &4448715740635919507
 GameObject:
   m_ObjectHideFlags: 0
@@ -164,7 +165,7 @@ GameObject:
   - component: {fileID: 1212424733730119515}
   - component: {fileID: 7272847511525691085}
   - component: {fileID: 7702689235823450816}
-  - component: {fileID: 8194118881436605494}
+  - component: {fileID: 9031851698068028006}
   m_Layer: 0
   m_Name: LipSync Input
   m_TagString: Untagged
@@ -301,7 +302,7 @@ MonoBehaviour:
   _mode: 0
   _smoothing: 0
   _audioSampleRate: 48000
---- !u!114 &8194118881436605494
+--- !u!114 &9031851698068028006
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -310,17 +311,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 7761153752365472044}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cbe2c8f3d0dd0c24aa44600b74586d5c, type: 3}
+  m_Script: {fileID: 11500000, guid: d40357962b35ae64c8727c624052c2e1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _audioSource: {fileID: 7272847511525691085}
-  _micInputVolume: 1
-  _micInputMode: 2
-  _inputButtonName: 
-  _stopRecordingWhilePaused: 0
-  _stopRecordingWhileUnfocused: 0
-  _micCaptureTimeout: 5
-  _preferOculusMic: 1
+  _lipSyncContext: {fileID: 7702689235823450816}
+  _scaleFactor: 1.6
 --- !u!1 &8984463130245505858
 GameObject:
   m_ObjectHideFlags: 0

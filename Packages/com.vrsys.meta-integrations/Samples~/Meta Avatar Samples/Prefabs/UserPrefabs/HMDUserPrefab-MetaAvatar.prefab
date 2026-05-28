@@ -177,10 +177,59 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 7761153752365472044, guid: 6d8ea93ef6cfe964082a234aae0da680, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4006073375555594819}
   m_SourcePrefab: {fileID: 100100000, guid: 6d8ea93ef6cfe964082a234aae0da680, type: 3}
 --- !u!4 &1575003456477642885 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 88654698467222753, guid: 6d8ea93ef6cfe964082a234aae0da680, type: 3}
   m_PrefabInstance: {fileID: 1504624170289472612}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &7617534145816190466 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 9031851698068028006, guid: 6d8ea93ef6cfe964082a234aae0da680, type: 3}
+  m_PrefabInstance: {fileID: 1504624170289472612}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9175054555350383944}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d40357962b35ae64c8727c624052c2e1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!1 &9175054555350383944 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7761153752365472044, guid: 6d8ea93ef6cfe964082a234aae0da680, type: 3}
+  m_PrefabInstance: {fileID: 1504624170289472612}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &4006073375555594819
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9175054555350383944}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de790a6aa752ab74c982d4c71630748b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sampleRate: 44100
+  recordLengthSec: 1
+  readBufferSize: 1024
+  OnMicrophoneData:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 7617534145816190466}
+        m_TargetAssemblyTypeName: VRSYS.Meta.Avatars.VRSYSLipSyncAudioApplier, vrsys.meta-integrations
+        m_MethodName: ForwardAudioToLipSync
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2

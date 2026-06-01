@@ -135,17 +135,18 @@ namespace VRSYS.Meta.Collocation
         {
             _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Started,
                 $"TrackingOriginUpdated Event received. origin {NetworkUser.LocalInstance.transform.position}, anchor {_manager.CurrentAnchor.transform.position}"));
-            _manager.StartCoroutine(ResetAlignmentNextFrame());
+            _manager.StartCoroutine(ResetAlignmentWithDelay());
         }
         
-        IEnumerator ResetAlignmentNextFrame()
+        IEnumerator ResetAlignmentWithDelay()
         {
             Debug.Log("Resetting scene alignment...");
             ResetTrackingOrigin();
             
-            // Wait for one frame, because after resetting the new tracked anchor position is not yet available
+            // Wait for two frames, because after resetting the new tracked anchor position is not yet available
             // TODO: Is it possible to fetch the new anchor position without waiting?
-            yield return null;  
+            for(int i = 0; i < 2; i++)
+                yield return null;  
             
             Debug.Log("Aliging scene to spatial anchor...");
             AlignScene();

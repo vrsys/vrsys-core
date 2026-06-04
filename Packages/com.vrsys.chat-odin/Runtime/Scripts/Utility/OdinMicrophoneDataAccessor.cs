@@ -48,13 +48,20 @@ namespace VRSYS.Core.Chat.Odin
             if(OdinHandler.Instance != null)
                 if (OdinHandler.Instance.Microphone != null)
                 {
-                    OdinHandler.Instance.Microphone.OnMicrophoneData += (float[] buffer, int position) =>
-                        OnMicrophoneData.Invoke(buffer, position);
+                    // OdinHandler.Instance.Microphone.OnMicrophoneData += (float[] buffer, int position) =>
+                    //     OnMicrophoneData.Invoke(buffer, position);
+
+                    OdinHandler.Instance.Microphone.OnMicrophoneData += ForwardAudioData;
                     
                     ExtendedLogger.LogInfo(GetType().Name, "Initialized Odin microphone data accessor.", this);
 
                     _initialized = true;
                 }
+        }
+
+        private void ForwardAudioData(float[] buffer, int position)
+        {
+            OnMicrophoneData.Invoke(buffer, position);
         }
 
         #endregion

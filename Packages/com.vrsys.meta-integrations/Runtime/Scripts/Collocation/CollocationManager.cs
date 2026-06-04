@@ -226,6 +226,18 @@ namespace VRSYS.Meta.Collocation
             _currentState.StartState();
         }
 
+        public void TriggerRealign()
+        {
+            if (_currentState.State != CollocationState.AligningToAnchor)
+            {
+                ExtendedLogger.LogWarning(GetType().Name, $"Collocation still running. Cannot realign yet. Collocation state: {_currentState.State}", this);
+                return;
+            }
+
+            var state = _currentState as AligningToAnchorStateHandler;
+            state.AlignScene();
+        }
+
         public void RestartCollocationWithSessionAnchor()
         {
             if(!CanRestart)

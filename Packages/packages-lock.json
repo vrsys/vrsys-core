@@ -534,7 +534,7 @@
       "depth": 0,
       "source": "embedded",
       "dependencies": {
-        "com.vrsys.core": "1.0.2"
+        "com.vrsys.core": "1.0.10"
       }
     },
     "com.vrsys.core": {
@@ -557,7 +557,7 @@
       "depth": 0,
       "source": "embedded",
       "dependencies": {
-        "com.vrsys.core": "1.0.7",
+        "com.vrsys.core": "1.0.10",
         "com.meta.xr.sdk.avatars": "35.2.0",
         "com.meta.xr.sdk.core": "76.0.1"
       }

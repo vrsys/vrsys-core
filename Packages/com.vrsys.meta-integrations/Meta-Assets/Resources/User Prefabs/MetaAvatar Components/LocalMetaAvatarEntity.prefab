@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 7308934417998580719}
   - component: {fileID: 2013052365752006283}
-  - component: {fileID: 8394805586120842175}
   m_Layer: 0
   m_Name: LocalMetaAvatarEntity
   m_TagString: Untagged
@@ -103,45 +102,3 @@ MonoBehaviour:
   _isLocal: 1
   autoLoadOnStart: 1
   verbose: 0
---- !u!114 &8394805586120842175
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8021943137256348795}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 81521d61d0efc3a4b87b3783aee9f4a4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _customRigPrefab: {fileID: 0}
-  _customAnimationOnly: 0
-  _enableStaticAnimationOptimization: 0
-  _enableLocalAnimationPlayback: 1
-  _enableRotationalTrackingOffset: 0
-  _inputBlended: 1
-  _leftArmBlendFactor: 1
-  _rightArmBlendFactor: 1
-  _enableUpperBodyBlended: 0
-  _upperBodyBlendFactor: 1
-  _customAnimationBlendFactor: 0
-  _enableTrackedUpperBodyRotation: 1
-  _enableDebugRigVisual: 0
-  _enableCrouching: 1
-  _enableIndependentUpperBodyHorizontalRotation: 1
-  _maxUpperBodyAngleDeviation: 45
-  _lowerBodyRotationDegreesPerSecond: 90
-  _enableRemoteScaling: 0
-  _remoteScaleFactor: 1
-  _maxArmLengthScalar: 1
-  _mixedRealityAnimationOptions:
-    anchoringState: 2
-  _jointOverrides:
-    jointOverrideTransitionTime: 0.25
-    leftAnkleJoint:
-      enableOverride: 0
-      overrideTransform: {fileID: 0}
-    rightAnkleJoint:
-      enableOverride: 0
-      overrideTransform: {fileID: 0}

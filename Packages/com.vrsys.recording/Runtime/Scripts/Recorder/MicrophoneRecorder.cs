@@ -1,0 +1,171 @@
+﻿using System;
+using UnityEngine;
+using Vrsys.Scripts.Recording;
+
+namespace VRSYS.Scripts.Recording
+{
+    public class MicrophoneRecorder : AudioRecorder
+    {
+        private MicrophoneClipReader _microphoneClipReader;
+        private float[] _audioData;
+        private int _audioSamplesPerRecordStep = -1;
+        private Transform _userTransform;
+
+        public string rerecMicDeviceOverride;
+
+        private MicrophoneClipReader _rerecReader;
+        private string _rerecDevice;
+        private float[] _rerecBuf;
+        private int _rerecSamplingRate;
+        private int _rerecChannels;
+        private float _rerecNextChunkTime = -1.0f;
+
+        public void SetMicrophoneReader(MicrophoneClipReader reader)
+        {
+            _microphoneClipReader = reader;
+        }
+        
+        public void SetUserTransform(Transform transform)
+        {
+            _userTransform = transform;
+        }
+        
+        
+        public override void Start()
+        {
+            base.Start();
+        }
+        
+        public override bool Record(float recordTime)
+        {
+            if (RecordingSamplingRate < 0)
+            {
+                RecordingChannelNum = _microphoneClipReader.Channels;
+                RecordingSamplingRate = _microphoneClipReader.SamplingRate;
+                _audioSamplesPerRecordStep = RecordingSamplingRate / SoundRecordingStepsPerSecond;
+            
+                _audioData = new float[_audioSamplesPerRecordStep];
+                FirstRecord = true;
+            }
+            
+            float readAudio = 1;
+            bool recordedData = false;
+
+            float recordedTime = 0.0f;
+            
+            while (readAudio > 0)
+            {
+                readAudio = _microphoneClipReader.Read(_audioData);
+                if (readAudio >= 0)
+                {
+                    if (RecordingTime < 0 && FirstRecord)
+                    {
+                        RecordingTime = recordTime - readAudio / SoundRecordingStepsPerSecond;
+                        FirstRecord = false;
+                        if(controller.debugLogs)
+                            Debug.Log("Initial microphone recording time: " + RecordingTime);
+                    }
+
+                    if (RecordingTime >= 0.0f)
+                    {
+                        _goIDDTO[0] = gameObject.GetInstanceID();
+
+                        bool result = RecordSoundDataWithGOInfoAtTimestamp(controller.RecorderID, _audioData, _audioSamplesPerRecordStep, RecordingSamplingRate, 0, RecordingChannelNum, _goIDDTO[0], RecordingTime, id);
+
+                        if (!result)
+                            return false;
+                    }
+
+                    RecordingTime += _audioSamplesPerRecordStep / (float)RecordingSamplingRate;
+                    recordedTime = _audioSamplesPerRecordStep / (float)RecordingSamplingRate;
+                    
+                    recordedData = true;
+                }
+            }
+            
+            if (recordedData && Mathf.Abs(recordTime - (RecordingTime + recordedTime)) > 0.5f)
+            {
+                if(controller.debugLogs)
+                    Debug.LogError("Error! Microphone time not aligned. Difference: " + (recordTime - (RecordingTime + recordedTime)));
+            }
+
+            return true;
+        }
+
+        public override void BeginRerecordCapture()
+        {
+            base.BeginRerecordCapture();
+            _rerecNextChunkTime = -1.0f;
+
+            _rerecDevice = ResolveRerecMicDevice();
+            if (string.IsNullOrEmpty(_rerecDevice))
+            {
+                Debug.LogError("MicrophoneRecorder.BeginRerecordCapture: no microphone device available");
+                return;
+            }
+
+            AudioClip clip = Microphone.Start(_rerecDevice, true, 10, AudioSettings.outputSampleRate);
+            if (clip == null)
+            {
+                Debug.LogError("MicrophoneRecorder.BeginRerecordCapture: could not start microphone " + _rerecDevice);
+                _rerecDevice = null;
+                return;
+            }
+
+            _rerecReader = new MicrophoneClipReader(clip, _rerecDevice);
+            _rerecSamplingRate = _rerecReader.SamplingRate;
+            _rerecChannels = Mathf.Max(1, _rerecReader.Channels);
+            int samplesPerStep = Mathf.Max(1,
+                _rerecSamplingRate / Mathf.Max(1, controller.audioRecordingStepsPerSecond)) * _rerecChannels;
+            _rerecBuf = new float[samplesPerStep];
+        }
+
+        public override void TickRerecordCapture(float currentReplayTime)
+        {
+            if (_rerecReader == null)
+                return;
+
+            if (_rerecNextChunkTime < 0.0f)
+                _rerecNextChunkTime = currentReplayTime;
+
+            float read = 1.0f;
+            while (read > 0.0f)
+            {
+                read = _rerecReader.Read(_rerecBuf);
+                if (read < 0.0f)
+                    break;
+
+                float[] samples = new float[_rerecBuf.Length];
+                Array.Copy(_rerecBuf, samples, _rerecBuf.Length);
+                EmitRerecordChunk(new RerecordChunk
+                {
+                    time = _rerecNextChunkTime,
+                    samples = samples,
+                    samplingRate = _rerecSamplingRate,
+                    channelNum = _rerecChannels,
+                    correspondingGameobjectId = _rerecCorrespondingGoId
+                });
+                _rerecNextChunkTime += samples.Length / (float)(_rerecSamplingRate * _rerecChannels);
+            }
+        }
+
+        public override void EndRerecordCapture()
+        {
+            base.EndRerecordCapture();
+            if (!string.IsNullOrEmpty(_rerecDevice) && Microphone.IsRecording(_rerecDevice))
+                Microphone.End(_rerecDevice);
+            _rerecReader = null;
+            _rerecDevice = null;
+            _rerecBuf = null;
+        }
+
+        private string ResolveRerecMicDevice()
+        {
+            if (!string.IsNullOrEmpty(rerecMicDeviceOverride))
+                return rerecMicDeviceOverride;
+            if (Microphone.devices.Length > 0)
+                return Microphone.devices[0];
+            return null;
+        }
+    }
+}

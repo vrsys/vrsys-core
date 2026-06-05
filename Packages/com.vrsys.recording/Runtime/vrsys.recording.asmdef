@@ -1,0 +1,24 @@
+{
+    "name": "vrsys.recording",
+    "rootNamespace": "",
+    "references": [
+        "vrsys.core",
+        "Unity.Netcode.Runtime",
+        "Unity.InputSystem",
+        "Unity.XR.Interaction.Toolkit",
+        "Unity.XR.CoreUtils",
+        "UnityEngine.UI",
+        "Unity.TextMeshPro",
+        "Unity.Collections",
+        "UnityEngine.SpatialTracking"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,28 @@
+{
+    "name": "vrsys.recording.meta",
+    "rootNamespace": "",
+    "references": [
+        "vrsys.recording",
+        "vrsys.core",
+        "vrsys.meta-integrations",
+        "Unity.Netcode.Runtime",
+        "Oculus.AvatarSDK2"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "VRSYS_META_INTEGRATIONS"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.vrsys.meta-integrations",
+            "expression": "",
+            "define": "VRSYS_META_INTEGRATIONS"
+        }
+    ],
+    "noEngineReferences": false
+}

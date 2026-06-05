@@ -1,0 +1,20 @@
+{
+    "name": "vrsys.recording.Editor",
+    "rootNamespace": "",
+    "references": [
+        "vrsys.recording",
+        "vrsys.core",
+        "Unity.Netcode.Runtime"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,21 @@
+{
+  "name": "com.vrsys.recording",
+  "version": "1.0.0",
+  "displayName": "VRSYS Recording",
+  "description": "Recording and replay of networked VRSYS sessions (transforms, audio and generic data tracks).",
+  "documentationUrl": "https://vrsys.gitbook.io/vrsys",
+  "dependencies": {
+    "com.vrsys.core": "1.0.9"
+  },
+  "samples": [
+    {
+      "displayName": "Recording Sample",
+      "description": "Sample scene, input actions and prefabs showing how to set up recording and replay with VRSYS.",
+      "path": "Samples~/Recording Sample"
+    }
+  ],
+  "author": {
+    "name": "VRSYS",
+    "url": "https://www.uni-weimar.de/vr"
+  }
+}

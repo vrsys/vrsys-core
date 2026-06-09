@@ -62,13 +62,11 @@ namespace VRSYS.Core.Chat.Odin
                 {
                     // OdinHandler.Instance.Microphone.OnMicrophoneData += (float[] buffer, int position) =>
                     //     OnMicrophoneData.Invoke(buffer, position);
+                    
+                    SamplingRate = (int)OdinHandler.Instance.Microphone.SampleRate;
+                    Channels = Mathf.Max(1, (int)OdinHandler.Config.DeviceChannels);
 
-                    var microphone = OdinHandler.Instance.Microphone;
-                    SamplingRate = (int)microphone.SampleRate;
-                    if (microphone.InputClip != null)
-                        Channels = Mathf.Max(1, microphone.InputClip.channels);
-
-                    microphone.OnMicrophoneData += ForwardAudioData;
+                    OdinHandler.Instance.Microphone.OnMicrophoneData += ForwardAudioData;
 
                     ExtendedLogger.LogInfo(GetType().Name, "Initialized Odin microphone data accessor.", this);
 

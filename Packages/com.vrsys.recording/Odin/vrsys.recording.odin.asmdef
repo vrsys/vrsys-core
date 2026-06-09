@@ -1,0 +1,25 @@
+{
+    "name": "vrsys.recording.odin",
+    "rootNamespace": "",
+    "references": [
+        "vrsys.recording",
+        "vrsys.chat-odin"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "VRSYS_CHAT_ODIN"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.vrsys.chat-odin",
+            "expression": "",
+            "define": "VRSYS_CHAT_ODIN"
+        }
+    ],
+    "noEngineReferences": false
+}

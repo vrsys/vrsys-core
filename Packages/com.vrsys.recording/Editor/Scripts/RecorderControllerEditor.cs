@@ -13,6 +13,7 @@ namespace VRSYS.Scripts.Recording
     {
         private bool synchronisedPlayback;
         private bool lateJoinPlayback;
+        private bool recordMicro;
         private bool downloadFilesFromServer;
         private bool uploadFilesToServer;
         private bool enableDebugInfo;
@@ -156,6 +157,7 @@ namespace VRSYS.Scripts.Recording
             replayRoot = (Transform)EditorGUILayout.ObjectField(
                 new GUIContent("Replay Root", "Optional anchor for playback. When set, recorded objects are matched/placed relative to this transform: pre-existing duplicate objects beneath it are matched to the recording, and objects that have to be instantiated for playback are created under it. Its position/rotation/scale thus offsets the whole replay. Leave empty to match/place objects at the scene root."),
                 controller.replayRoot, typeof(Transform), true);
+            recordMicro = GUILayout.Toggle(controller.recordMicro, "Record microphone");
             synchronisedPlayback = GUILayout.Toggle(controller.synchronizedPlayback, "Synchronised playback");
             lateJoinPlayback = GUILayout.Toggle(controller.lateJoinPlayback, "Late join playback");
             uploadFilesToServer = GUILayout.Toggle(controller.uploadFilesToServer, "Upload recording files to server");
@@ -167,6 +169,9 @@ namespace VRSYS.Scripts.Recording
                 Undo.RecordObject(target, "Changed Values");
                 PrefabUtility.RecordPrefabInstancePropertyModifications(target);
                 controller.replayRoot = replayRoot;
+                Undo.RecordObject(target, "Changed Values");
+                PrefabUtility.RecordPrefabInstancePropertyModifications(target);
+                controller.recordMicro = recordMicro;
                 Undo.RecordObject(target, "Changed Values");
                 PrefabUtility.RecordPrefabInstancePropertyModifications(target);
                 controller.synchronizedPlayback = synchronisedPlayback;

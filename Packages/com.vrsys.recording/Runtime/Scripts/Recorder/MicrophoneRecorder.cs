@@ -6,7 +6,7 @@ namespace VRSYS.Scripts.Recording
 {
     public class MicrophoneRecorder : AudioRecorder
     {
-        private MicrophoneClipReader _microphoneClipReader;
+        private IMicrophoneClipReader _microphoneClipReader;
         private float[] _audioData;
         private int _audioSamplesPerRecordStep = -1;
         private Transform _userTransform;
@@ -20,20 +20,29 @@ namespace VRSYS.Scripts.Recording
         private int _rerecChannels;
         private float _rerecNextChunkTime = -1.0f;
 
-        public void SetMicrophoneReader(MicrophoneClipReader reader)
+        public void SetMicrophoneReader(IMicrophoneClipReader reader)
         {
+            // Releasing any previous reader's subscriptions (e.g. an Odin push-stream listener) before
+            // swapping it out, so overriding the default Unity-microphone reader does not leak the old one.
+            (_microphoneClipReader as IDisposable)?.Dispose();
             _microphoneClipReader = reader;
         }
-        
+
         public void SetUserTransform(Transform transform)
         {
             _userTransform = transform;
         }
-        
-        
+
+
         public override void Start()
         {
             base.Start();
+        }
+
+        public override void OnDestroy()
+        {
+            base.OnDestroy();
+            (_microphoneClipReader as IDisposable)?.Dispose();
         }
         
         public override bool Record(float recordTime)

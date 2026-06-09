@@ -53,6 +53,7 @@ namespace VRSYS.Scripts.Recording
 
         public bool attachTransformRecorderToAll = true;
         public bool replayAudio = true;
+        public bool recordMicro = true;
 
         [Tooltip("Optional anchor for playback. When set, recorded objects are matched/placed relative " +
                  "to this transform: pre-existing duplicate objects beneath it are matched to the " +
@@ -184,7 +185,6 @@ namespace VRSYS.Scripts.Recording
         {
             if (recorderState.currentState == State.Recording || recorderState.currentState == State.PrepareRecording)
             {
-                bool recordMicro = true;
                 if (Microphone.devices.Length > 0)
                 {
                     

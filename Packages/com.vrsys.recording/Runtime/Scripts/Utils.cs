@@ -993,8 +993,29 @@ namespace Vrsys.Scripts.Recording
         }
     }
 
+    /// <summary>
+    /// Source of microphone PCM for the <see cref="VRSYS.Scripts.Recording.MicrophoneRecorder"/>. The
+    /// recorder pulls fixed-size chunks via <see cref="Read"/>; implementations decide where the samples
+    /// come from (Unity <c>Microphone</c> clip, an external voice SDK, etc.). Implement
+    /// <see cref="System.IDisposable"/> as well if the reader holds subscriptions that must be released
+    /// when the recorder is destroyed.
+    /// </summary>
+    public interface IMicrophoneClipReader
+    {
+        int Channels { get; }
+        int SamplingRate { get; }
+
+        /// <summary>
+        /// Fills <paramref name="buffer"/> with the next chunk of interleaved samples. Returns the number
+        /// of buffer-fulls currently available (&gt;= 0) when a chunk was written, or a negative value when
+        /// not enough data is buffered yet. The recorder loops on the positive return to drain backlog and
+        /// uses it to back-date the first recorded sample so buffered audio stays time-aligned.
+        /// </summary>
+        float Read(float[] buffer);
+    }
+
     // adapted from Photon.Voice.Unity.MicWrapper
-    public class MicrophoneClipReader
+    public class MicrophoneClipReader : IMicrophoneClipReader
     {
         private AudioClip _microphoneClip;
         private string _device;

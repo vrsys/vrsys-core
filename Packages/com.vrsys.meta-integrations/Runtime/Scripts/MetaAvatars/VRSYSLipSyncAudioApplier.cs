@@ -16,9 +16,15 @@ namespace VRSYS.Meta.Avatars
 
         public void ForwardAudioToLipSync(float[] buffer, int position)
         {
+            if (_lipSyncContext == null || !_lipSyncContext.isActiveAndEnabled)
+                return;
+
+            if (buffer == null || buffer.Length == 0)
+                return;
+
             for (int i = 0; i < buffer.Length; i++)
                 buffer[i] *= _scaleFactor;
-            
+
             _lipSyncContext.ProcessAudioSamples(buffer, 1);
         }
 

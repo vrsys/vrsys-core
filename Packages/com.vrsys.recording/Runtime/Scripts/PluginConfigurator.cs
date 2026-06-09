@@ -52,9 +52,48 @@ namespace VRSYS.Scripts.Recording
         private LogLevel lastAppliedLogLevel;
         [HideInInspector] public string recordingDirectory = "";
 
+        // Rooted reference to the delegate handed to native code. The native side
+        // keeps only the raw function pointer in a global that survives Unity domain
+        // reloads (exit play mode / script recompile); the managed delegate does not.
+        // Without rooting it here AND clearing it around reloads, that global dangles
+        // and the next plugin log call crashes ("UNKNOWN while executing native code").
+        private static debugCallback _debugCallback;
+
+        // Registers the native log callback and roots the delegate. Idempotent;
+        // re-registers with a fresh delegate after a domain reload.
+        private static void RegisterLogging()
+        {
+            _debugCallback = OnDebugCallback;
+            RegisterDebugCallback(_debugCallback);
+        }
+
+        // Clears the native callback so its function pointer can never outlive this
+        // managed domain. The native log path guards a null callback (falls back to
+        // stdout), so this is always safe.
+        private static void UnregisterLogging()
+        {
+            RegisterDebugCallback(null);
+            _debugCallback = null;
+        }
+
+#if UNITY_EDITOR
+        // Runs on every editor load, including after each domain reload, so the
+        // edit-mode "create/replay recordings in the editor" buttons always have a
+        // valid callback even though MonoBehaviour.Start() does not run in edit mode.
+        // beforeAssemblyReload clears the native pointer before this domain is torn
+        // down, closing the stale-pointer window across reloads.
+        [UnityEditor.InitializeOnLoadMethod]
+        private static void InitializeEditorLogging()
+        {
+            RegisterLogging();
+            UnityEditor.AssemblyReloadEvents.beforeAssemblyReload -= UnregisterLogging;
+            UnityEditor.AssemblyReloadEvents.beforeAssemblyReload += UnregisterLogging;
+        }
+#endif
+
         public void Start()
         {
-            RegisterDebugCallback(OnDebugCallback);
+            RegisterLogging();
             SetRecordingMaxBufferSize(0, recordingMaxBufferSize);
             SetSoundRecordingMaxBufferSize(0, recordingSoundMaxBufferSize);
             SetReplayBufferNumber(0, replayBufferNumber);

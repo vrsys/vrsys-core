@@ -42,7 +42,7 @@ namespace VRSYS.Scripts.Recording
         public virtual void Start()
         {
             if(id == 99999)
-                id = Utils.GetObjectName(gameObject).GetHashCode();
+                id = Utils.GetObjectName(gameObject, controller != null ? controller.replayRoot : null).GetHashCode();
 
             if (!preventAutoRegister && controller != null && !registered)
                 RegisterRecorder();

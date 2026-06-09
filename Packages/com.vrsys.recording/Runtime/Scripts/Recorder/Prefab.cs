@@ -10,5 +10,11 @@ namespace VRSYS.Scripts.Recording
     public class Prefab : ScriptableObject
     {
         public string assetPath;
+
+        // Optional Addressables address/key of the prefab, captured alongside assetPath. Lets playback
+        // load the prefab via Addressables (which works in player builds / Android) for prefabs that do
+        // not live under a Resources folder. Empty when the prefab is not marked Addressable or the
+        // Addressables package is not installed.
+        public string addressableKey;
     }
 }

@@ -634,23 +634,36 @@ namespace VRSYS.Scripts.Recording
 
         public void UpdateReplayList()
         {
-            
-            // if (_state.selectedServer.Length == 0 && _state.serverList.Count > 0)
-            // {
-            //     _selectedServerId = 0;
-            //     _state.selectedServer = _state.serverList[_selectedServerId];
-            // }
-            //
-            // if (!_state.serverList.Contains(_state.selectedServer))
-            // {
-            //     _selectedServerId = 0;
-            //     _state.selectedServer = _state.serverList[_selectedServerId];
-            // }
-            //
-            // if (!_state.selectedServer.Contains("http"))
-            //     _state.selectedServer = "http://" + _state.selectedServer;
+            // When using local replay files, populate the list from the local recording directory
+            // and do not query the server (which would otherwise log connection errors when offline).
+            if (_state.useLocalReplayFiles)
+            {
+                UpdateLocalReplayList();
+                return;
+            }
 
             StartCoroutine(GetReplayList(_state.selectedServer, _state.projectName));
+        }
+
+        private void UpdateLocalReplayList()
+        {
+            string directory = string.IsNullOrEmpty(_state.recordingDirectory)
+                ? Application.persistentDataPath
+                : _state.recordingDirectory;
+
+            if (!Directory.Exists(directory))
+                return;
+
+            string[] filesWithPaths = Directory.GetFiles(directory, "*.recordmeta");
+            string[] replayNames = new string[filesWithPaths.Length];
+            for (int i = 0; i < filesWithPaths.Length; i++)
+                replayNames[i] = Path.GetFileNameWithoutExtension(filesWithPaths[i]);
+
+            if (_state.replayList == null || _state.replayList.replayNames == null ||
+                replayNames.Length != _state.replayList.replayNames.Length)
+            {
+                _state.replayList = new ReplayList { replayNames = replayNames };
+            }
         }
 
         public void UpdateSelectedServerText(TextMeshProUGUI text)

@@ -28,7 +28,11 @@ namespace VRSYS.Scripts.Recording
 
         private State _previousState = State.Idle;
         public State currentState = State.Idle;
-        
+
+        [Tooltip("True while a local (non-distributed) recording is in progress. Lives here next to " +
+                 "currentState so the two cannot desync.")]
+        public bool localRecording = false;
+
         public UnityEvent OnStateChanged = new UnityEvent();
         
         public string projectName;
@@ -56,6 +60,9 @@ namespace VRSYS.Scripts.Recording
         public string selectedReplayFile;
         public ReplayList replayList;
         public bool replayPaused = false;
+        [Tooltip("If enabled, the playback list is populated from recordings in the local recording " +
+                 "directory and the server is not queried for the replay list.")]
+        public bool useLocalReplayFiles = true;
 
         public void Start()
         {

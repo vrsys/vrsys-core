@@ -54,9 +54,11 @@ namespace VRSYS.Scripts.Recording
         public bool attachTransformRecorderToAll = true;
         public bool replayAudio = true;
 
-        [Tooltip("Optional anchor for playback. When set, parentless replayed objects are reparented " +
-                 "under this transform, so its position/rotation/scale offsets the whole replay. " +
-                 "Leave empty to replay objects at their recorded world transforms.")]
+        [Tooltip("Optional anchor for playback. When set, recorded objects are matched/placed relative " +
+                 "to this transform: pre-existing duplicate objects beneath it are matched to the " +
+                 "recording, and objects that have to be instantiated for playback are created under it. " +
+                 "Its position/rotation/scale thus offsets the whole replay. Leave empty to match/place " +
+                 "objects at the scene root.")]
         public Transform replayRoot;
 
         public bool createWAV = false;
@@ -81,7 +83,6 @@ namespace VRSYS.Scripts.Recording
 
         private float _lastReplayListRefresh;
         public bool localPlayback = false;
-        public bool localRecording = false;
         public bool uploadFilesToServer = false;
         public bool debugLogs = true;
 
@@ -247,6 +248,18 @@ namespace VRSYS.Scripts.Recording
         private void AttachTransformRecorder()
         {
             Debug.Log("Attaching transform recorder scripts to gameobjects in the scene");
+
+            // During replay with a configured replay root, only objects beneath that root are animated.
+            // Attaching recorders to the replay-root subtree only prevents objects that share a recorded
+            // hierarchy name but live outside the anchor (e.g. an original "/Cube" next to the anchored
+            // duplicate "/Anchor/Cube") from being played back as well.
+            if (recorderState.currentState == State.PreparingReplay && replayRoot != null)
+            {
+                AttachTransformRecorderRecursively(replayRoot.gameObject);
+                Debug.Log("Attaching transform recorder scripts to gameobjects in the scene finished");
+                return;
+            }
+
             if (attachTransformRecorderToAll)
             {
                 GameObject[] rootObjects = SceneManager.GetActiveScene().GetRootGameObjects();
@@ -336,6 +349,8 @@ namespace VRSYS.Scripts.Recording
                 OnReplayEnd();
                 if (!result)
                     Debug.LogError("Could not stop the replay!");
+                else 
+                    recorderState.currentState = State.Idle;
             }
         }
 
@@ -364,7 +379,7 @@ namespace VRSYS.Scripts.Recording
 
         public void StartLocalRecording()
         {
-            localRecording = true;
+            recorderState.localRecording = true;
             PrepareRecording();
             StartRecording();
         }
@@ -391,7 +406,7 @@ namespace VRSYS.Scripts.Recording
             recorderState.currentState = State.PreparingReplay;
             Debug.Log("Starting replay for recorder with id: " + recorderState.recorderID);
 
-            bool openForEditing = GetComponent<ReRecorder>() != null;
+            bool openForEditing = GetComponent<IRecordingEditor>() != null;
             bool result = openForEditing
                 ? OpenExistingRecordingFileForEditing(recorderState.recorderID, recorderState.recordingDirectory,
                     recorderState.recordingDirectory.Length, recorderState.selectedReplayFile,
@@ -502,7 +517,7 @@ namespace VRSYS.Scripts.Recording
         public void EndRecording()
         {
             recorderState.currentState = State.Idle;
-            localRecording = false;
+            recorderState.localRecording = false;
             Debug.Log("Stopping recording for recorder with id: " + recorderState.recorderID);
 
             bool result = StopRecording(recorderState.recorderID);

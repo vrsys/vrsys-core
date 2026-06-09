@@ -343,7 +343,6 @@ MonoBehaviour:
   downloadFilesFromServer: 1
   recorderState: {fileID: 2889173778122889198}
   localPlayback: 0
-  localRecording: 0
   uploadFilesToServer: 1
   debugLogs: 0
 --- !u!114 &7486710540757772241

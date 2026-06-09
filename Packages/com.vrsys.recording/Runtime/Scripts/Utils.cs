@@ -428,6 +428,11 @@ namespace Vrsys.Scripts.Recording
 
         public static string GetObjectName(GameObject gameObject)
         {
+            return GetObjectName(gameObject, null);
+        }
+
+        public static string GetObjectName(GameObject gameObject, Transform replayRoot)
+        {
             GameObject currentGameObject = gameObject;
             string name = "";
 
@@ -448,7 +453,38 @@ namespace Vrsys.Scripts.Recording
                 parent = parent.parent;
             }
 
+            // When replaying under a configured replay root, the playback objects live beneath that
+            // root (either pre-existing duplicates or prefabs instantiated under it by ScenePreparator).
+            // Their derived hierarchy name therefore gains the root's full transform path as a prefix.
+            // Strip it so the names match the recorded, anchor-relative names. This is a no-op for
+            // objects that are not actually beneath the root.
+            if (replayRoot != null)
+            {
+                string replayRootPrefix = GetTransformPath(replayRoot);
+                if (!string.IsNullOrEmpty(replayRootPrefix))
+                    name = Regex.Replace(name, "^" + Regex.Escape(replayRootPrefix), "");
+            }
+
             return "/" + name;
+        }
+
+        /// <summary>
+        /// Builds the full hierarchy path of a transform as "root/.../target/" (no leading slash,
+        /// trailing slash), matching the prefix format used inside <see cref="GetObjectName"/>.
+        /// </summary>
+        public static string GetTransformPath(Transform targetTransform)
+        {
+            if (targetTransform == null)
+                return "";
+
+            string name = targetTransform.name.Contains("[Rec]")
+                ? targetTransform.name.Replace("[Rec]", "")
+                : targetTransform.name;
+
+            string path = name + "/";
+            if (targetTransform.parent != null)
+                path = GetTransformPath(targetTransform.parent) + path;
+            return path;
         }
 
         public static GameObject GetGameObjectByHierarchyName(GameObject root, string hierarchyGameObjectName)

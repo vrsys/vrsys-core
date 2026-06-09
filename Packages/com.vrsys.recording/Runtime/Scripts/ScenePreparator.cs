@@ -81,15 +81,25 @@ namespace VRSYS.Scripts.Recording
         {
             Debug.Log("Trying to handle missing objects.");
 
-            GameObject[] rootObjects = SceneManager.GetActiveScene().GetRootGameObjects();
-            foreach (var rootObject in rootObjects)
-                SceneGraphTraversalGameObjectExistenceCheck(rootObject, "");
-
-            if (DontDestroySceneAccessor.Instance != null)
+            // With a configured replay root, only objects beneath that root may be matched to the
+            // recording, so restrict the existence check to its subtree. This ensures duplicates that
+            // live outside the anchor (e.g. an original "/Cube") are not matched and played back.
+            if (_controller.replayRoot != null)
             {
-                rootObjects = DontDestroySceneAccessor.Instance.GetAllRootsOfDontDestroyOnLoad();
+                SceneGraphTraversalGameObjectExistenceCheck(_controller.replayRoot.gameObject, "");
+            }
+            else
+            {
+                GameObject[] rootObjects = SceneManager.GetActiveScene().GetRootGameObjects();
                 foreach (var rootObject in rootObjects)
                     SceneGraphTraversalGameObjectExistenceCheck(rootObject, "");
+
+                if (DontDestroySceneAccessor.Instance != null)
+                {
+                    rootObjects = DontDestroySceneAccessor.Instance.GetAllRootsOfDontDestroyOnLoad();
+                    foreach (var rootObject in rootObjects)
+                        SceneGraphTraversalGameObjectExistenceCheck(rootObject, "");
+                }
             }
 
             if (_controller.debugLogs)
@@ -118,6 +128,10 @@ namespace VRSYS.Scripts.Recording
                     var parentInfo = replayGameObjectInformations.FirstOrDefault(i => i.hierarchyName == parentName);
                     if (parentInfo?.foundObject != null)
                         parent = parentInfo.foundObject.transform;
+                    // Top-level recorded objects (no recorded parent) are placed under the configured
+                    // replay root so the instantiated playback objects sit correctly under the anchor.
+                    else if (string.IsNullOrEmpty(parentName) && _controller.replayRoot != null)
+                        parent = _controller.replayRoot;
 
                     if (information.prefabLocation.Length > 0 && information.foundObject == null)
                         TryInstantiatePrefab(information, parent, parentName);
@@ -134,11 +148,13 @@ namespace VRSYS.Scripts.Recording
         private void TryInstantiatePrefab(ReplayGameObjectInformation information, Transform parent, string parentName)
         {
             string prefabName = "";
-            if (information.prefabLocation.Contains("Resources/"))
+            if (information.prefabLocation.Contains("Resources/")){
                 prefabName = information.prefabLocation.Split("Resources/").Last().Replace(".prefab", "");
-
-            Debug.Log(": " + information.gameObjectName + ", prefab location : " + prefabName +
-                      ", original location: " + information.prefabLocation);
+                Debug.Log(": " + information.gameObjectName + ", prefab location : " + prefabName +
+                          ", original location: " + information.prefabLocation);
+			} else {
+				Debug.LogWarning("The prefab that would be instantiated for replay is not in a Resources folder!");
+			}
 
             GameObject go = prefabName != "" ? Resources.Load<GameObject>(prefabName) : null;
 
@@ -391,7 +407,13 @@ namespace VRSYS.Scripts.Recording
             string pattern2 = "\\[Rec" + _controller.RecorderID + "\\]\\/";
             objectName = Regex.Replace(objectName, pattern2, "/");
 
-            name += "/" + objectName;
+            // When a replay root is configured, treat it as the root of the recorded hierarchy: objects
+            // duplicated beneath it are matched against the recorded (anchor-relative) names, while the
+            // replay root itself and its ancestors are not part of those names.
+            if (_controller.replayRoot != null && currentGameObj.transform == _controller.replayRoot)
+                name = "";
+            else
+                name += "/" + objectName;
 
             if (currentGameObj.GetComponent<NetworkUser>() != null)
                 return;

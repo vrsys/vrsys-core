@@ -106,8 +106,6 @@ namespace VRSYS.Scripts.Recording
             if (_name == "")
             {
                 _name = Utils.GetObjectName(gameObject);
-                //string pattern = "\\[Rec\\d+\\]";
-                //_name = Regex.Replace(_name, pattern, "");
                 _name = Utils.RemoveDiacritics(_name);
             }
             
@@ -216,8 +214,6 @@ namespace VRSYS.Scripts.Recording
                 fillDTOCurrentData(currentCapture);
                 
                 result = RecordObjectAtTimestamp(controller.RecorderID, _name, _name.Length, id, _matrixDTO, recordTime, _infoDTO);
-
-                //Debug.Log("RecordTime: " + recordTime);
                 
                 if (!result && controller.debugLogs)
                 {
@@ -253,7 +249,7 @@ namespace VRSYS.Scripts.Recording
             
             if (_name == "")
             {
-                _name = Utils.GetObjectName(gameObject);
+                _name = Utils.GetObjectName(gameObject, controller.replayRoot);
                 string pattern = "\\[Rec" + controller.RecorderID + "\\]$";
                 _name = Regex.Replace(_name, pattern, "");
                 string pattern2 = "\\[Rec" + controller.RecorderID + "\\]\\/";
@@ -275,11 +271,6 @@ namespace VRSYS.Scripts.Recording
 
             if (recorderId == 99999)
                 recorderId = controller.RecorderID;
-
-            // Optional replay root: reparent parentless replayed objects under the configured anchor,
-            // offsetting/positioning the whole replay (replaces the former ReplayAnchorTransform feature).
-            if (_transform != null && _transform.parent == null && controller.replayRoot != null)
-                _transform.SetParent(controller.replayRoot, false);
 
             _currentParentTransform = _transform.parent;
 

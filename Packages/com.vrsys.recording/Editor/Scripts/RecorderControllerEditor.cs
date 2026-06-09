@@ -16,6 +16,7 @@ namespace VRSYS.Scripts.Recording
         private bool downloadFilesFromServer;
         private bool uploadFilesToServer;
         private bool enableDebugInfo;
+        private Transform replayRoot;
         private string _downloadPassword = "";
         
         public override void OnInspectorGUI()
@@ -23,10 +24,15 @@ namespace VRSYS.Scripts.Recording
             RecorderController controller = (RecorderController)target;
             EditorGUI.BeginChangeCheck();
             
-            GUILayout.Label("The following button will setup scripts required for recording prefab information. \nThis is necessary during playback to instantiate the objects.");
-            if (GUILayout.Button("Setup Requirements"))
+            GUILayout.Label("The following buttons will setup scripts required for recording prefab information. \nThis is necessary during playback to instantiate the objects.");
+            if (GUILayout.Button("Setup Requirements for Networked Prefabs"))
             {
-                SetupRequirements();
+                AddPrefabInformationToAllNetworkPrefabs();
+            }
+
+            if (GUILayout.Button("Setup Requirements for all Prefabs under Assets"))
+            {
+                AddPrefabInformationToAllPrefabs();
             }
 
             GUILayout.Label("\nThe following state stores information about the recording file as well as other information.");
@@ -110,7 +116,7 @@ namespace VRSYS.Scripts.Recording
             {
                 if (GUILayout.Button("Stop Recording"))
                 {
-                    if(controller.localRecording)
+                    if(controller.recorderState != null && controller.recorderState.localRecording)
                         controller.EndRecording();
                     else
                         controller.SendEndRecordingEvent();
@@ -131,7 +137,10 @@ namespace VRSYS.Scripts.Recording
 
                 if (GUILayout.Button("Stop Replay"))
                 {
-                    controller.SendEndReplayEvent();
+                    if (controller.localPlayback)
+                        controller.EndReplay();
+                    else
+                        controller.SendEndReplayEvent();
                 }
             }
             
@@ -144,6 +153,9 @@ namespace VRSYS.Scripts.Recording
             }
             
             GUILayout.Label("\nThe following settings control playback behaviour.");
+            replayRoot = (Transform)EditorGUILayout.ObjectField(
+                new GUIContent("Replay Root", "Optional anchor for playback. When set, recorded objects are matched/placed relative to this transform: pre-existing duplicate objects beneath it are matched to the recording, and objects that have to be instantiated for playback are created under it. Its position/rotation/scale thus offsets the whole replay. Leave empty to match/place objects at the scene root."),
+                controller.replayRoot, typeof(Transform), true);
             synchronisedPlayback = GUILayout.Toggle(controller.synchronizedPlayback, "Synchronised playback");
             lateJoinPlayback = GUILayout.Toggle(controller.lateJoinPlayback, "Late join playback");
             uploadFilesToServer = GUILayout.Toggle(controller.uploadFilesToServer, "Upload recording files to server");
@@ -152,6 +164,9 @@ namespace VRSYS.Scripts.Recording
 
             if (EditorGUI.EndChangeCheck())
             {
+                Undo.RecordObject(target, "Changed Values");
+                PrefabUtility.RecordPrefabInstancePropertyModifications(target);
+                controller.replayRoot = replayRoot;
                 Undo.RecordObject(target, "Changed Values");
                 PrefabUtility.RecordPrefabInstancePropertyModifications(target);
                 controller.synchronizedPlayback = synchronisedPlayback;
@@ -191,11 +206,6 @@ namespace VRSYS.Scripts.Recording
             }
         }
 
-        public void SetupRequirements()
-        {
-            AddPrefabInformationToAllNetworkPrefabs();
-        }
-
         private void AddPrefabInformationToAllNetworkPrefabs()
         {
             string[] guids = AssetDatabase.FindAssets("t:NetworkPrefabsList");
@@ -215,20 +225,21 @@ namespace VRSYS.Scripts.Recording
 
                     GameObject go = networkPrefab.Prefab;
                     string assetPath = AssetDatabase.GetAssetPath(go);
+                    string addressableKey = ResolveAddressableKey(assetPath);
 
                     RecordingPrefabInformation[] oldPrefabInformation = go.GetComponents<RecordingPrefabInformation>();
                     if (oldPrefabInformation.Length > 0)
                     {
                         foreach (var information in oldPrefabInformation)
                         {
-                            information.Setup(assetPath);
+                            information.Setup(assetPath, addressableKey);
                         }
                     }
                     else
                     {
                         RecordingPrefabInformation recordingPrefabInformation = go.AddComponent<RecordingPrefabInformation>();
                         if (recordingPrefabInformation != null)
-                            recordingPrefabInformation.Setup(assetPath);
+                            recordingPrefabInformation.Setup(assetPath, addressableKey);
                     }
 
                     PrefabUtility.RecordPrefabInstancePropertyModifications(go);
@@ -239,19 +250,30 @@ namespace VRSYS.Scripts.Recording
         
         private void AddPrefabInformationToAllPrefabs()
         {
-            string[] assetGUIDs = AssetDatabase.FindAssets("t:GameObject");
+            // Restrict the search to the Assets directory (not Packages) and to actual prefab files.
+            // "t:GameObject" also matches imported models (e.g. .fbx), which are read-only and cannot
+            // take components, so filter by the .prefab extension.
+            string[] assetGUIDs = AssetDatabase.FindAssets("t:GameObject", new[] { "Assets" });
             Debug.Log("searching in " + assetGUIDs.Length + " gameobjects...");
 
             foreach (var guid in assetGUIDs)
             {
                 var assetPath = AssetDatabase.GUIDToAssetPath(guid);
+                if (!assetPath.EndsWith(".prefab", System.StringComparison.OrdinalIgnoreCase))
+                    continue;
+
                 var go = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
+                if (go == null)
+                    continue;
+
+                string addressableKey = ResolveAddressableKey(assetPath);
+
                 RecordingPrefabInformation[] oldPrefabInformation = go.GetComponents<RecordingPrefabInformation>();
                 if (oldPrefabInformation.Length > 0)
                 {
                     foreach (var information in oldPrefabInformation)
                     {
-                        information.Setup(assetPath);
+                        information.Setup(assetPath, addressableKey);
                     }
                 }
                 else
@@ -259,11 +281,44 @@ namespace VRSYS.Scripts.Recording
                     RecordingPrefabInformation recordingPrefabInformation = go.AddComponent<RecordingPrefabInformation>();
                     if (recordingPrefabInformation != null)
                     {
-                        recordingPrefabInformation.Setup(assetPath);
+                        recordingPrefabInformation.Setup(assetPath, addressableKey);
                     }
                 }
                 PrefabUtility.RecordPrefabInstancePropertyModifications(go);
             }
+        }
+
+        // Returns the Addressables address of the asset at the given path, or "" if the asset is not
+        // marked Addressable or the Addressables package is not installed. Resolved via reflection so the
+        // recording package keeps zero hard dependency on com.unity.addressables; it activates
+        // automatically once Addressables is present in the project.
+        private static string ResolveAddressableKey(string assetPath)
+        {
+            if (string.IsNullOrEmpty(assetPath))
+                return "";
+
+            System.Type defaultObjectType = System.Type.GetType(
+                "UnityEditor.AddressableAssets.AddressableAssetSettingsDefaultObject, Unity.Addressables.Editor");
+            if (defaultObjectType == null)
+                return ""; // Addressables editor assembly not present
+
+            object settings = defaultObjectType
+                .GetProperty("Settings", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
+                ?.GetValue(null);
+            if (settings == null)
+                return ""; // Addressables not initialised in this project
+
+            string guid = AssetDatabase.AssetPathToGUID(assetPath);
+            if (string.IsNullOrEmpty(guid))
+                return "";
+
+            object entry = settings.GetType()
+                .GetMethod("FindAssetEntry", new[] { typeof(string) })
+                ?.Invoke(settings, new object[] { guid });
+            if (entry == null)
+                return ""; // asset is not marked Addressable
+
+            return entry.GetType().GetProperty("address")?.GetValue(entry) as string ?? "";
         }
     }
 #endif

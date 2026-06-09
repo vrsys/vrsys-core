@@ -17,7 +17,7 @@ namespace VRSYS.Scripts.Recording
         private string selectedServer;
         private int selectedReplayFileIndex = 0; // Add this line to store the selected string index
         private string[] replayFileOptions; // Array of strings for the dropdown
-        private bool useLocalReplayFiles = true; // Toggle: populate dropdown from local files vs. server list
+        private bool useLocalReplayFiles = true; // Mirror of RecorderState.useLocalReplayFiles for the inspector
 
         
         public override void OnInspectorGUI()
@@ -33,7 +33,7 @@ namespace VRSYS.Scripts.Recording
 
             recordingFile = EditorGUILayout.TextField(new GUIContent("Recording Name: ", "Name of the recording file that will be created when recording."), state.recordingFile);
             
-            useLocalReplayFiles = EditorGUILayout.Toggle(new GUIContent("Use Local Replay Files", "If enabled, the playback dropdown lists recordings found in the local recording directory. If disabled, it lists recordings retrieved from the server."), useLocalReplayFiles);
+            useLocalReplayFiles = EditorGUILayout.Toggle(new GUIContent("Use Local Replay Files", "If enabled, the playback dropdown lists recordings found in the local recording directory and the server is not queried for the replay list. If disabled, it lists recordings retrieved from the server."), state.useLocalReplayFiles);
 
             if (useLocalReplayFiles)
                 IdentifyLocallyStoredRecordings(Application.persistentDataPath);
@@ -88,6 +88,9 @@ namespace VRSYS.Scripts.Recording
                 Undo.RecordObject(target, "Changed Values");
                 PrefabUtility.RecordPrefabInstancePropertyModifications(target);
                 state.selectedServer = selectedServer;
+                Undo.RecordObject(target, "Changed Values");
+                PrefabUtility.RecordPrefabInstancePropertyModifications(target);
+                state.useLocalReplayFiles = useLocalReplayFiles;
             }
         }
 

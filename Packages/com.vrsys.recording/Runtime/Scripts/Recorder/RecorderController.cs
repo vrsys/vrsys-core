@@ -54,6 +54,7 @@ namespace VRSYS.Scripts.Recording
         public bool attachTransformRecorderToAll = true;
         public bool replayAudio = true;
         public bool recordMicro = true;
+        public bool recordAudioListener = true;
 
         [Tooltip("Optional anchor for playback. When set, recorded objects are matched/placed relative " +
                  "to this transform: pre-existing duplicate objects beneath it are matched to the " +
@@ -194,8 +195,6 @@ namespace VRSYS.Scripts.Recording
                         // specific voice SDK can inject their own clip via MicrophoneRecorder.SetMicrophoneReader.
                         string microphone = Microphone.devices[0];
                         Debug.Log("Default microphone: " + microphone);
-                        AudioClip microphoneClip = Microphone.Start(microphone, true, 10, AudioSettings.outputSampleRate);
-                        MicrophoneClipReader reader = new MicrophoneClipReader(microphoneClip, microphone);
 
                         GameObject newGo = new GameObject();
                         newGo.name = "SoundSource:0";
@@ -203,7 +202,22 @@ namespace VRSYS.Scripts.Recording
                         MicrophoneRecorder microphoneRecorder = newGo.AddComponent<MicrophoneRecorder>();
                         microphoneRecorder.SetId(0);
                         microphoneRecorder.Controller = this;
-                        microphoneRecorder.SetMicrophoneReader(reader);
+
+                        // Only start a fresh Unity capture when nothing is already recording from this
+                        // device. When a voice SDK such as ODIN already holds the microphone, calling
+                        // Microphone.Start again would disrupt its active capture, so we skip it and leave
+                        // the reader unset for the SDK-specific override (MicrophoneRecorder.SetMicrophoneReader).
+                        if (!Microphone.IsRecording(microphone))
+                        {
+                            AudioClip microphoneClip = Microphone.Start(microphone, true, 10, AudioSettings.outputSampleRate);
+                            microphoneRecorder.SetMicrophoneReader(new MicrophoneClipReader(microphoneClip, microphone));
+                        }
+                        else
+                        {
+                            Debug.Log("Microphone '" + microphone + "' is already recording (e.g. in use by a voice " +
+                                      "SDK like ODIN); skipping Microphone.Start and leaving the reader for an override.");
+                        }
+
                         if (NetworkUser.LocalInstance != null)
                             microphoneRecorder.SetUserTransform(NetworkUser.LocalInstance.head);
                     }
@@ -214,7 +228,7 @@ namespace VRSYS.Scripts.Recording
                     // testSource.Play();
                 }
 
-                if (recordMicro)
+                if (recordAudioListener)
                 {
                     var listener = FindAnyObjectByType<AudioListener>();
                     if (listener != null)

@@ -177,7 +177,10 @@ namespace VRSYS.Scripts.Recording
                     SetupAvatarPlaybackGO(newGo, information);
 
                 MarkAsPlaybackGO(newGo);
-                _instantiatedGameObjects.Add(newGo);
+                // Track the whole instantiated subtree, not just the root. A recorded child may be
+                // reparented out of this prefab during playback; if only the root were tracked it would
+                // survive when the root is destroyed and leak. Tracking every node guarantees cleanup.
+                TrackInstantiatedHierarchy(newGo);
                 SceneGraphTraversalGameObjectExistenceCheck(newGo, parentName);
             }
             else
@@ -370,20 +373,28 @@ namespace VRSYS.Scripts.Recording
 
         public void CleanReplayScene()
         {
-            Invoke(nameof(DeleteInstantiatedObjects), dissolveTime);
-        }
-
-        private void DeleteInstantiatedObjects()
-        {
             Debug.Log("Cleaning replay scene by destroying objects that were instantiated for playback.");
-            for (int i = 0; i < _instantiatedGameObjects.Count; ++i)
+
+            // Snapshot the instantiated objects and reset the field immediately. Destruction is deferred
+            // by dissolveTime, so a new PrepareReplayScene started within that window must not append into
+            // the list that is about to be destroyed (otherwise the next replay's objects get killed too).
+            List<GameObject> toDelete = _instantiatedGameObjects;
+            _instantiatedGameObjects = new List<GameObject>();
+
+            foreach (var go in toDelete)
             {
-                if (_instantiatedGameObjects[i] != null)
-                    GameObject.Destroy(_instantiatedGameObjects[i]);
+                if (go != null)
+                    GameObject.Destroy(go, dissolveTime);
             }
 
             Debug.Log("Cleaning replay scene done.");
-            _instantiatedGameObjects.Clear();
+        }
+
+        private void TrackInstantiatedHierarchy(GameObject go)
+        {
+            _instantiatedGameObjects.Add(go);
+            foreach (Transform child in go.transform)
+                TrackInstantiatedHierarchy(child.gameObject);
         }
 
         private void MarkAsPlaybackGO(GameObject currentGameObj)

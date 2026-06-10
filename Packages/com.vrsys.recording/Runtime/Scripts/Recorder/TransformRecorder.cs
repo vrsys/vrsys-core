@@ -341,14 +341,20 @@ namespace VRSYS.Scripts.Recording
                                     }
                                     else
                                     {
-                                        _transform.parent = null;
+                                        // A reparent-to-root during recording maps to the replay anchor
+                                        // during playback: the recording's root is the configured replayRoot
+                                        // (cf. ScenePreparator, which parents top-level recorded objects under
+                                        // it). SetParent(null) when no anchor is set preserves scene-root behaviour.
+                                        _transform.SetParent(controller.replayRoot);
+                                        _parentTransform = controller.replayRoot;
                                         _parent = 0;
                                     }
                                 }
 
                                 if (newParentUUID == 0)
                                 {
-                                    _transform.parent = null;
+                                    _transform.SetParent(controller.replayRoot);
+                                    _parentTransform = controller.replayRoot;
                                     _parent = 0;
                                 }
                             }

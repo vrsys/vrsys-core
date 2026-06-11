@@ -48,7 +48,6 @@ namespace VRSYS.Scripts.Recording
         [DllImport("RecordingPlugin")]
         private static extern bool GetTransformAndInformationAtTime(int recorderId, string objectName, int objectNameLength, int uuid, float currentTime, IntPtr data, IntPtr objectInformation);
         
-        private bool replayHierarchyChanges = true;
         private bool _isRecorded = false;
         private int playbackFramerate = 60;
         private int _parent;
@@ -274,7 +273,7 @@ namespace VRSYS.Scripts.Recording
 
             _currentParentTransform = _transform.parent;
 
-            if (replayHierarchyChanges)
+            if (controller.replayHierarchyChanges)
             {
                 if (_currentParentTransform != null && _currentParentTransform != _parentTransform && controller.recorderState.newIdOriginalId.ContainsKey(_currentParentTransform.gameObject.GetInstanceID()))
                 {
@@ -326,7 +325,7 @@ namespace VRSYS.Scripts.Recording
                         if (gameObject.activeSelf != active)
                             gameObject.SetActive(active);
                         
-                        if (replayHierarchyChanges)
+                        if (controller.replayHierarchyChanges)
                         {
                             if (newParentUUID != -99999 && _parent != newParentUUID)
                             {

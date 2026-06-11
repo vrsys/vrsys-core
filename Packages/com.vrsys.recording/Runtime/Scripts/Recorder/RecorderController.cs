@@ -52,9 +52,11 @@ namespace VRSYS.Scripts.Recording
         public int audioRecordingStepsPerSecond = 10;
 
         public bool attachTransformRecorderToAll = true;
+        public bool replayHierarchyChanges = true;
         public bool replayAudio = true;
         public bool recordMicro = true;
         public bool recordAudioListener = true;
+        public bool recordAllSoundSources = true;
 
         [Tooltip("Optional anchor for playback. When set, recorded objects are matched/placed relative " +
                  "to this transform: pre-existing duplicate objects beneath it are matched to the " +
@@ -248,12 +250,15 @@ namespace VRSYS.Scripts.Recording
                     }
                 }
                 
-                AudioSource[] sources = FindObjectsByType<AudioSource>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-                for (int i = 0; i < sources.Length; ++i)
+                if (recordAllSoundSources)
                 {
-                    AudioSourceRecorder recorder = sources[i].gameObject.AddComponent<AudioSourceRecorder>();
-                    recorder.SetId(2 + i);
-                    recorder.Controller = this;
+                    AudioSource[] sources = FindObjectsByType<AudioSource>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+                    for (int i = 0; i < sources.Length; ++i)
+                    {
+                        AudioSourceRecorder recorder = sources[i].gameObject.AddComponent<AudioSourceRecorder>();
+                        recorder.SetId(2 + i);
+                        recorder.Controller = this;
+                    }
                 }
             }
         }

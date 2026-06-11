@@ -321,17 +321,17 @@ namespace VRSYS.Scripts.Recording
             for (int i = 0; i < transformCount; ++i)
             {
                 int currentID = transformIDs[i];
-                GetGameObjectHierarchyNameByID(_controller.RecorderID, buffer, maxSize, currentID);
-                string gameobjectHierarchyPath = buffer.ToString();
+                int length = GetGameObjectHierarchyNameByID(_controller.RecorderID, buffer, maxSize, currentID);
+                string gameobjectHierarchyPath = length > 0 ? buffer.ToString() : "";
 
-                GetGameObjectMeshPathByID(_controller.RecorderID, buffer, maxSize, currentID);
-                string gameobjectMeshPath = buffer.ToString();
+                length = GetGameObjectMeshPathByID(_controller.RecorderID, buffer, maxSize, currentID);
+                string gameobjectMeshPath = length > 0 ? buffer.ToString() : "";
 
-                GetGameObjectPrefabByID(_controller.RecorderID, buffer, maxSize, currentID);
-                string gameobjectPrefabLocation = buffer.ToString();
+                length =  GetGameObjectPrefabByID(_controller.RecorderID, buffer, maxSize, currentID);
+                string gameobjectPrefabLocation = length > 0 ? buffer.ToString() : "";
 
-                GetGameObjectComponentsByID(_controller.RecorderID, buffer, maxSize, currentID);
-                string gameobjectComponents = buffer.ToString();
+                length =  GetGameObjectComponentsByID(_controller.RecorderID, buffer, maxSize, currentID);
+                string gameobjectComponents = length > 0 ? buffer.ToString() : "";
 
                 float firstSeenTime = GetGameObjectFirstSeenTimeByID(_controller.RecorderID, currentID);
                 string[] pathParts = gameobjectHierarchyPath.Split('/');

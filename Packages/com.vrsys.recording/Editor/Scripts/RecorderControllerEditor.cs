@@ -15,6 +15,12 @@ namespace VRSYS.Scripts.Recording
         private bool lateJoinPlayback;
         private bool recordMicro;
         private bool recordAudioListener;
+        private bool recordAllSoundSources;
+        private bool _showAudioRecording = true;
+        private bool attachTransformRecorderToAll;
+        private bool replayHierarchyChanges;
+        private int transformRecordingStepsPerSecond;
+        private bool _showTransformRecording = true;
         private bool downloadFilesFromServer;
         private bool uploadFilesToServer;
         private bool enableDebugInfo;
@@ -158,8 +164,60 @@ namespace VRSYS.Scripts.Recording
             replayRoot = (Transform)EditorGUILayout.ObjectField(
                 new GUIContent("Replay Root", "Optional anchor for playback. When set, recorded objects are matched/placed relative to this transform: pre-existing duplicate objects beneath it are matched to the recording, and objects that have to be instantiated for playback are created under it. Its position/rotation/scale thus offsets the whole replay. Leave empty to match/place objects at the scene root."),
                 controller.replayRoot, typeof(Transform), true);
-            recordMicro = GUILayout.Toggle(controller.recordMicro, "Record microphone");
-            recordAudioListener = GUILayout.Toggle(controller.recordAudioListener, "Record audio listener");
+
+            // Transform recording options grouped in their own collapsible section. Defaults to expanded.
+            _showTransformRecording = EditorGUILayout.BeginFoldoutHeaderGroup(_showTransformRecording, "Transform Recording Settings");
+            if (_showTransformRecording)
+            {
+                EditorGUI.indentLevel++;
+                attachTransformRecorderToAll = EditorGUILayout.Toggle(
+                    new GUIContent("Attach to all transforms", "Attach a transform recorder to every object in the scene when recording."),
+                    controller.attachTransformRecorderToAll);
+                transformRecordingStepsPerSecond = EditorGUILayout.IntField(
+                    new GUIContent("Recording steps per second", "How many transform samples are captured per second while recording."),
+                    controller.transformRecordingStepsPerSecond);
+                replayHierarchyChanges = EditorGUILayout.Toggle(
+                    new GUIContent("Replay hierarchy changes", "Reapply recorded reparenting (hierarchy changes) during playback. Disable to keep objects under their initial parent."),
+                    controller.replayHierarchyChanges);
+                EditorGUI.indentLevel--;
+            }
+            else
+            {
+                // Keep the working copies in sync with the stored values while the section is collapsed,
+                // so the change-check below does not write back stale state.
+                attachTransformRecorderToAll = controller.attachTransformRecorderToAll;
+                transformRecordingStepsPerSecond = controller.transformRecordingStepsPerSecond;
+                replayHierarchyChanges = controller.replayHierarchyChanges;
+            }
+            EditorGUILayout.EndFoldoutHeaderGroup();
+
+            // Surface the audio capture options in their own collapsible section so they are not lost
+            // among the other playback toggles. Defaults to expanded so they are visible on first sight.
+            _showAudioRecording = EditorGUILayout.BeginFoldoutHeaderGroup(_showAudioRecording, "Audio Recording Settings");
+            if (_showAudioRecording)
+            {
+                EditorGUI.indentLevel++;
+                recordMicro = EditorGUILayout.Toggle(
+                    new GUIContent("Record microphone", "Capture the local microphone into the recording."),
+                    controller.recordMicro);
+                recordAudioListener = EditorGUILayout.Toggle(
+                    new GUIContent("Record audio listener", "Capture the scene's AudioListener output into the recording."),
+                    controller.recordAudioListener);
+                recordAllSoundSources = EditorGUILayout.Toggle(
+                    new GUIContent("Record all sound sources", "Capture every AudioSource in the scene into the recording."),
+                    controller.recordAllSoundSources);
+                EditorGUI.indentLevel--;
+            }
+            else
+            {
+                // Keep the working copies in sync with the stored values while the section is collapsed,
+                // so the change-check below does not write back stale toggle state.
+                recordMicro = controller.recordMicro;
+                recordAudioListener = controller.recordAudioListener;
+                recordAllSoundSources = controller.recordAllSoundSources;
+            }
+            EditorGUILayout.EndFoldoutHeaderGroup();
+
             synchronisedPlayback = GUILayout.Toggle(controller.synchronizedPlayback, "Synchronised playback");
             lateJoinPlayback = GUILayout.Toggle(controller.lateJoinPlayback, "Late join playback");
             uploadFilesToServer = GUILayout.Toggle(controller.uploadFilesToServer, "Upload recording files to server");
@@ -175,6 +233,10 @@ namespace VRSYS.Scripts.Recording
                 PrefabUtility.RecordPrefabInstancePropertyModifications(target);
                 controller.recordMicro = recordMicro;
                 controller.recordAudioListener = recordAudioListener;
+                controller.recordAllSoundSources = recordAllSoundSources;
+                controller.attachTransformRecorderToAll = attachTransformRecorderToAll;
+                controller.transformRecordingStepsPerSecond = transformRecordingStepsPerSecond;
+                controller.replayHierarchyChanges = replayHierarchyChanges;
                 Undo.RecordObject(target, "Changed Values");
                 PrefabUtility.RecordPrefabInstancePropertyModifications(target);
                 controller.synchronizedPlayback = synchronisedPlayback;

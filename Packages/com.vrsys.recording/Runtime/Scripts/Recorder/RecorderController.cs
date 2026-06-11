@@ -68,7 +68,6 @@ namespace VRSYS.Scripts.Recording
 
         public bool createWAV = false;
         public bool createCSV = false;
-        public bool playbackLastRecordedFile = true;
         public bool synchronizedPlayback = false;
         public bool lateJoinPlayback = false;
         public bool downloadFilesFromServer = false;
@@ -568,10 +567,7 @@ namespace VRSYS.Scripts.Recording
             OnRecordingEnd();
             
             _networkController.UpdateReplayList();
-
-            if (playbackLastRecordedFile)
-                recorderState.fixedPlaybackRecordingName = recorderState.recordingFile;
-
+            
             DestroyRecorder();
         }
 

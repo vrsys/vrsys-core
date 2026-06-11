@@ -16,86 +16,40 @@ namespace VRSYS.Scripts.Recording
         private bool recordMicro;
         private bool recordAudioListener;
         private bool recordAllSoundSources;
-        private bool _showAudioRecording = true;
+        private bool replayAudio;
         private bool attachTransformRecorderToAll;
         private bool replayHierarchyChanges;
         private bool recordOnLocalTransformChangesOnly;
         private int transformRecordingStepsPerSecond;
-        private bool _showTransformRecording = true;
         private bool downloadFilesFromServer;
         private bool uploadFilesToServer;
+        private bool createWAV;
+        private bool createCSV;
         private bool enableDebugInfo;
         private Transform replayRoot;
         private string _downloadPassword = "";
+
+        // Foldout expand/collapse state. Defaults follow the agreed layout: the frequently used
+        // recording/playback sections start expanded; one-time setup and infrequent sections start collapsed.
+        private bool _showSceneSetup = false;
+        private bool _showTransformRecording = true;
+        private bool _showAudioRecording = true;
+        private bool _showPlayback = true;
+        private bool _showServerFiles = false;
+        private bool _showOutputDebug = false;
         
         public override void OnInspectorGUI()
         {
             RecorderController controller = (RecorderController)target;
             EditorGUI.BeginChangeCheck();
             
-            GUILayout.Label("The following buttons will setup scripts required for recording prefab information. \nThis is necessary during playback to instantiate the objects.");
-            if (GUILayout.Button("Setup Requirements for Networked Prefabs"))
-            {
-                AddPrefabInformationToAllNetworkPrefabs();
-            }
-
-            if (GUILayout.Button("Setup Requirements for all Prefabs under Assets"))
-            {
-                AddPrefabInformationToAllPrefabs();
-            }
+            // --- Always-visible top section: Recorder State + the primary recording/replay controls ---
 
             GUILayout.Label("\nThe following state stores information about the recording file as well as other information.");
 
             controller.recorderState = (RecorderState)EditorGUILayout.ObjectField("Recorder State",
                 controller.GetComponent<RecorderState>(), typeof(RecorderState));
 
-            if (controller.recorderState != null)
-            {
-                GUILayout.Label("\nRecording Directory:");
-                if (GUILayout.Button("Open Recording Directory"))
-                {
-                    if (string.IsNullOrEmpty(controller.recorderState.recordingDirectory))
-                    {
-                        OpenRecordingDirectory(Application.persistentDataPath);
-                    }
-                    else{
-                        OpenRecordingDirectory(controller.recorderState.recordingDirectory);
-                    }
-                }
-
-                GUILayout.Label("\nDownload Project Zip:");
-                _downloadPassword = EditorGUILayout.PasswordField("Download password", _downloadPassword);
-
-                bool canDownload =
-                    !string.IsNullOrEmpty(controller.recorderState.projectName) &&
-                    !string.IsNullOrEmpty(controller.recorderState.selectedServer) &&
-                    !string.IsNullOrEmpty(_downloadPassword);
-
-                using (new EditorGUI.DisabledScope(!canDownload))
-                {
-                    if (GUILayout.Button("Download Project Zip"))
-                    {
-                        string projectName = controller.recorderState.projectName;
-                        string serverAddress = controller.recorderState.selectedServer;
-                        string saveDir = string.IsNullOrEmpty(controller.recorderState.recordingDirectory)
-                            ? Application.persistentDataPath
-                            : controller.recorderState.recordingDirectory;
-                        string savePath = Path.Combine(saveDir, projectName + ".zip");
-
-                        controller.StartCoroutine(NetworkUtils.DownloadProjectZip(
-                            projectName,
-                            serverAddress,
-                            _downloadPassword,
-                            savePath,
-                            (ok, msg) =>
-                            {
-                                if (ok) Debug.Log("Download saved to: " + msg);
-                                else Debug.LogError("Download failed: " + msg);
-                            }));
-                    }
-                }
-            }
-            
             GUILayout.Label("\nThe following buttons can be used in the editor to create/replay recordings.");
 
             if (controller.CurrentState == State.Idle)
@@ -104,7 +58,7 @@ namespace VRSYS.Scripts.Recording
                 {
                     controller.SendStartRecordingEvents();
                 }
-                
+
                 if (GUILayout.Button("Start Local Recording"))
                 {
                     controller.StartLocalRecording();
@@ -114,7 +68,7 @@ namespace VRSYS.Scripts.Recording
                 {
                     controller.PrepareAndStartDistributedReplay();
                 }
-                
+
                 if (GUILayout.Button("Start Local Replay"))
                 {
                     controller.PrepareAndStartLocalReplay();
@@ -131,7 +85,7 @@ namespace VRSYS.Scripts.Recording
                         controller.SendEndRecordingEvent();
                 }
             }
-            
+
             if (controller.CurrentState == State.Replaying)
             {
                 if (controller.localPlayback && GUILayout.Button("Toggle Local Play/Pause"))
@@ -142,7 +96,7 @@ namespace VRSYS.Scripts.Recording
                 {
                     // TODO trigger global toggle pause event
                 }
-                
+
 
                 if (GUILayout.Button("Stop Replay"))
                 {
@@ -152,7 +106,7 @@ namespace VRSYS.Scripts.Recording
                         controller.SendEndReplayEvent();
                 }
             }
-            
+
             if (controller.CurrentState == State.PreparingReplay)
             {
                 if (GUILayout.Button("Cancel Download & Playback"))
@@ -160,14 +114,30 @@ namespace VRSYS.Scripts.Recording
                     // TODO: enable canceling of playback and downloads
                 }
             }
-            
-            GUILayout.Label("\nThe following settings control playback behaviour.");
-            replayRoot = (Transform)EditorGUILayout.ObjectField(
-                new GUIContent("Replay Root", "Optional anchor for playback. When set, recorded objects are matched/placed relative to this transform: pre-existing duplicate objects beneath it are matched to the recording, and objects that have to be instantiated for playback are created under it. Its position/rotation/scale thus offsets the whole replay. Leave empty to match/place objects at the scene root."),
-                controller.replayRoot, typeof(Transform), true);
 
-            // Transform recording options grouped in their own collapsible section. Defaults to expanded.
-            _showTransformRecording = EditorGUILayout.BeginFoldoutHeaderGroup(_showTransformRecording, "Transform Recording & Playback Settings");
+            EditorGUILayout.Space();
+
+            // --- Scene Setup: one-time prefab setup actions. Collapsed by default. ---
+            _showSceneSetup = EditorGUILayout.BeginFoldoutHeaderGroup(_showSceneSetup, "Scene Setup");
+            if (_showSceneSetup)
+            {
+                EditorGUI.indentLevel++;
+                GUILayout.Label("These buttons set up the scripts required for recording prefab information.\nThis is necessary during playback to instantiate the objects.");
+                if (GUILayout.Button("Setup Requirements for Networked Prefabs"))
+                {
+                    AddPrefabInformationToAllNetworkPrefabs();
+                }
+
+                if (GUILayout.Button("Setup Requirements for all Prefabs under Assets"))
+                {
+                    AddPrefabInformationToAllPrefabs();
+                }
+                EditorGUI.indentLevel--;
+            }
+            EditorGUILayout.EndFoldoutHeaderGroup();
+
+            // --- Transform Recording: capture options for transforms. Expanded by default. ---
+            _showTransformRecording = EditorGUILayout.BeginFoldoutHeaderGroup(_showTransformRecording, "Transform Recording");
             if (_showTransformRecording)
             {
                 EditorGUI.indentLevel++;
@@ -177,9 +147,6 @@ namespace VRSYS.Scripts.Recording
                 transformRecordingStepsPerSecond = EditorGUILayout.IntField(
                     new GUIContent("Recording steps per second", "How many transform samples are captured per second while recording."),
                     controller.transformRecordingStepsPerSecond);
-                replayHierarchyChanges = EditorGUILayout.Toggle(
-                    new GUIContent("Replay hierarchy changes", "Reapply recorded reparenting (hierarchy changes) during playback. Disable to keep objects under their initial parent."),
-                    controller.replayHierarchyChanges);
                 recordOnLocalTransformChangesOnly = EditorGUILayout.Toggle(
                     new GUIContent("Record on local changes only", "When enabled, a transform is recorded only when its local position/rotation/scale changes. When disabled, changes are detected from the global (world) transform instead."),
                     controller.recordOnLocalTransformChangesOnly);
@@ -191,14 +158,12 @@ namespace VRSYS.Scripts.Recording
                 // so the change-check below does not write back stale state.
                 attachTransformRecorderToAll = controller.attachTransformRecorderToAll;
                 transformRecordingStepsPerSecond = controller.transformRecordingStepsPerSecond;
-                replayHierarchyChanges = controller.replayHierarchyChanges;
                 recordOnLocalTransformChangesOnly = controller.recordOnLocalTransformChangesOnly;
             }
             EditorGUILayout.EndFoldoutHeaderGroup();
 
-            // Surface the audio capture options in their own collapsible section so they are not lost
-            // among the other playback toggles. Defaults to expanded so they are visible on first sight.
-            _showAudioRecording = EditorGUILayout.BeginFoldoutHeaderGroup(_showAudioRecording, "Audio Recording Settings");
+            // --- Audio Recording: audio capture options. Expanded by default. ---
+            _showAudioRecording = EditorGUILayout.BeginFoldoutHeaderGroup(_showAudioRecording, "Audio Recording");
             if (_showAudioRecording)
             {
                 EditorGUI.indentLevel++;
@@ -211,6 +176,9 @@ namespace VRSYS.Scripts.Recording
                 recordAllSoundSources = EditorGUILayout.Toggle(
                     new GUIContent("Record all sound sources", "Capture every AudioSource in the scene into the recording."),
                     controller.recordAllSoundSources);
+                replayAudio = EditorGUILayout.Toggle(
+                    new GUIContent("Replay audio", "Play back recorded audio during replay."),
+                    controller.replayAudio);
                 EditorGUI.indentLevel--;
             }
             else
@@ -220,14 +188,128 @@ namespace VRSYS.Scripts.Recording
                 recordMicro = controller.recordMicro;
                 recordAudioListener = controller.recordAudioListener;
                 recordAllSoundSources = controller.recordAllSoundSources;
+                replayAudio = controller.replayAudio;
             }
             EditorGUILayout.EndFoldoutHeaderGroup();
 
-            synchronisedPlayback = GUILayout.Toggle(controller.synchronizedPlayback, "Synchronised playback");
-            lateJoinPlayback = GUILayout.Toggle(controller.lateJoinPlayback, "Late join playback");
-            uploadFilesToServer = GUILayout.Toggle(controller.uploadFilesToServer, "Upload recording files to server");
-            downloadFilesFromServer = GUILayout.Toggle(controller.downloadFilesFromServer, "Download recording files from server");
-            enableDebugInfo = GUILayout.Toggle(controller.debugLogs, "Print debug logs");
+            // --- Playback: settings that control how a recording is replayed. Expanded by default. ---
+            _showPlayback = EditorGUILayout.BeginFoldoutHeaderGroup(_showPlayback, "Playback");
+            if (_showPlayback)
+            {
+                EditorGUI.indentLevel++;
+                replayRoot = (Transform)EditorGUILayout.ObjectField(
+                    new GUIContent("Replay Root", "Optional anchor for playback. When set, recorded objects are matched/placed relative to this transform: pre-existing duplicate objects beneath it are matched to the recording, and objects that have to be instantiated for playback are created under it. Its position/rotation/scale thus offsets the whole replay. Leave empty to match/place objects at the scene root."),
+                    controller.replayRoot, typeof(Transform), true);
+                replayHierarchyChanges = EditorGUILayout.Toggle(
+                    new GUIContent("Replay hierarchy changes", "Reapply recorded reparenting (hierarchy changes) during playback. Disable to keep objects under their initial parent."),
+                    controller.replayHierarchyChanges);
+                synchronisedPlayback = EditorGUILayout.Toggle(
+                    new GUIContent("Synchronised playback", "Keep playback time synchronised across all networked clients."),
+                    controller.synchronizedPlayback);
+                lateJoinPlayback = EditorGUILayout.Toggle(
+                    new GUIContent("Late join playback", "Start clients that join after playback began at the current playback time."),
+                    controller.lateJoinPlayback);
+                EditorGUI.indentLevel--;
+            }
+            else
+            {
+                replayRoot = controller.replayRoot;
+                replayHierarchyChanges = controller.replayHierarchyChanges;
+                synchronisedPlayback = controller.synchronizedPlayback;
+                lateJoinPlayback = controller.lateJoinPlayback;
+            }
+            EditorGUILayout.EndFoldoutHeaderGroup();
+
+            // --- Server & Files: server transfer toggles and file/directory actions. Collapsed by default. ---
+            _showServerFiles = EditorGUILayout.BeginFoldoutHeaderGroup(_showServerFiles, "Server & Files");
+            if (_showServerFiles)
+            {
+                EditorGUI.indentLevel++;
+                uploadFilesToServer = EditorGUILayout.Toggle(
+                    new GUIContent("Upload recording files to server", "Upload the produced recording files to the configured server."),
+                    controller.uploadFilesToServer);
+                downloadFilesFromServer = EditorGUILayout.Toggle(
+                    new GUIContent("Download recording files from server", "Download recording files from the configured server before playback."),
+                    controller.downloadFilesFromServer);
+
+                if (controller.recorderState != null)
+                {
+                    GUILayout.Label("\nRecording Directory:");
+                    if (GUILayout.Button("Open Recording Directory"))
+                    {
+                        if (string.IsNullOrEmpty(controller.recorderState.recordingDirectory))
+                        {
+                            OpenRecordingDirectory(Application.persistentDataPath);
+                        }
+                        else{
+                            OpenRecordingDirectory(controller.recorderState.recordingDirectory);
+                        }
+                    }
+
+                    GUILayout.Label("\nDownload Project Zip:");
+                    _downloadPassword = EditorGUILayout.PasswordField("Download password", _downloadPassword);
+
+                    bool canDownload =
+                        !string.IsNullOrEmpty(controller.recorderState.projectName) &&
+                        !string.IsNullOrEmpty(controller.recorderState.selectedServer) &&
+                        !string.IsNullOrEmpty(_downloadPassword);
+
+                    using (new EditorGUI.DisabledScope(!canDownload))
+                    {
+                        if (GUILayout.Button("Download Project Zip"))
+                        {
+                            string projectName = controller.recorderState.projectName;
+                            string serverAddress = controller.recorderState.selectedServer;
+                            string saveDir = string.IsNullOrEmpty(controller.recorderState.recordingDirectory)
+                                ? Application.persistentDataPath
+                                : controller.recorderState.recordingDirectory;
+                            string savePath = Path.Combine(saveDir, projectName + ".zip");
+
+                            controller.StartCoroutine(NetworkUtils.DownloadProjectZip(
+                                projectName,
+                                serverAddress,
+                                _downloadPassword,
+                                savePath,
+                                (ok, msg) =>
+                                {
+                                    if (ok) Debug.Log("Download saved to: " + msg);
+                                    else Debug.LogError("Download failed: " + msg);
+                                }));
+                        }
+                    }
+                }
+                EditorGUI.indentLevel--;
+            }
+            else
+            {
+                uploadFilesToServer = controller.uploadFilesToServer;
+                downloadFilesFromServer = controller.downloadFilesFromServer;
+            }
+            EditorGUILayout.EndFoldoutHeaderGroup();
+
+            // --- Output & Debug: file export options and debug logging. Collapsed by default. ---
+            _showOutputDebug = EditorGUILayout.BeginFoldoutHeaderGroup(_showOutputDebug, "Output & Debug");
+            if (_showOutputDebug)
+            {
+                EditorGUI.indentLevel++;
+                createWAV = EditorGUILayout.Toggle(
+                    new GUIContent("Create WAV", "Export recorded audio to a .wav file alongside the recording."),
+                    controller.createWAV);
+                createCSV = EditorGUILayout.Toggle(
+                    new GUIContent("Create CSV", "Export recorded data to a .csv file alongside the recording."),
+                    controller.createCSV);
+                enableDebugInfo = EditorGUILayout.Toggle(
+                    new GUIContent("Print debug logs", "Print verbose recording/playback debug logs to the console."),
+                    controller.debugLogs);
+                EditorGUI.indentLevel--;
+            }
+            else
+            {
+                createWAV = controller.createWAV;
+                createCSV = controller.createCSV;
+                enableDebugInfo = controller.debugLogs;
+            }
+            EditorGUILayout.EndFoldoutHeaderGroup();
 
             if (EditorGUI.EndChangeCheck())
             {
@@ -239,10 +321,13 @@ namespace VRSYS.Scripts.Recording
                 controller.recordMicro = recordMicro;
                 controller.recordAudioListener = recordAudioListener;
                 controller.recordAllSoundSources = recordAllSoundSources;
+                controller.replayAudio = replayAudio;
                 controller.attachTransformRecorderToAll = attachTransformRecorderToAll;
                 controller.transformRecordingStepsPerSecond = transformRecordingStepsPerSecond;
                 controller.replayHierarchyChanges = replayHierarchyChanges;
                 controller.recordOnLocalTransformChangesOnly = recordOnLocalTransformChangesOnly;
+                controller.createWAV = createWAV;
+                controller.createCSV = createCSV;
                 Undo.RecordObject(target, "Changed Values");
                 PrefabUtility.RecordPrefabInstancePropertyModifications(target);
                 controller.synchronizedPlayback = synchronisedPlayback;

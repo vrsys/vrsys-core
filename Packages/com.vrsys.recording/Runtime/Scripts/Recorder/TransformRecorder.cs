@@ -187,12 +187,17 @@ namespace VRSYS.Scripts.Recording
                     float posDif = (_lastLocalPos - currentCapture.localPosition).magnitude;
                     float scaDif = (_lastLocalSca - currentCapture.localScale).magnitude;
 
-                    float timeDif = _lastRecordTime - recordTime;
+                    // Elapsed time since the last *recorded* sample. While the object is static no
+                    // samples are written, so a value larger than one sample step means we skipped a
+                    // static period and must insert a hold keyframe to stop the plugin from smearing
+                    // the first motion delta across the whole gap.
+                    float timeDif = recordTime - _lastRecordTime;
 
-                    if ((timeDif > 1.1f / (float) controller.transformRecordingStepsPerSecond || (posDif > 1f || scaDif > 0.3f)) && recordTime > 0.001f)
+                    if ((timeDif > 1.5f / (float) controller.transformRecordingStepsPerSecond || (posDif > 1f || scaDif > 0.3f)) && recordTime > 0.001f)
                     {
                         teleportation = true;
-                        Debug.Log("Teleportation detected? Pos Dif: " + posDif + ", Scale Dif: " + scaDif + ", Time Dif: " + timeDif + ", Time: " + recordTime + ", uuid: " + id);
+                        if (controller.debugLogs)
+                            Debug.Log("Gap/teleport keyframe inserted. Pos Dif: " + posDif + ", Scale Dif: " + scaDif + ", Time Dif: " + timeDif + ", Time: " + recordTime + ", uuid: " + id);
                     }
                 }
              

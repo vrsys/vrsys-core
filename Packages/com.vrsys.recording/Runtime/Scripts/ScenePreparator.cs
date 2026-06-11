@@ -162,7 +162,16 @@ namespace VRSYS.Scripts.Recording
             {
                 if (_controller.debugLogs)
                     Debug.Log("Prefab could be loaded.");
+                // Instantiate INACTIVE: the recorded user prefab (e.g. REPLAY-HMDUser) contains an
+                // OVRCameraRig + Camera. If instantiated active, their Awake/OnEnable register a second
+                // XR camera rig with the renderer for a frame before RemoveCustomComponents strips them,
+                // and the async render thread crashes in the Adreno Vulkan driver (vkCmdBeginRenderPass2).
+                // Deactivating the source prefab first makes the clone instantiate inactive, so no Awake
+                // runs until the camera/network components have been removed; it stays inactive afterwards.
+                bool prefabWasActive = go.activeSelf;
+                go.SetActive(false);
                 GameObject newGo = Instantiate(go, parent);
+                go.SetActive(prefabWasActive);
                 if (_controller.debugLogs)
                     Debug.Log("Removing custom components.");
                 Utils.RemoveCustomComponents(newGo.transform);

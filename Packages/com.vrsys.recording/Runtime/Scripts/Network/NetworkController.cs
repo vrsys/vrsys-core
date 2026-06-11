@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using Unity.Netcode;
 using System.Runtime.InteropServices;
-using System.Threading;
 using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
@@ -49,6 +48,10 @@ namespace VRSYS.Scripts.Recording
         private bool _genericDownloadFailed = false;
         private bool _allUsersFinishedLoading = false;
         private bool _startReplayEventSent = false;
+        private Coroutine _startRecordingCoroutine;
+        private Coroutine _startReplayCoroutine;
+        private Coroutine _endRecordingCoroutine;
+        private Coroutine _endReplayCoroutine;
         
         private DateTime _globalSynchronizationTime;
         private TimeSpan _globalRecordStartDifference;
@@ -163,27 +166,36 @@ namespace VRSYS.Scripts.Recording
             Debug.Log("Received start recording time: " + startRecordingTime + ". Recorder id: " + _state.recorderID);
 
             _globalSynchronizationTime = NetworkUtils.GetSynchronizedTime();
+            if (_startRecordingCoroutine != null)
+            {
+                StopCoroutine(_startRecordingCoroutine);
+                _startRecordingCoroutine = null;
+            }
+
             if (_globalSynchronizationTime > startRecordingTime)
             {
                 TimeSpan difference = _globalSynchronizationTime - startRecordingTime;
                 Debug.LogError("The recording should have started already! Time difference: " + difference.TotalMilliseconds + " ms.  Potential fix: increase the  maxSynchronizationTime!");
-                if (_state.currentState == State.PrepareRecording)
-                {
-                    _controller.StartRecording();
-                }
+                StartRecordingIfStateAllows(startRecordingTime);
             }
             else
             {
-                Task.Run(() => WaitForRecordingAsync(startRecordingTime));
+                _startRecordingCoroutine = StartCoroutine(StartRecordingWhenReady(startRecordingTime));
             }
         }
 
-        private async void WaitForRecordingAsync(DateTime startRecordingTime)
+        private IEnumerator StartRecordingWhenReady(DateTime startRecordingTime)
         {
-            await Task.Run(() => WaitUntilTime(startRecordingTime));
-            
+            yield return WaitUntilSynchronizedTime(startRecordingTime);
+            _startRecordingCoroutine = null;
+            StartRecordingIfStateAllows(startRecordingTime);
+        }
+
+        private void StartRecordingIfStateAllows(DateTime startRecordingTime)
+        {
             if (_state.currentState == State.PrepareRecording)
             {
+                _globalSynchronizationTime = NetworkUtils.GetSynchronizedTime();
                 TimeSpan diff = _globalSynchronizationTime - startRecordingTime;
                 RegisterRecordingStartGlobalTimeOffset(_state.recorderID, (float)diff.TotalMilliseconds);
                 _controller.StartRecording();
@@ -194,17 +206,19 @@ namespace VRSYS.Scripts.Recording
             }
         }
 
-        private bool WaitUntilTime(DateTime time)
+        private IEnumerator WaitUntilSynchronizedTime(DateTime time)
         {
+            _globalSynchronizationTime = NetworkUtils.GetSynchronizedTime();
+
             while (_globalSynchronizationTime < time)
             {
                 TimeSpan difference = _globalSynchronizationTime - time;
                 _globalRecordStartDifference = difference;
+                yield return null;
                 _globalSynchronizationTime = NetworkUtils.GetSynchronizedTime();
-                Thread.Sleep(1);
             }
+
             Debug.Log("Target time passed.");
-            return true;
         }
 
         public void EndRecordingOnAllClientsEvent()
@@ -230,20 +244,39 @@ namespace VRSYS.Scripts.Recording
                 return;
             
             _globalSynchronizationTime = NetworkUtils.GetSynchronizedTime();
+            if (_endRecordingCoroutine != null)
+            {
+                StopCoroutine(_endRecordingCoroutine);
+                _endRecordingCoroutine = null;
+            }
+
             if (_globalSynchronizationTime > stopRecordingTime)
             {
                 TimeSpan difference = _globalSynchronizationTime - stopRecordingTime;
                 Debug.LogError("The recording should have stopped already! Time difference: " +
                                difference.TotalMilliseconds +
                                " ms.  Potential fix: increase the  maxSynchronizationTime!");
+                StopRecording();
             }
             else
             {
-                while (_globalSynchronizationTime < stopRecordingTime)
-                {
-                    _globalSynchronizationTime = NetworkUtils.GetSynchronizedTime();
-                    Thread.Sleep(1);
-                }
+                _endRecordingCoroutine = StartCoroutine(StopRecordingWhenReady(stopRecordingTime));
+            }
+        }
+
+        private IEnumerator StopRecordingWhenReady(DateTime stopRecordingTime)
+        {
+            yield return WaitUntilSynchronizedTime(stopRecordingTime);
+            _endRecordingCoroutine = null;
+            StopRecording();
+        }
+
+        private void StopRecording()
+        {
+            if (_startRecordingCoroutine != null)
+            {
+                StopCoroutine(_startRecordingCoroutine);
+                _startRecordingCoroutine = null;
             }
 
             _controller.EndRecording();
@@ -255,6 +288,7 @@ namespace VRSYS.Scripts.Recording
         {
             
             Debug.Log("Sending event to start replay on all clients.");
+            _startReplayEventSent = true;
             _globalSynchronizationTime = NetworkUtils.GetSynchronizedTime();
             DateTime startReplayTime = _globalSynchronizationTime.AddMilliseconds(maxSynchronizationTimeMS);
             StartReplayOnServerRpc(startReplayTime.ToFileTime(), _state.recorderID);
@@ -279,10 +313,12 @@ namespace VRSYS.Scripts.Recording
             if (!_replayStarted)
                 Debug.Log("Replay not yet started.");
 
-            if (!IsDownloading())
+            bool isDownloading = IsDownloading();
+
+            if (!isDownloading)
                 Debug.Log("Not downloading files.");
 
-            if (!_replayStarted && !IsDownloading() && _state.currentState == State.PreparingReplay)
+            if (!_replayStarted && !isDownloading && _state.currentState == State.PreparingReplay)
             {
                 _replayStarted = true;
 
@@ -293,20 +329,45 @@ namespace VRSYS.Scripts.Recording
                     Debug.LogError("The replay should have started already! Time difference: " +
                                    difference.TotalMilliseconds +
                                    " ms.  Potential fix: increase the  maxSynchronizationTime!");
-                    _controller.StartReplay();
+                    StartReplayIfStateAllows();
                 }
                 else
                 {
-                    Task.Run(() => WaitForReplayAsync(startReplayTime));
-                    Debug.Log("Target time passed. Starting replay.");
-                    _controller.StartReplay();
+                    if (_startReplayCoroutine != null)
+                        StopCoroutine(_startReplayCoroutine);
+
+                    _startReplayCoroutine = StartCoroutine(StartReplayWhenReady(startReplayTime));
                 }
             }
         }
         
-        private async void WaitForReplayAsync(DateTime startReplayTime)
+        private IEnumerator StartReplayWhenReady(DateTime startReplayTime)
         {
-            bool finished = await Task.Run(() => WaitUntilTime(startReplayTime));
+            yield return WaitUntilSynchronizedTime(startReplayTime);
+            _startReplayCoroutine = null;
+            StartReplayIfStateAllows();
+        }
+
+        private void StartReplayIfStateAllows()
+        {
+            if (_state.currentState != State.PreparingReplay)
+            {
+                _replayStarted = false;
+                _startReplayEventSent = false;
+                Debug.LogWarning("A request to start a replay was sent but the current state does not allow starting replay.");
+                return;
+            }
+
+            if (IsDownloading())
+            {
+                _replayStarted = false;
+                _startReplayEventSent = false;
+                Debug.LogWarning("A request to start a replay was sent but downloads are still running.");
+                return;
+            }
+
+            Debug.Log("Target time passed. Starting replay.");
+            _controller.StartReplay();
         }
 
         public void EndReplayOnAllClientsEvent()
@@ -331,22 +392,43 @@ namespace VRSYS.Scripts.Recording
                 return;
             
             _globalSynchronizationTime = NetworkUtils.GetSynchronizedTime();
+            if (_endReplayCoroutine != null)
+            {
+                StopCoroutine(_endReplayCoroutine);
+                _endReplayCoroutine = null;
+            }
+
             if (_globalSynchronizationTime > stopReplayTime)
             {
                 TimeSpan difference = _globalSynchronizationTime - stopReplayTime;
                 Debug.LogError("The replay should have stopped already! Time difference: " +
                                difference.TotalMilliseconds +
                                " ms.  Potential fix: increase the  maxSynchronizationTime!");
+                StopReplay();
             }
             else
             {
-                while (_globalSynchronizationTime < stopReplayTime)
-                {
-                    _globalSynchronizationTime = NetworkUtils.GetSynchronizedTime();
-                    Thread.Sleep(1);
-                }
+                _endReplayCoroutine = StartCoroutine(StopReplayWhenReady(stopReplayTime));
             }
-            
+        }
+
+        private IEnumerator StopReplayWhenReady(DateTime stopReplayTime)
+        {
+            yield return WaitUntilSynchronizedTime(stopReplayTime);
+            _endReplayCoroutine = null;
+            StopReplay();
+        }
+
+        private void StopReplay()
+        {
+            if (_startReplayCoroutine != null)
+            {
+                StopCoroutine(_startReplayCoroutine);
+                _startReplayCoroutine = null;
+            }
+
+            _replayStarted = false;
+            _startReplayEventSent = false;
             _controller.EndReplay();
         }
 

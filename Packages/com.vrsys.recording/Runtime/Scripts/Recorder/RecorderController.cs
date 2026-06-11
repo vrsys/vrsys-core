@@ -448,20 +448,19 @@ namespace VRSYS.Scripts.Recording
             recorderState.currentMinSliderValue = 0.0f;
             recorderState.currentMaxSliderValue = recorderState.recordingDuration;
 
+            DisableAllAudioSources();
+            
             Debug.Log("Preparing scene for playback.");
             _scenePreparator.PrepareReplayScene();
 
             AttachTransformRecorder();
-            AttachSoundRecorder();
+            // Audio sources are already handeled by the scene preaparator prepare replay scene
             AttachArbitraryRecorder();
 
             playbackStartDate = DateTime.Now.ToString("g", CultureInfo.GetCultureInfo("es-ES")).Replace(" ", "_")
                 .Replace(":", "_").Replace("/", "_");
 
             recorderState.recordedObjectPresent = _scenePreparator.GetNamePresent();
-
-            DisableAllAudioSources();
-
             recorderState.currentState = State.Replaying;
             recorderState.currentReplayTime = 0.0f;
             recorderState.currentRecordingTime = -1.0f;
@@ -801,6 +800,7 @@ namespace VRSYS.Scripts.Recording
         
         private void OnReplayStart()
         {
+            Debug.Log("OnReplayStart called!");
             foreach (var kv in _transformRecorder)
             {
                 if (kv.Value != null)
@@ -824,6 +824,7 @@ namespace VRSYS.Scripts.Recording
                     kv.Value.OnReplayStart();
                 }
             }
+            Debug.Log("OnReplayStart finished!");
         }
         
         private void OnReplayEnd()

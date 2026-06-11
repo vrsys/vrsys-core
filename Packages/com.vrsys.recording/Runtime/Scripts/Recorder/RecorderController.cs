@@ -53,6 +53,7 @@ namespace VRSYS.Scripts.Recording
 
         public bool attachTransformRecorderToAll = true;
         public bool replayHierarchyChanges = true;
+        public bool recordOnLocalTransformChangesOnly = true;
         public bool replayAudio = true;
         public bool recordMicro = true;
         public bool recordAudioListener = true;

@@ -19,6 +19,7 @@ namespace VRSYS.Scripts.Recording
         private bool _showAudioRecording = true;
         private bool attachTransformRecorderToAll;
         private bool replayHierarchyChanges;
+        private bool recordOnLocalTransformChangesOnly;
         private int transformRecordingStepsPerSecond;
         private bool _showTransformRecording = true;
         private bool downloadFilesFromServer;
@@ -166,7 +167,7 @@ namespace VRSYS.Scripts.Recording
                 controller.replayRoot, typeof(Transform), true);
 
             // Transform recording options grouped in their own collapsible section. Defaults to expanded.
-            _showTransformRecording = EditorGUILayout.BeginFoldoutHeaderGroup(_showTransformRecording, "Transform Recording Settings");
+            _showTransformRecording = EditorGUILayout.BeginFoldoutHeaderGroup(_showTransformRecording, "Transform Recording & Playback Settings");
             if (_showTransformRecording)
             {
                 EditorGUI.indentLevel++;
@@ -179,6 +180,9 @@ namespace VRSYS.Scripts.Recording
                 replayHierarchyChanges = EditorGUILayout.Toggle(
                     new GUIContent("Replay hierarchy changes", "Reapply recorded reparenting (hierarchy changes) during playback. Disable to keep objects under their initial parent."),
                     controller.replayHierarchyChanges);
+                recordOnLocalTransformChangesOnly = EditorGUILayout.Toggle(
+                    new GUIContent("Record on local changes only", "When enabled, a transform is recorded only when its local position/rotation/scale changes. When disabled, changes are detected from the global (world) transform instead."),
+                    controller.recordOnLocalTransformChangesOnly);
                 EditorGUI.indentLevel--;
             }
             else
@@ -188,6 +192,7 @@ namespace VRSYS.Scripts.Recording
                 attachTransformRecorderToAll = controller.attachTransformRecorderToAll;
                 transformRecordingStepsPerSecond = controller.transformRecordingStepsPerSecond;
                 replayHierarchyChanges = controller.replayHierarchyChanges;
+                recordOnLocalTransformChangesOnly = controller.recordOnLocalTransformChangesOnly;
             }
             EditorGUILayout.EndFoldoutHeaderGroup();
 
@@ -237,6 +242,7 @@ namespace VRSYS.Scripts.Recording
                 controller.attachTransformRecorderToAll = attachTransformRecorderToAll;
                 controller.transformRecordingStepsPerSecond = transformRecordingStepsPerSecond;
                 controller.replayHierarchyChanges = replayHierarchyChanges;
+                controller.recordOnLocalTransformChangesOnly = recordOnLocalTransformChangesOnly;
                 Undo.RecordObject(target, "Changed Values");
                 PrefabUtility.RecordPrefabInstancePropertyModifications(target);
                 controller.synchronizedPlayback = synchronisedPlayback;

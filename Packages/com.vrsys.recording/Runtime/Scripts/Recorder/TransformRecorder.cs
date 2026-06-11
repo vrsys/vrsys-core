@@ -174,7 +174,7 @@ namespace VRSYS.Scripts.Recording
             
             TransformCapture currentCapture = CaptureCurrentTransform(parentID);
             bool changeInTransform;
-            bool objectChanged = HasObjectChanged(LastRecordedCapture(), currentCapture, firstSeen, out changeInTransform);
+            bool objectChanged = HasObjectChanged(LastRecordedCapture(), currentCapture, firstSeen, controller.recordOnLocalTransformChangesOnly, out changeInTransform);
 
             if (objectChanged)
             {
@@ -430,28 +430,30 @@ namespace VRSYS.Scripts.Recording
         }
 
         private static bool HasObjectChanged(TransformCapture previous, TransformCapture current,
-            bool firstSeen, out bool changeInTransform)
+            bool firstSeen, bool useLocalChangeCheck, out bool changeInTransform)
         {
             bool changeInActiveStatus = previous.active != current.active;
             bool changeInParent = previous.parentId != current.parentId;
 
-            /////////////////////////////////////////////////////////////////////////
-            //bool changeInTransform = !previous.globalPosition.Equals(current.globalPosition) ||
-            //                         !previous.globalScale.Equals(current.globalScale) ||
-            //                         !previous.globalRotation.Equals(current.globalRotation);
-            ///////////////////////////////////////////////////////////////////////////
-
-            changeInTransform = !previous.localPosition.Equals(current.localPosition) ||
-                                !previous.localScale.Equals(current.localScale) ||
-                                !previous.localRotation.Equals(current.localRotation);
+            // Detect transform changes from either the local or the global (world) transform, selectable
+            // via RecorderController.recordOnLocalTransformChangesOnly.
+            if (useLocalChangeCheck)
+                changeInTransform = !previous.localPosition.Equals(current.localPosition) ||
+                                    !previous.localScale.Equals(current.localScale) ||
+                                    !previous.localRotation.Equals(current.localRotation);
+            else
+                changeInTransform = !previous.globalPosition.Equals(current.globalPosition) ||
+                                    !previous.globalScale.Equals(current.globalScale) ||
+                                    !previous.globalRotation.Equals(current.globalRotation);
 
             return changeInActiveStatus || firstSeen || changeInParent || changeInTransform;
         }
 
-        private static bool HasObjectChanged(TransformCapture previous, TransformCapture current, bool firstSeen)
+        private static bool HasObjectChanged(TransformCapture previous, TransformCapture current,
+            bool firstSeen, bool useLocalChangeCheck)
         {
             bool changeInTransform;
-            return HasObjectChanged(previous, current, firstSeen, out changeInTransform);
+            return HasObjectChanged(previous, current, firstSeen, useLocalChangeCheck, out changeInTransform);
         }
 
         private static void PackTransform(TransformCapture capture, float[] matrixDTO, int[] infoDTO)
@@ -519,7 +521,7 @@ namespace VRSYS.Scripts.Recording
         {
             TransformCapture currentCapture = CaptureCurrentTransform(GetRerecordParentId(transform));
             if (_rerecHasLastCapture &&
-                !HasObjectChanged(_rerecLastCapture, currentCapture, false))
+                !HasObjectChanged(_rerecLastCapture, currentCapture, false, controller.recordOnLocalTransformChangesOnly))
                 return;
 
             float minStep = 1.0f / Mathf.Max(1, controller.transformRecordingStepsPerSecond);

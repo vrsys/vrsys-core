@@ -229,9 +229,16 @@ namespace VRSYS.Scripts.Recording
             GameObject userNameTextGo = Utils.GetChildByName(newGo, "UserName-Text");
             if (userNameTextGo != null)
             {
-                TextMeshProUGUI userNameText = userNameTextGo.GetComponentInChildren<TextMeshProUGUI>();
-                string cleanName = information.gameObjectName.Replace(" [Local]", "").Replace(" [Remote]", "");
-                userNameText.text = "[Rec] " + cleanName;
+                // newGo is still inactive at this point (it is only activated at the end of this
+                // method). GetComponentInChildren skips inactive objects by default and would
+                // return null here -> NullReferenceException on userNameText.text. Include inactive
+                // children and null-guard the result.
+                TextMeshProUGUI userNameText = userNameTextGo.GetComponentInChildren<TextMeshProUGUI>(true);
+                if (userNameText != null)
+                {
+                    string cleanName = information.gameObjectName.Replace(" [Local]", "").Replace(" [Remote]", "");
+                    userNameText.text = "[Rec] " + cleanName;
+                }
             }
 
             GameObject recordingIndication = Utils.GetChildByName(newGo, "Indicator-Image");

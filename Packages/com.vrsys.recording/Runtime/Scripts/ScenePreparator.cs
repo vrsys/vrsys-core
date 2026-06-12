@@ -475,6 +475,7 @@ namespace VRSYS.Scripts.Recording
                     GameObject.Destroy(go, dissolveTime);
             }
 
+            // TODO: when playback changed the parents of already present objects then the cleanup does not reset to original parent!
             Debug.Log("Cleaning replay scene done.");
         }
 

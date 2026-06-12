@@ -15,6 +15,11 @@ namespace VRSYS.Scripts.Recording
         None = 4
     };
 
+    [AddComponentMenu("")]
+    public class PluginConfigurator : MonoBehaviour
+    {
+    }
+
     [Serializable]
     public class RecordingPluginSettings
     {

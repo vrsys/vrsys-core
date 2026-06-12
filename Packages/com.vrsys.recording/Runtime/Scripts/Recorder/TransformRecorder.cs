@@ -93,6 +93,7 @@ namespace VRSYS.Scripts.Recording
         private string trueName;
         private string anonymisedName;
 
+        private const float ReplayBoundaryPaddingSeconds = 0.001f;
         private float lastErrorLog = 0.0f;
         
         public override bool Record(float recordTime)
@@ -238,6 +239,8 @@ namespace VRSYS.Scripts.Recording
         {
             if (inRerecordingMode)
                 return true;
+
+            replayTime = ClampReplayTimeForNativeBuffer(replayTime);
             
             if (Mathf.Abs(replayTime - _lastReplayTime) < 1.0f/playbackFramerate && _transform != null)
             {
@@ -370,6 +373,19 @@ namespace VRSYS.Scripts.Recording
                 }
             }
         }
+
+        private float ClampReplayTimeForNativeBuffer(float replayTime)
+        {
+            float duration = controller != null && controller.recorderState != null
+                ? controller.recorderState.recordingDuration
+                : -1.0f;
+
+            if (duration > ReplayBoundaryPaddingSeconds * 2.0f)
+                return Mathf.Clamp(replayTime, ReplayBoundaryPaddingSeconds, duration - ReplayBoundaryPaddingSeconds);
+
+            return Mathf.Max(0.0f, replayTime);
+        }
+
         bool fillDTOCurrentData()
         {
             int parentId = transform.parent != null ? transform.parent.gameObject.GetInstanceID() : 0;

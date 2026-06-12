@@ -87,6 +87,7 @@ namespace VRSYS.Scripts.Recording
         public bool localPlayback = false;
         public bool uploadFilesToServer = false;
         public bool debugLogs = true;
+        private const float ReplayBoundaryPaddingSeconds = 0.1f;
         private LogLevel _lastAppliedPluginLogLevel;
 
         private void DebugReplayStartupLog(string message)
@@ -513,7 +514,7 @@ namespace VRSYS.Scripts.Recording
                                       ? 0
                                       : recorderState.recordedObjectPresent.Count));
             recorderState.currentState = State.Replaying;
-            recorderState.currentReplayTime = 0.0f;
+            recorderState.currentReplayTime = GetReplayStartTime();
             recorderState.currentRecordingTime = -1.0f;
             
             DebugReplayStartupLog("StartReplay before OnReplayStart.");
@@ -1007,6 +1008,14 @@ namespace VRSYS.Scripts.Recording
 
             RecordingPluginConfigurator.ApplyLogLevel(pluginSettings.logLevel);
             _lastAppliedPluginLogLevel = pluginSettings.logLevel;
+        }
+
+        private float GetReplayStartTime()
+        {
+            if (recorderState.recordingDuration <= ReplayBoundaryPaddingSeconds)
+                return 0.0f;
+
+            return ReplayBoundaryPaddingSeconds;
         }
 
         public void LateUpdate()

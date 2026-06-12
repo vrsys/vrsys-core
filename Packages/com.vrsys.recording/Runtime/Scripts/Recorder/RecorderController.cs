@@ -53,6 +53,7 @@ namespace VRSYS.Scripts.Recording
         public bool replayHierarchyChanges = true;
         public bool recordOnLocalTransformChangesOnly = true;
         public bool replayAudio = true;
+        public bool playbackTransform = true;
         public bool recordMicro = true;
         public bool recordAudioListener = true;
         public bool recordAllSoundSources = true;
@@ -494,10 +495,17 @@ namespace VRSYS.Scripts.Recording
             _scenePreparator.PrepareReplayScene();
             DebugReplayStartupLog("StartReplay after PrepareReplayScene.");
 
-            DebugReplayStartupLog("StartReplay before AttachTransformRecorder.");
-            AttachTransformRecorder();
-            DebugReplayStartupLog("StartReplay after AttachTransformRecorder. transformRecorderCount=" +
-                                  _transformRecorder.Count);
+            DebugReplayStartupLog("StartReplay before AttachTransformRecorder. playbackTransform=" + playbackTransform);
+            if (playbackTransform)
+            {
+                AttachTransformRecorder();
+                DebugReplayStartupLog("StartReplay after AttachTransformRecorder. transformRecorderCount=" +
+                                      _transformRecorder.Count);
+            }
+            else
+            {
+                DebugReplayStartupLog("StartReplay skipped AttachTransformRecorder because playbackTransform=false.");
+            }
             // Audio sources are already handeled by the scene preaparator prepare replay scene
             DebugReplayStartupLog("StartReplay before AttachArbitraryRecorder.");
             AttachArbitraryRecorder();

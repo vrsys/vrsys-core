@@ -443,19 +443,26 @@ namespace VRSYS.Scripts.Recording
                         "Not all gameObjects from the recording are present in the current scene graph!");
             }
 
-            if (_controller.debugLogs)
-                Debug.Log("Trying to handle missing audio sources.");
-            DebugScenePreparationLog("PrepareReplayScene before HandleAudioSources.");
-            error = HandleAudioSources();
-            DebugScenePreparationLog("PrepareReplayScene after HandleAudioSources. error=" + error);
-
-            if (_controller.debugLogs)
+            if (_controller.replayAudio)
             {
-                if (!error)
-                    Debug.Log("All sound sources from the recording are now present in the current scene graph!");
-                else
-                    Debug.LogError(
-                        "Not all sound sources from the recording are present in the current scene graph!");
+                if (_controller.debugLogs)
+                    Debug.Log("Trying to handle missing audio sources.");
+                DebugScenePreparationLog("PrepareReplayScene before HandleAudioSources.");
+                error = HandleAudioSources();
+                DebugScenePreparationLog("PrepareReplayScene after HandleAudioSources. error=" + error);
+
+                if (_controller.debugLogs)
+                {
+                    if (!error)
+                        Debug.Log("All sound sources from the recording are now present in the current scene graph!");
+                    else
+                        Debug.LogError(
+                            "Not all sound sources from the recording are present in the current scene graph!");
+                }
+            }
+            else
+            {
+                DebugScenePreparationLog("PrepareReplayScene skipped HandleAudioSources because replayAudio=false.");
             }
         }
 

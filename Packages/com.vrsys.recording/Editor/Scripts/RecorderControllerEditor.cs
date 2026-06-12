@@ -16,9 +16,10 @@ namespace VRSYS.Scripts.Recording
         private bool recordMicro;
         private bool recordAudioListener;
         private bool recordAllSoundSources;
-        private bool replayAudio;
         private bool attachTransformRecorderToAll;
         private bool replayHierarchyChanges;
+        private bool playbackTransform;
+        private bool replayAudio;
         private bool recordOnLocalTransformChangesOnly;
         private int transformRecordingStepsPerSecond;
         private bool downloadFilesFromServer;
@@ -185,9 +186,6 @@ namespace VRSYS.Scripts.Recording
                 recordAllSoundSources = EditorGUILayout.Toggle(
                     new GUIContent("Record all sound sources", "Capture every AudioSource in the scene into the recording."),
                     controller.recordAllSoundSources);
-                replayAudio = EditorGUILayout.Toggle(
-                    new GUIContent("Replay audio", "Play back recorded audio during replay."),
-                    controller.replayAudio);
                 EditorGUI.indentLevel--;
             }
             else
@@ -197,7 +195,6 @@ namespace VRSYS.Scripts.Recording
                 recordMicro = controller.recordMicro;
                 recordAudioListener = controller.recordAudioListener;
                 recordAllSoundSources = controller.recordAllSoundSources;
-                replayAudio = controller.replayAudio;
             }
             EditorGUILayout.EndFoldoutHeaderGroup();
 
@@ -212,6 +209,12 @@ namespace VRSYS.Scripts.Recording
                 replayHierarchyChanges = EditorGUILayout.Toggle(
                     new GUIContent("Replay hierarchy changes", "Reapply recorded reparenting (hierarchy changes) during playback. Disable to keep objects under their initial parent."),
                     controller.replayHierarchyChanges);
+                playbackTransform = EditorGUILayout.Toggle(
+                    new GUIContent("Playback transform", "Attach TransformRecorder components during replay so recorded transforms are applied."),
+                    controller.playbackTransform);
+                replayAudio = EditorGUILayout.Toggle(
+                    new GUIContent("Playback audio", "Handle recorded audio sources during replay."),
+                    controller.replayAudio);
                 synchronisedPlayback = EditorGUILayout.Toggle(
                     new GUIContent("Synchronised playback", "Keep playback time synchronised across all networked clients."),
                     controller.synchronizedPlayback);
@@ -231,6 +234,8 @@ namespace VRSYS.Scripts.Recording
             {
                 replayRoot = controller.replayRoot;
                 replayHierarchyChanges = controller.replayHierarchyChanges;
+                playbackTransform = controller.playbackTransform;
+                replayAudio = controller.replayAudio;
                 synchronisedPlayback = controller.synchronizedPlayback;
                 lateJoinPlayback = controller.lateJoinPlayback;
                 if (networkController != null)
@@ -364,10 +369,11 @@ namespace VRSYS.Scripts.Recording
                 controller.recordMicro = recordMicro;
                 controller.recordAudioListener = recordAudioListener;
                 controller.recordAllSoundSources = recordAllSoundSources;
-                controller.replayAudio = replayAudio;
                 controller.attachTransformRecorderToAll = attachTransformRecorderToAll;
                 controller.transformRecordingStepsPerSecond = transformRecordingStepsPerSecond;
                 controller.replayHierarchyChanges = replayHierarchyChanges;
+                controller.playbackTransform = playbackTransform;
+                controller.replayAudio = replayAudio;
                 controller.recordOnLocalTransformChangesOnly = recordOnLocalTransformChangesOnly;
                 controller.createWAV = createWAV;
                 controller.createCSV = createCSV;

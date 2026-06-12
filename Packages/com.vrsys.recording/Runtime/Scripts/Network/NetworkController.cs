@@ -21,7 +21,7 @@ namespace VRSYS.Scripts.Recording
         [DllImport("RecordingPlugin")]
         private static extern bool RegisterRecordingStartGlobalTimeOffset(int recorderId, float globalTimeOffset);
 
-        public float maxSynchronizationTimeMS;
+        [HideInInspector] public float maxSynchronizationTimeMS;
         [HideInInspector] public List<String> _userNames = new List<string>();
         [HideInInspector] public Dictionary<string, float> _userReplayTimes = new Dictionary<string, float>();
         [HideInInspector] public Dictionary<string, float> _userReplayTimesUpdateTime = new Dictionary<string, float>();

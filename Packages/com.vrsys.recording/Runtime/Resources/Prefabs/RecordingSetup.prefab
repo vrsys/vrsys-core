@@ -214,7 +214,6 @@ GameObject:
   - component: {fileID: 7483180858779729903}
   - component: {fileID: 545745640441180949}
   - component: {fileID: 3748566946502455273}
-  - component: {fileID: 7486710540757772241}
   - component: {fileID: 8555302788377108125}
   - component: {fileID: 6248952380421724258}
   - component: {fileID: 7753282352920979557}
@@ -345,25 +344,14 @@ MonoBehaviour:
   localPlayback: 0
   uploadFilesToServer: 1
   debugLogs: 0
---- !u!114 &7486710540757772241
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 602422142196527079}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5372e0a1ad9e4a64c976f6f1d9c334dc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  recordingMaxBufferSize: 1000
-  replayBufferNumber: 3
-  replayBufferTimeInterval: 10
-  recordingSoundMaxBufferSize: 100
-  logLevel: 1
-  versionInfo: No information
-  recordingDirectory: C:/Users/Anton-Lammert/AppData/LocalLow/DefaultCompany/TemporalCollaborativeImmersiveAnalysis/1
+  pluginSettings:
+    recordingMaxBufferSize: 1000
+    replayBufferNumber: 3
+    replayBufferTimeInterval: 10
+    recordingSoundMaxBufferSize: 100
+    logLevel: 1
+    versionInfo: No information
+    recordingDirectory: C:/Users/Anton-Lammert/AppData/LocalLow/DefaultCompany/TemporalCollaborativeImmersiveAnalysis/1
 --- !u!114 &8555302788377108125
 MonoBehaviour:
   m_ObjectHideFlags: 0

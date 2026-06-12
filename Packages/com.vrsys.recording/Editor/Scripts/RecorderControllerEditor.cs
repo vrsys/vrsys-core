@@ -26,6 +26,12 @@ namespace VRSYS.Scripts.Recording
         private bool createWAV;
         private bool createCSV;
         private bool enableDebugInfo;
+        private float maxSynchronizationTimeMS;
+        private int recordingMaxBufferSize;
+        private int replayBufferNumber;
+        private float replayBufferTimeInterval;
+        private int recordingSoundMaxBufferSize;
+        private LogLevel pluginLogLevel;
         private Transform replayRoot;
         private string _downloadPassword = "";
 
@@ -41,6 +47,9 @@ namespace VRSYS.Scripts.Recording
         public override void OnInspectorGUI()
         {
             RecorderController controller = (RecorderController)target;
+            NetworkController networkController = controller.GetComponent<NetworkController>();
+            if (controller.pluginSettings == null)
+                controller.pluginSettings = new RecordingPluginSettings();
             EditorGUI.BeginChangeCheck();
             
             // --- Always-visible top section: Recorder State + the primary recording/replay controls ---
@@ -209,6 +218,13 @@ namespace VRSYS.Scripts.Recording
                 lateJoinPlayback = EditorGUILayout.Toggle(
                     new GUIContent("Late join playback", "Start clients that join after playback began at the current playback time."),
                     controller.lateJoinPlayback);
+                if (networkController != null)
+                {
+                    EditorGUILayout.Space();
+                    maxSynchronizationTimeMS = EditorGUILayout.FloatField(
+                        new GUIContent("Max Synchronisation Time MS", "Delay added to distributed recording and replay commands so clients can schedule them against synchronized network time."),
+                        networkController.maxSynchronizationTimeMS);
+                }
                 EditorGUI.indentLevel--;
             }
             else
@@ -217,6 +233,8 @@ namespace VRSYS.Scripts.Recording
                 replayHierarchyChanges = controller.replayHierarchyChanges;
                 synchronisedPlayback = controller.synchronizedPlayback;
                 lateJoinPlayback = controller.lateJoinPlayback;
+                if (networkController != null)
+                    maxSynchronizationTimeMS = networkController.maxSynchronizationTimeMS;
             }
             EditorGUILayout.EndFoldoutHeaderGroup();
 
@@ -301,6 +319,26 @@ namespace VRSYS.Scripts.Recording
                 enableDebugInfo = EditorGUILayout.Toggle(
                     new GUIContent("Print debug logs", "Print verbose recording/playback debug logs to the console."),
                     controller.debugLogs);
+                EditorGUILayout.Space();
+                GUILayout.Label("Native Plugin");
+                recordingMaxBufferSize = EditorGUILayout.IntField(
+                    new GUIContent("Recording max buffer size", "Maximum native buffer size for transform recording data."),
+                    controller.pluginSettings.recordingMaxBufferSize);
+                replayBufferNumber = EditorGUILayout.IntField(
+                    new GUIContent("Replay buffer number", "Number of native replay buffers to keep available."),
+                    controller.pluginSettings.replayBufferNumber);
+                replayBufferTimeInterval = EditorGUILayout.FloatField(
+                    new GUIContent("Replay buffer time interval", "Time span covered by each native replay buffer."),
+                    controller.pluginSettings.replayBufferTimeInterval);
+                recordingSoundMaxBufferSize = EditorGUILayout.IntField(
+                    new GUIContent("Sound max buffer size", "Maximum native buffer size for recorded sound data."),
+                    controller.pluginSettings.recordingSoundMaxBufferSize);
+                pluginLogLevel = (LogLevel)EditorGUILayout.EnumPopup(
+                    new GUIContent("Plugin log level", "Minimum native recording plugin log level forwarded to Unity."),
+                    controller.pluginSettings.logLevel);
+                EditorGUILayout.LabelField(
+                    new GUIContent("Plugin version", "Version reported by the native recording plugin."),
+                    new GUIContent(controller.pluginSettings.versionInfo));
                 EditorGUI.indentLevel--;
             }
             else
@@ -308,6 +346,11 @@ namespace VRSYS.Scripts.Recording
                 createWAV = controller.createWAV;
                 createCSV = controller.createCSV;
                 enableDebugInfo = controller.debugLogs;
+                recordingMaxBufferSize = controller.pluginSettings.recordingMaxBufferSize;
+                replayBufferNumber = controller.pluginSettings.replayBufferNumber;
+                replayBufferTimeInterval = controller.pluginSettings.replayBufferTimeInterval;
+                recordingSoundMaxBufferSize = controller.pluginSettings.recordingSoundMaxBufferSize;
+                pluginLogLevel = controller.pluginSettings.logLevel;
             }
             EditorGUILayout.EndFoldoutHeaderGroup();
 
@@ -343,8 +386,19 @@ namespace VRSYS.Scripts.Recording
                 Undo.RecordObject(target, "Changed Values");
                 PrefabUtility.RecordPrefabInstancePropertyModifications(target);
                 controller.debugLogs = enableDebugInfo;
+                controller.pluginSettings.recordingMaxBufferSize = recordingMaxBufferSize;
+                controller.pluginSettings.replayBufferNumber = replayBufferNumber;
+                controller.pluginSettings.replayBufferTimeInterval = replayBufferTimeInterval;
+                controller.pluginSettings.recordingSoundMaxBufferSize = recordingSoundMaxBufferSize;
+                controller.pluginSettings.logLevel = pluginLogLevel;
                 Undo.RecordObject(target, "Changed Values");
                 PrefabUtility.RecordPrefabInstancePropertyModifications(target);
+                if (networkController != null)
+                {
+                    Undo.RecordObject(networkController, "Changed Values");
+                    networkController.maxSynchronizationTimeMS = maxSynchronizationTimeMS;
+                    PrefabUtility.RecordPrefabInstancePropertyModifications(networkController);
+                }
             }
         }
 

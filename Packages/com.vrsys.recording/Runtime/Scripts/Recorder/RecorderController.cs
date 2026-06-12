@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
-using Unity.Collections;
 using Unity.Netcode;
 using Unity.XR.CoreUtils;
 using UnityEngine;
@@ -17,7 +16,6 @@ using Vrsys.Scripts.Recording;
 namespace VRSYS.Scripts.Recording
 {
     [RequireComponent(typeof(RecorderState))]
-    [RequireComponent(typeof(PluginConfigurator))]
     [RequireComponent(typeof(NetworkController))]
     public class RecorderController : MonoBehaviour
     {
@@ -74,7 +72,7 @@ namespace VRSYS.Scripts.Recording
 
         private ScenePreparator _scenePreparator;
         public RecorderState recorderState;
-        private PluginConfigurator _configurator;
+        public RecordingPluginSettings pluginSettings = new RecordingPluginSettings();
         private NetworkController _networkController;
 
         private float _lastTransformRecordTime;
@@ -89,6 +87,7 @@ namespace VRSYS.Scripts.Recording
         public bool localPlayback = false;
         public bool uploadFilesToServer = false;
         public bool debugLogs = true;
+        private LogLevel _lastAppliedPluginLogLevel;
 
         private void DebugReplayStartupLog(string message)
         {
@@ -143,9 +142,12 @@ namespace VRSYS.Scripts.Recording
         public void Start()
         {
             recorderState = GetComponent<RecorderState>();
-            _configurator = GetComponent<PluginConfigurator>();
             _networkController = GetComponent<NetworkController>();
             _scenePreparator = GetComponent<ScenePreparator>();
+            if (pluginSettings == null)
+                pluginSettings = new RecordingPluginSettings();
+            RecordingPluginConfigurator.ApplyInitialSettings(pluginSettings, recorderState.recorderID);
+            _lastAppliedPluginLogLevel = pluginSettings.logLevel;
             
             if (recorderState.recordingDirectory == "")
                 recorderState.recordingDirectory = Application.persistentDataPath + "/";
@@ -983,6 +985,8 @@ namespace VRSYS.Scripts.Recording
 
         public void Update()
         {
+            ApplyPluginLogLevelIfChanged();
+
             SetFixedPlaybackRecordingFileIfSet();
 
             if (recorderState.currentState != State.Recording && lateJoinPlayback)
@@ -994,6 +998,15 @@ namespace VRSYS.Scripts.Recording
                 _networkController.PublishHostReplayTime(recorderState.currentReplayTime);
                 SynchronizePlayback();
             }
+        }
+
+        private void ApplyPluginLogLevelIfChanged()
+        {
+            if (pluginSettings == null || pluginSettings.logLevel == _lastAppliedPluginLogLevel)
+                return;
+
+            RecordingPluginConfigurator.ApplyLogLevel(pluginSettings.logLevel);
+            _lastAppliedPluginLogLevel = pluginSettings.logLevel;
         }
 
         public void LateUpdate()

@@ -1,8 +1,7 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 using System.Text;
 using AOT;
-using Unity.Collections;
 using UnityEngine;
 
 namespace VRSYS.Scripts.Recording
@@ -15,8 +14,20 @@ namespace VRSYS.Scripts.Recording
         Error = 3,
         None = 4
     };
-    
-    public class PluginConfigurator : MonoBehaviour
+
+    [Serializable]
+    public class RecordingPluginSettings
+    {
+        public int recordingMaxBufferSize = 10000;
+        public int replayBufferNumber = 3;
+        public float replayBufferTimeInterval = 10.0f;
+        public int recordingSoundMaxBufferSize = 100;
+        public LogLevel logLevel = LogLevel.Info;
+        public string versionInfo = "No information";
+        [HideInInspector] public string recordingDirectory = "";
+    }
+
+    internal static class RecordingPluginConfigurator
     {
         [DllImport("RecordingPlugin")]
         private static extern bool SetRecordingMaxBufferSize(int recorderId, int maxBufferSize);
@@ -31,26 +42,13 @@ namespace VRSYS.Scripts.Recording
         private static extern bool SetSoundRecordingMaxBufferSize(int recorderId, int maxBufferSize);
 
         [DllImport("RecordingPlugin")]
-        private static extern bool SetRecordingDirectory(int recorderId, string directory, int directoryLength);
-
-        [DllImport("RecordingPlugin")]
         private static extern int GetVersionNumber(StringBuilder textBuilder, int maxSize);
-        
+
         [DllImport("RecordingPlugin", CallingConvention = CallingConvention.Cdecl)]
-        static extern void RegisterDebugCallback(debugCallback cb);
+        private static extern void RegisterDebugCallback(debugCallback cb);
 
         [DllImport("RecordingPlugin")]
         private static extern bool SetLogLevel(int level);
-
-        public int recordingMaxBufferSize = 10000;
-        public int replayBufferNumber = 3;
-        public float replayBufferTimeInterval = 10.0f;
-        public int recordingSoundMaxBufferSize = 100;
-        public LogLevel logLevel = LogLevel.Info;
-        public string versionInfo = "No information";
-
-        private LogLevel lastAppliedLogLevel;
-        [HideInInspector] public string recordingDirectory = "";
 
         // Rooted reference to the delegate handed to native code. The native side
         // keeps only the raw function pointer in a global that survives Unity domain
@@ -91,54 +89,48 @@ namespace VRSYS.Scripts.Recording
         }
 #endif
 
-        public void Start()
+        public static void ApplyInitialSettings(RecordingPluginSettings settings, int recorderId)
         {
+            if (settings == null)
+                return;
+
             RegisterLogging();
-            SetRecordingMaxBufferSize(0, recordingMaxBufferSize);
-            SetSoundRecordingMaxBufferSize(0, recordingSoundMaxBufferSize);
-            SetReplayBufferNumber(0, replayBufferNumber);
-            SetReplayBufferStoredTimeInterval(0, replayBufferTimeInterval);
+            SetRecordingMaxBufferSize(recorderId, settings.recordingMaxBufferSize);
+            SetSoundRecordingMaxBufferSize(recorderId, settings.recordingSoundMaxBufferSize);
+            SetReplayBufferNumber(recorderId, settings.replayBufferNumber);
+            SetReplayBufferStoredTimeInterval(recorderId, settings.replayBufferTimeInterval);
 
             int maxSize = 300;
             StringBuilder buffer = new StringBuilder(maxSize);
             int len = GetVersionNumber(buffer, buffer.Capacity);
             if (len > 0)
-            {
-                versionInfo = buffer.ToString();
-            }
+                settings.versionInfo = buffer.ToString();
 
+            ApplyLogLevel(settings.logLevel);
+        }
+
+        public static void ApplyLogLevel(LogLevel logLevel)
+        {
             SetLogLevel((int)logLevel);
-            lastAppliedLogLevel = logLevel;
         }
 
-        public void Update()
-        {
-            if (logLevel != lastAppliedLogLevel)
-            {
-                lastAppliedLogLevel = logLevel;
-                SetLogLevel((int)logLevel);
-            }
-        }
+        private delegate void debugCallback(IntPtr request, int level, int size);
 
-        delegate void debugCallback(IntPtr request, int level, int size);
-
-        
         [MonoPInvokeCallback(typeof(debugCallback))]
-        static void OnDebugCallback(IntPtr request, int level, int size)
+        private static void OnDebugCallback(IntPtr request, int level, int size)
         {
-            //Ptr to string
-            string debug_string = Marshal.PtrToStringAnsi(request, size);
-            
-            if((LogLevel)level == LogLevel.Debug)
-                Debug.Log(debug_string);
+            string debugString = Marshal.PtrToStringAnsi(request, size);
+
+            if ((LogLevel)level == LogLevel.Debug)
+                Debug.Log(debugString);
             else if ((LogLevel)level == LogLevel.Info)
-                Debug.Log(debug_string);
+                Debug.Log(debugString);
             else if ((LogLevel)level == LogLevel.Warning)
-                Debug.LogWarning(debug_string);
+                Debug.LogWarning(debugString);
             else if ((LogLevel)level == LogLevel.Error)
-                Debug.LogError(debug_string);
-            else 
-                Debug.LogAssertion(debug_string);
+                Debug.LogError(debugString);
+            else
+                Debug.LogAssertion(debugString);
         }
     }
 }

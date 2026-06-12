@@ -52,6 +52,7 @@ namespace VRSYS.Scripts.Recording
         private Coroutine _startReplayCoroutine;
         private Coroutine _endRecordingCoroutine;
         private Coroutine _endReplayCoroutine;
+        private string _lastDistributedReplayStatusLog;
         
         private DateTime _globalSynchronizationTime;
         private TimeSpan _globalRecordStartDifference;
@@ -60,6 +61,63 @@ namespace VRSYS.Scripts.Recording
 
         private int _selectedServerId = 0;
         private TextMeshProUGUI _serverText;
+
+        private void DebugDistributedReplayLog(string message)
+        {
+            if (_controller == null || !_controller.debugLogs)
+                return;
+
+            Debug.Log("[DistributedReplayDebug][frame=" + Time.frameCount +
+                      "][time=" + Time.realtimeSinceStartup.ToString("F3") + "] " + message);
+        }
+
+        private void DebugDistributedReplayStatusIfChanged(string context)
+        {
+            if (_controller == null || !_controller.debugLogs)
+                return;
+
+            string status = "state=" + _state.currentState +
+                            ", replayStarted=" + _replayStarted +
+                            ", startReplayEventSent=" + _startReplayEventSent +
+                            ", allUsersFinishedLoading=" + _allUsersFinishedLoading +
+                            ", localDownloads=" + LocalDownloadStatusSummary() +
+                            ", users=" + UserDownloadStatusSummary();
+
+            if (_lastDistributedReplayStatusLog == status)
+                return;
+
+            _lastDistributedReplayStatusLog = status;
+            DebugDistributedReplayLog(context + ": " + status);
+        }
+
+        private string LocalDownloadStatusSummary()
+        {
+            return "sounds=" + _soundsDownloaded +
+                   ", transforms=" + _transformsDownloaded +
+                   ", meta=" + _metaInformationDownloaded +
+                   ", generic=" + _genericDownloaded +
+                   ", failed(sounds=" + _soundsDownloadFailed +
+                   ", transforms=" + _transformsDownloadFailed +
+                   ", meta=" + _metaInformationDownloadFailed +
+                   ", generic=" + _genericDownloadFailed + ")";
+        }
+
+        private string UserDownloadStatusSummary()
+        {
+            if (_userDownloadStatus.Count == 0)
+                return "<none>";
+
+            string result = "";
+            foreach (var entry in _userDownloadStatus)
+            {
+                if (result.Length > 0)
+                    result += ", ";
+
+                result += entry.Key + "=" + entry.Value;
+            }
+
+            return result;
+        }
 
         public void Start()
         {
@@ -291,12 +349,24 @@ namespace VRSYS.Scripts.Recording
             _startReplayEventSent = true;
             _globalSynchronizationTime = NetworkUtils.GetSynchronizedTime();
             DateTime startReplayTime = _globalSynchronizationTime.AddMilliseconds(maxSynchronizationTimeMS);
+            DebugDistributedReplayLog("StartReplayOnAllClientsEvent: now=" + _globalSynchronizationTime +
+                                      ", target=" + startReplayTime +
+                                      ", maxSynchronizationTimeMS=" + maxSynchronizationTimeMS +
+                                      ", recorderId=" + _state.recorderID +
+                                      ", selectedReplayFile=" + _state.selectedReplayFile +
+                                      ", recordingDirectory=" + _state.recordingDirectory +
+                                      ", selectedServer=" + _state.selectedServer);
+            DebugDistributedReplayStatusIfChanged("StartReplayOnAllClientsEvent");
             StartReplayOnServerRpc(startReplayTime.ToFileTime(), _state.recorderID);
         }
 
         [ServerRpc(RequireOwnership = false)]
         private void StartReplayOnServerRpc(long startTime, int recorderId)
         {
+            DebugDistributedReplayLog("StartReplayOnServerRpc: recorderId=" + recorderId +
+                                      ", targetFileTime=" + startTime +
+                                      ", isServer=" + IsServer +
+                                      ", isClient=" + IsClient);
             StartReplayOnClientRpc(startTime, recorderId);
         }
         
@@ -306,7 +376,11 @@ namespace VRSYS.Scripts.Recording
             DateTime startReplayTime = DateTime.FromFileTime(startTime);
 
             if (recorderId != _state.recorderID)
+            {
+                DebugDistributedReplayLog("StartReplayOnClientRpc ignored: incomingRecorderId=" + recorderId +
+                                          ", localRecorderId=" + _state.recorderID);
                 return;
+            }
             
             Debug.Log("Start replay event received for recorder id: " + _state.recorderID);
             
@@ -314,6 +388,13 @@ namespace VRSYS.Scripts.Recording
                 Debug.Log("Replay not yet started.");
 
             bool isDownloading = IsDownloading();
+            DebugDistributedReplayLog("StartReplayOnClientRpc: target=" + startReplayTime +
+                                      ", now=" + NetworkUtils.GetSynchronizedTime() +
+                                      ", state=" + _state.currentState +
+                                      ", isDownloading=" + isDownloading +
+                                      ", replayStarted=" + _replayStarted +
+                                      ", localDownloads=" + LocalDownloadStatusSummary());
+            DebugDistributedReplayStatusIfChanged("StartReplayOnClientRpc");
 
             if (!isDownloading)
                 Debug.Log("Not downloading files.");
@@ -334,17 +415,30 @@ namespace VRSYS.Scripts.Recording
                 else
                 {
                     if (_startReplayCoroutine != null)
+                    {
+                        DebugDistributedReplayLog("StartReplayOnClientRpc: stopping previous start replay coroutine before scheduling a new one.");
                         StopCoroutine(_startReplayCoroutine);
+                    }
 
+                    DebugDistributedReplayLog("StartReplayOnClientRpc: scheduling StartReplayWhenReady for target=" + startReplayTime);
                     _startReplayCoroutine = StartCoroutine(StartReplayWhenReady(startReplayTime));
                 }
+            }
+            else
+            {
+                DebugDistributedReplayLog("StartReplayOnClientRpc: replay start conditions not met. state=" +
+                                          _state.currentState +
+                                          ", isDownloading=" + isDownloading +
+                                          ", replayStarted=" + _replayStarted);
             }
         }
         
         private IEnumerator StartReplayWhenReady(DateTime startReplayTime)
         {
+            DebugDistributedReplayLog("StartReplayWhenReady: waiting for target=" + startReplayTime);
             yield return WaitUntilSynchronizedTime(startReplayTime);
             _startReplayCoroutine = null;
+            DebugDistributedReplayLog("StartReplayWhenReady: target reached, evaluating start conditions.");
             StartReplayIfStateAllows();
         }
 
@@ -354,6 +448,7 @@ namespace VRSYS.Scripts.Recording
             {
                 _replayStarted = false;
                 _startReplayEventSent = false;
+                DebugDistributedReplayStatusIfChanged("StartReplayIfStateAllows blocked by state");
                 Debug.LogWarning("A request to start a replay was sent but the current state does not allow starting replay.");
                 return;
             }
@@ -362,12 +457,16 @@ namespace VRSYS.Scripts.Recording
             {
                 _replayStarted = false;
                 _startReplayEventSent = false;
+                DebugDistributedReplayStatusIfChanged("StartReplayIfStateAllows blocked by download");
                 Debug.LogWarning("A request to start a replay was sent but downloads are still running.");
                 return;
             }
 
             Debug.Log("Target time passed. Starting replay.");
+            DebugDistributedReplayLog("StartReplayIfStateAllows: calling RecorderController.StartReplay.");
             _controller.StartReplay();
+            DebugDistributedReplayLog("StartReplayIfStateAllows: RecorderController.StartReplay returned. state=" +
+                                      _state.currentState);
         }
 
         public void EndReplayOnAllClientsEvent()
@@ -437,31 +536,49 @@ namespace VRSYS.Scripts.Recording
             
             if (_state.selectedReplayFile == "")
             {
+                DebugDistributedReplayLog("StartDownloadOnAllClientsEvent aborted: no replay file selected.");
                 Debug.LogError("No replay file selected!");
                 return;
             }
 
             Debug.Log("Started download on all clients");
+            DebugDistributedReplayLog("StartDownloadOnAllClientsEvent: replayFile=" + _state.selectedReplayFile +
+                                      ", recorderId=" + _state.recorderID +
+                                      ", state=" + _state.currentState +
+                                      ", projectName=" + _state.projectName +
+                                      ", selectedServer=" + _state.selectedServer +
+                                      ", recordingDirectory=" + _state.recordingDirectory);
+            DebugDistributedReplayStatusIfChanged("StartDownloadOnAllClientsEvent");
             StartDownloadsServerRpc(_state.selectedReplayFile, _state.recorderID);
         }
 
         [ServerRpc(RequireOwnership = false)]
         private void StartDownloadsServerRpc(string replayFile, int recorderId)
         {
+            DebugDistributedReplayLog("StartDownloadsServerRpc: replayFile=" + replayFile +
+                                      ", recorderId=" + recorderId +
+                                      ", isServer=" + IsServer +
+                                      ", isClient=" + IsClient);
             StartDownloadsClientRpc(replayFile, recorderId);
         }
 
         [ClientRpc]
         private void StartDownloadsClientRpc(string replayFile, int recorderId)
         {
-            Debug.Log("Test");
+            DebugDistributedReplayLog("StartDownloadsClientRpc received: replayFile=" + replayFile +
+                                      ", incomingRecorderId=" + recorderId +
+                                      ", localRecorderId=" + _state.recorderID +
+                                      ", state=" + _state.currentState);
             if (_state.currentState == State.Idle)
             {
                 _state.selectedReplayFile = replayFile;
                 _state.fixedPlaybackRecordingName = replayFile;
                 
                 if(recorderId != _state.recorderID)
+                {
+                    DebugDistributedReplayLog("StartDownloadsClientRpc ignored after idle check: recorder id mismatch.");
                     return;
+                }
                 
                 Debug.Log("Download started for recorder id: " + _state.recorderID);
                 Debug.Log("Selected replay file: " + _state.selectedReplayFile);
@@ -488,6 +605,13 @@ namespace VRSYS.Scripts.Recording
                 {
                     _userDownloadStatus.Add(player, false);
                 }
+
+                DebugDistributedReplayStatusIfChanged("StartDownloadsClientRpc after state change");
+            }
+            else
+            {
+                DebugDistributedReplayLog("StartDownloadsClientRpc ignored: state is " + _state.currentState +
+                                          " instead of Idle.");
             }
         }
         
@@ -497,6 +621,10 @@ namespace VRSYS.Scripts.Recording
             {
                 Debug.Log("Local download started");
                 Debug.Log("Selected replay file: " + _state.selectedReplayFile);
+                DebugDistributedReplayLog("StartDownloads: local download path. replayFile=" +
+                                          _state.selectedReplayFile +
+                                          ", recordingDirectory=" + _state.recordingDirectory +
+                                          ", projectName=" + _state.projectName);
 
                 _soundsDownloaded = false;
                 _transformsDownloaded = false;
@@ -512,6 +640,7 @@ namespace VRSYS.Scripts.Recording
                 }
 
                 StartDownloadCoroutines();         
+                DebugDistributedReplayStatusIfChanged("StartDownloads local");
             }
         }
         
@@ -519,6 +648,7 @@ namespace VRSYS.Scripts.Recording
         {
             
             bool downloadState = IsDownloading();
+            DebugDistributedReplayStatusIfChanged("UpdateDownloadStatusEvent before send");
             object[] recordingData = new object[] { downloadState, _state.recorderID };
             string userName = "Local User";
             if(NetworkUser.LocalInstance != null)
@@ -536,6 +666,9 @@ namespace VRSYS.Scripts.Recording
                 }
                 else
                 {
+                    DebugDistributedReplayLog("UpdateDownloadStatusEvent: sending status. user=" + userName +
+                                              ", downloadState=" + downloadState +
+                                              ", recorderId=" + _state.recorderID);
                     UpdateDownloadStatusServerRpc(downloadState, _state.recorderID, userName);
                 }
             }
@@ -544,6 +677,9 @@ namespace VRSYS.Scripts.Recording
         [ServerRpc(RequireOwnership = false)]
         private void UpdateDownloadStatusServerRpc(bool downloadStatus, int recorderId, string userName)
         {
+            DebugDistributedReplayLog("UpdateDownloadStatusServerRpc: user=" + userName +
+                                      ", downloadStatus=" + downloadStatus +
+                                      ", recorderId=" + recorderId);
             UpdateDownloadStatusClientRpc(downloadStatus, recorderId, userName);
         }
         
@@ -552,7 +688,16 @@ namespace VRSYS.Scripts.Recording
         private void UpdateDownloadStatusClientRpc(bool downloadStatus, int recorderId, string userName)
         {
             if(recorderId != _state.recorderID)
+            {
+                DebugDistributedReplayLog("UpdateDownloadStatusClientRpc ignored: incomingRecorderId=" + recorderId +
+                                          ", localRecorderId=" + _state.recorderID +
+                                          ", user=" + userName);
                 return;
+            }
+
+            DebugDistributedReplayLog("UpdateDownloadStatusClientRpc: user=" + userName +
+                                      ", downloadStatus=" + downloadStatus +
+                                      ", allUsersFinishedLoadingBefore=" + _allUsersFinishedLoading);
             
             if (!_allUsersFinishedLoading)
             {
@@ -604,6 +749,7 @@ namespace VRSYS.Scripts.Recording
                 }
                 
                 _allUsersFinishedLoading = _allUsersFinishedLoading && !IsDownloading();
+                DebugDistributedReplayStatusIfChanged("UpdateDownloadStatusClientRpc after aggregation");
 
                 //if (_allUsersFinishedLoading)
                 //    Debug.Log("All user finished downloading the recording file.");
@@ -619,6 +765,7 @@ namespace VRSYS.Scripts.Recording
 
             if (_allUsersFinishedLoading && !_replayStarted && !_startReplayEventSent)
             {
+                DebugDistributedReplayLog("UpdateDownloadStatusClientRpc: all users finished, starting synchronized replay event.");
                 StartReplayOnAllClientsEvent();
             }
         }
@@ -847,6 +994,10 @@ namespace VRSYS.Scripts.Recording
             using (var uwr = new UnityWebRequest(completeURL, UnityWebRequest.kHttpVerbGET))
             {
                 string file = directory + "/" + fileName + fileType;
+                DebugDistributedReplayLog("DownloadFileFromServer: url=" + completeURL +
+                                          ", targetFile=" + file +
+                                          ", fileType=" + fileType +
+                                          ", exists=" + File.Exists(file));
                 if(!File.Exists(file)){
                     DownloadHandlerFile dH = new DownloadHandlerFile(file);
                     dH.removeFileOnAbort = true;
@@ -859,6 +1010,8 @@ namespace VRSYS.Scripts.Recording
                     //uwr.SetRequestHeader("Cache-Control", "no-cache");
                     
                     uwr.SendWebRequest();
+                    DebugDistributedReplayLog("DownloadFileFromServer: request sent for " + fileType +
+                                              ", targetFile=" + file);
                     
                     while (!uwr.isDone)
                     {
@@ -871,6 +1024,9 @@ namespace VRSYS.Scripts.Recording
                     if (uwr.result != UnityWebRequest.Result.Success)
                     {
                         Debug.LogError(uwr.error + ", url: " + completeURL);
+                        DebugDistributedReplayLog("DownloadFileFromServer failed: fileType=" + fileType +
+                                                  ", error=" + uwr.error +
+                                                  ", responseCode=" + uwr.responseCode);
                         
                         if (url.Contains("get_meta_recording"))
                         {
@@ -891,6 +1047,9 @@ namespace VRSYS.Scripts.Recording
                     }
                     else
                     {
+                        DebugDistributedReplayLog("DownloadFileFromServer finished: fileType=" + fileType +
+                                                  ", downloadedBytes=" + uwr.downloadedBytes +
+                                                  ", targetFile=" + file);
                         if (url.Contains("get_meta_recording"))
                         {
                             _metaInformationDownloaded = true;
@@ -908,10 +1067,13 @@ namespace VRSYS.Scripts.Recording
                             _transformsDownloaded = true;
                         }
                     }
+                    DebugDistributedReplayStatusIfChanged("DownloadFileFromServer completion " + fileType);
                 }
                 else
                 {
                     Debug.Log("File already exists: " + file + ". Skipping download.");
+                    DebugDistributedReplayLog("DownloadFileFromServer skipped existing file: fileType=" + fileType +
+                                              ", targetFile=" + file);
                     if (url.Contains("get_meta_recording"))
                     {
                         _metaInformationDownloaded = true;
@@ -928,6 +1090,7 @@ namespace VRSYS.Scripts.Recording
                     {
                         _transformsDownloaded = true;
                     }
+                    DebugDistributedReplayStatusIfChanged("DownloadFileFromServer skipped " + fileType);
                 }
             }
         }
@@ -936,6 +1099,10 @@ namespace VRSYS.Scripts.Recording
         {
             string replayFile = _state.selectedReplayFile;
             string projectName = _state.projectName;
+            DebugDistributedReplayLog("StartDownloadCoroutines: replayFile=" + replayFile +
+                                      ", projectName=" + projectName +
+                                      ", recordingDirectory=" + _state.recordingDirectory +
+                                      ", selectedServer=" + _state.selectedServer);
             StartCoroutine(DownloadFileFromServer(projectName, _state.recordingDirectory, "get_transform_recording", replayFile));
             StartCoroutine(DownloadFileFromServer(projectName, _state.recordingDirectory, "get_sound_recording", replayFile));
             StartCoroutine(DownloadFileFromServer(projectName, _state.recordingDirectory, "get_meta_recording", replayFile));

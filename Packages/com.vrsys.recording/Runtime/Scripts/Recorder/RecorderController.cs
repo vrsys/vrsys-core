@@ -90,6 +90,15 @@ namespace VRSYS.Scripts.Recording
         public bool uploadFilesToServer = false;
         public bool debugLogs = true;
 
+        private void DebugReplayStartupLog(string message)
+        {
+            if (!debugLogs)
+                return;
+
+            Debug.Log("[ReplayStartupDebug][frame=" + Time.frameCount +
+                      "][time=" + Time.realtimeSinceStartup.ToString("F3") + "] " + message);
+        }
+
         [HideInInspector]
         public int RecorderID
         {
@@ -390,9 +399,21 @@ namespace VRSYS.Scripts.Recording
 
         public void PrepareAndStartDistributedReplay()
         {
+            DebugReplayStartupLog("PrepareAndStartDistributedReplay called. state=" + recorderState.currentState +
+                                  ", recorderId=" + recorderState.recorderID +
+                                  ", selectedReplayFile=" + recorderState.selectedReplayFile +
+                                  ", fixedPlaybackRecordingName=" + recorderState.fixedPlaybackRecordingName +
+                                  ", recordingDirectory=" + recorderState.recordingDirectory +
+                                  ", selectedServer=" + recorderState.selectedServer +
+                                  ", downloadFilesFromServer=" + downloadFilesFromServer);
             if (recorderState.currentState == State.Idle)
             {
                 _networkController.StartDownloadOnAllClientsEvent();
+            }
+            else
+            {
+                DebugReplayStartupLog("PrepareAndStartDistributedReplay ignored because state is " +
+                                      recorderState.currentState + ".");
             }
         }
 
@@ -422,10 +443,20 @@ namespace VRSYS.Scripts.Recording
 
         public void StartReplay()
         {
+            DebugReplayStartupLog("StartReplay entered. state=" + recorderState.currentState +
+                                  ", recorderId=" + recorderState.recorderID +
+                                  ", selectedReplayFile=" + recorderState.selectedReplayFile +
+                                  ", fixedPlaybackRecordingName=" + recorderState.fixedPlaybackRecordingName +
+                                  ", recordingDirectory=" + recorderState.recordingDirectory +
+                                  ", localPlayback=" + localPlayback +
+                                  ", replayRoot=" + (replayRoot == null ? "<null>" : replayRoot.name));
             recorderState.currentState = State.PreparingReplay;
             Debug.Log("Starting replay for recorder with id: " + recorderState.recorderID);
 
             bool openForEditing = GetComponent<IRecordingEditor>() != null;
+            DebugReplayStartupLog("StartReplay before native open. openForEditing=" + openForEditing +
+                                  ", recordingDirectoryLength=" + recorderState.recordingDirectory.Length +
+                                  ", selectedReplayFileLength=" + recorderState.selectedReplayFile.Length);
             bool result = openForEditing
                 ? OpenExistingRecordingFileForEditing(recorderState.recorderID, recorderState.recordingDirectory,
                     recorderState.recordingDirectory.Length, recorderState.selectedReplayFile,
@@ -433,6 +464,7 @@ namespace VRSYS.Scripts.Recording
                 : OpenExistingRecordingFile(recorderState.recorderID, recorderState.recordingDirectory,
                     recorderState.recordingDirectory.Length, recorderState.selectedReplayFile,
                     recorderState.selectedReplayFile.Length);
+            DebugReplayStartupLog("StartReplay after native open. result=" + result);
 
             if (!result)
             {
@@ -444,28 +476,49 @@ namespace VRSYS.Scripts.Recording
                 Debug.Log("Playback file existence check: Successful " + Time.time);
             }
 
+            DebugReplayStartupLog("StartReplay before GetRecordingDuration.");
             recorderState.recordingDuration = GetRecordingDuration(recorderState.recorderID);
+            DebugReplayStartupLog("StartReplay after GetRecordingDuration. duration=" + recorderState.recordingDuration);
             recorderState.currentMinSliderValue = 0.0f;
             recorderState.currentMaxSliderValue = recorderState.recordingDuration;
 
+            DebugReplayStartupLog("StartReplay before DisableAllAudioSources.");
             DisableAllAudioSources();
+            DebugReplayStartupLog("StartReplay after DisableAllAudioSources.");
             
             Debug.Log("Preparing scene for playback.");
+            DebugReplayStartupLog("StartReplay before PrepareReplayScene.");
             _scenePreparator.PrepareReplayScene();
+            DebugReplayStartupLog("StartReplay after PrepareReplayScene.");
 
+            DebugReplayStartupLog("StartReplay before AttachTransformRecorder.");
             AttachTransformRecorder();
+            DebugReplayStartupLog("StartReplay after AttachTransformRecorder. transformRecorderCount=" +
+                                  _transformRecorder.Count);
             // Audio sources are already handeled by the scene preaparator prepare replay scene
+            DebugReplayStartupLog("StartReplay before AttachArbitraryRecorder.");
             AttachArbitraryRecorder();
+            DebugReplayStartupLog("StartReplay after AttachArbitraryRecorder. genericRecorderCount=" +
+                                  _genericRecorder.Count);
 
             playbackStartDate = DateTime.Now.ToString("g", CultureInfo.GetCultureInfo("es-ES")).Replace(" ", "_")
                 .Replace(":", "_").Replace("/", "_");
 
+            DebugReplayStartupLog("StartReplay before GetNamePresent.");
             recorderState.recordedObjectPresent = _scenePreparator.GetNamePresent();
+            DebugReplayStartupLog("StartReplay after GetNamePresent. recordedObjectPresentCount=" +
+                                  (recorderState.recordedObjectPresent == null
+                                      ? 0
+                                      : recorderState.recordedObjectPresent.Count));
             recorderState.currentState = State.Replaying;
             recorderState.currentReplayTime = 0.0f;
             recorderState.currentRecordingTime = -1.0f;
             
+            DebugReplayStartupLog("StartReplay before OnReplayStart.");
             OnReplayStart();
+            DebugReplayStartupLog("StartReplay completed. state=" + recorderState.currentState +
+                                  ", currentReplayTime=" + recorderState.currentReplayTime +
+                                  ", recordingDuration=" + recorderState.recordingDuration);
         }
 
         public void SendEndReplayEvent()

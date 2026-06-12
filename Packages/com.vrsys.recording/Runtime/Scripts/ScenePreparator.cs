@@ -77,6 +77,15 @@ namespace VRSYS.Scripts.Recording
             _controller = GetComponent<RecorderController>();
         }
 
+        private void DebugScenePreparationLog(string message)
+        {
+            if (_controller == null || !_controller.debugLogs)
+                return;
+
+            Debug.Log("[ScenePreparationDebug][frame=" + Time.frameCount +
+                      "][time=" + Time.realtimeSinceStartup.ToString("F3") + "] " + message);
+        }
+
         private bool HandleMissingGameObject()
         {
             Debug.Log("Trying to handle missing objects.");
@@ -269,7 +278,14 @@ namespace VRSYS.Scripts.Recording
             {
                 if (_controller.debugLogs)
                     Debug.Log("Trying to get ids of all sound sources contained in recording.");
+                DebugScenePreparationLog("HandleAudioSources before GetRecordingSoundSources. recorderId=" +
+                                         _controller.RecorderID + ", maxSoundSources=" + MaxSoundSources);
                 int count = GetRecordingSoundSources(_controller.RecorderID, (IntPtr)u, MaxSoundSources);
+                string[] retrievedSoundIds = new string[Mathf.Max(0, Mathf.Min(count, MaxSoundSources))];
+                for (int i = 0; i < retrievedSoundIds.Length; ++i)
+                    retrievedSoundIds[i] = _soundIDs[i].ToString();
+                DebugScenePreparationLog("HandleAudioSources after GetRecordingSoundSources. count=" + count +
+                                         ", ids=[" + string.Join(", ", retrievedSoundIds) + "]");
                 if (_controller.debugLogs)
                     Debug.Log("Found: " + count + " sound sources.");
 
@@ -278,6 +294,8 @@ namespace VRSYS.Scripts.Recording
                     for (int k = 0; k < count; ++k)
                     {
                         int soundSourceId = _soundIDs[k];
+                        DebugScenePreparationLog("HandleAudioSources processing sound source index=" + k +
+                                                 ", id=" + soundSourceId);
                         if (soundSourceId == 1)
                         {
                             Debug.LogWarning("The recorded audiolistener data is not played back!");
@@ -302,6 +320,7 @@ namespace VRSYS.Scripts.Recording
 
             if (_controller.debugLogs)
                 Debug.Log("Sound source retrieval and setup finished.");
+            DebugScenePreparationLog("HandleAudioSources finished.");
 
             return false;
         }
@@ -314,10 +333,16 @@ namespace VRSYS.Scripts.Recording
         public unsafe void PrepareReplayScene()
         {
             replayGameObjectInformations.Clear();
+            DebugScenePreparationLog("PrepareReplayScene entered. recorderId=" + _controller.RecorderID +
+                                     ", replayRoot=" +
+                                     (_controller.replayRoot == null ? "<null>" : _controller.replayRoot.name));
             if (_controller.debugLogs)
                 Debug.Log("Trying to get recording gameobjects");
 
+            DebugScenePreparationLog("PrepareReplayScene before GetRecordingTransformCount.");
             int transformCount = GetRecordingTransformCount(_controller.RecorderID);
+            DebugScenePreparationLog("PrepareReplayScene after GetRecordingTransformCount. transformCount=" +
+                                     transformCount);
             if (transformCount <= 0)
             {
                 Debug.LogWarning(
@@ -326,10 +351,15 @@ namespace VRSYS.Scripts.Recording
             }
 
             int[] transformIDs = new int[transformCount];
+            int retrievedTransformIdCount;
             fixed (int* t = transformIDs)
             {
-                GetRecordingTransformIDs(_controller.RecorderID, (IntPtr)t, transformCount);
+                DebugScenePreparationLog("PrepareReplayScene before GetRecordingTransformIDs. requestedMaxSize=" +
+                                         transformCount);
+                retrievedTransformIdCount = GetRecordingTransformIDs(_controller.RecorderID, (IntPtr)t, transformCount);
             }
+            DebugScenePreparationLog("PrepareReplayScene after GetRecordingTransformIDs. returnedCount=" +
+                                     retrievedTransformIdCount + ", ids=[" + string.Join(", ", transformIDs) + "]");
 
             int maxSize = 10000;
             StringBuilder buffer = new StringBuilder(maxSize);
@@ -337,19 +367,51 @@ namespace VRSYS.Scripts.Recording
             for (int i = 0; i < transformCount; ++i)
             {
                 int currentID = transformIDs[i];
+                DebugScenePreparationLog("PrepareReplayScene reading metadata for transform index=" + i +
+                                         ", id=" + currentID + ".");
+                // DIAGNOSTIC: the last [PrepLoop] line before a crash names the exact object
+                // (index + id), the hierarchy name read so far, and which getter ran next.
+                if (_controller.debugLogs) Debug.Log($"[PrepLoop] i={i}/{transformCount} id={currentID} step=hierarchyName");
+                buffer.Clear();
+                DebugScenePreparationLog("PrepareReplayScene before GetGameObjectHierarchyNameByID. id=" + currentID +
+                                         ", maxSize=" + maxSize);
                 int length = GetGameObjectHierarchyNameByID(_controller.RecorderID, buffer, maxSize, currentID);
                 string gameobjectHierarchyPath = length > 0 ? buffer.ToString() : "";
+                DebugScenePreparationLog("PrepareReplayScene after GetGameObjectHierarchyNameByID. id=" + currentID +
+                                         ", length=" + length + ", value=\"" + gameobjectHierarchyPath + "\"");
 
+                if (_controller.debugLogs) Debug.Log($"[PrepLoop] i={i} id={currentID} step=meshPath name='{gameobjectHierarchyPath}'");
+                buffer.Clear();
+                DebugScenePreparationLog("PrepareReplayScene before GetGameObjectMeshPathByID. id=" + currentID +
+                                         ", maxSize=" + maxSize);
                 length = GetGameObjectMeshPathByID(_controller.RecorderID, buffer, maxSize, currentID);
                 string gameobjectMeshPath = length > 0 ? buffer.ToString() : "";
+                DebugScenePreparationLog("PrepareReplayScene after GetGameObjectMeshPathByID. id=" + currentID +
+                                         ", length=" + length + ", value=\"" + gameobjectMeshPath + "\"");
 
+                if (_controller.debugLogs) Debug.Log($"[PrepLoop] i={i} id={currentID} step=prefab");
+                buffer.Clear();
+                DebugScenePreparationLog("PrepareReplayScene before GetGameObjectPrefabByID. id=" + currentID +
+                                         ", maxSize=" + maxSize);
                 length =  GetGameObjectPrefabByID(_controller.RecorderID, buffer, maxSize, currentID);
                 string gameobjectPrefabLocation = length > 0 ? buffer.ToString() : "";
+                DebugScenePreparationLog("PrepareReplayScene after GetGameObjectPrefabByID. id=" + currentID +
+                                         ", length=" + length + ", value=\"" + gameobjectPrefabLocation + "\"");
 
+                if (_controller.debugLogs) Debug.Log($"[PrepLoop] i={i} id={currentID} step=components");
+                buffer.Clear();
+                DebugScenePreparationLog("PrepareReplayScene before GetGameObjectComponentsByID. id=" + currentID +
+                                         ", maxSize=" + maxSize);
                 length =  GetGameObjectComponentsByID(_controller.RecorderID, buffer, maxSize, currentID);
                 string gameobjectComponents = length > 0 ? buffer.ToString() : "";
+                DebugScenePreparationLog("PrepareReplayScene after GetGameObjectComponentsByID. id=" + currentID +
+                                         ", length=" + length + ", value=\"" + gameobjectComponents + "\"");
 
+                if (_controller.debugLogs) Debug.Log($"[PrepLoop] i={i} id={currentID} step=build comp='{gameobjectComponents}'");
+                DebugScenePreparationLog("PrepareReplayScene before GetGameObjectFirstSeenTimeByID. id=" + currentID);
                 float firstSeenTime = GetGameObjectFirstSeenTimeByID(_controller.RecorderID, currentID);
+                DebugScenePreparationLog("PrepareReplayScene after GetGameObjectFirstSeenTimeByID. id=" + currentID +
+                                         ", firstSeenTime=" + firstSeenTime);
                 string[] pathParts = gameobjectHierarchyPath.Split('/');
                 ReplayGameObjectInformation gameObjectInformation = new ReplayGameObjectInformation();
                 gameObjectInformation.id = currentID;
@@ -360,9 +422,17 @@ namespace VRSYS.Scripts.Recording
                 gameObjectInformation.components = gameobjectComponents.Split(",").ToList();
                 gameObjectInformation.firstSeenTime = firstSeenTime;
                 replayGameObjectInformations.Add(gameObjectInformation);
+                DebugScenePreparationLog("PrepareReplayScene stored metadata for transform index=" + i +
+                                         ", id=" + currentID +
+                                         ", gameObjectName=\"" + gameObjectInformation.gameObjectName +
+                                         "\", componentCount=" + gameObjectInformation.components.Count);
             }
+            DebugScenePreparationLog("PrepareReplayScene finished metadata retrieval. storedCount=" +
+                                     replayGameObjectInformations.Count);
 
+            DebugScenePreparationLog("PrepareReplayScene before HandleMissingGameObject.");
             bool error = HandleMissingGameObject();
+            DebugScenePreparationLog("PrepareReplayScene after HandleMissingGameObject. error=" + error);
 
             if (_controller.debugLogs)
             {
@@ -375,7 +445,9 @@ namespace VRSYS.Scripts.Recording
 
             if (_controller.debugLogs)
                 Debug.Log("Trying to handle missing audio sources.");
+            DebugScenePreparationLog("PrepareReplayScene before HandleAudioSources.");
             error = HandleAudioSources();
+            DebugScenePreparationLog("PrepareReplayScene after HandleAudioSources. error=" + error);
 
             if (_controller.debugLogs)
             {

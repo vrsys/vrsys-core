@@ -19,6 +19,7 @@ namespace VRSYS.Scripts.Recording
         private bool attachTransformRecorderToAll;
         private bool replayHierarchyChanges;
         private bool playbackTransform;
+        private bool instantiateMissingObjects;
         private bool replayAudio;
         private bool recordOnLocalTransformChangesOnly;
         private int transformRecordingStepsPerSecond;
@@ -212,6 +213,9 @@ namespace VRSYS.Scripts.Recording
                 playbackTransform = EditorGUILayout.Toggle(
                     new GUIContent("Playback transform", "Attach TransformRecorder components during replay so recorded transforms are applied."),
                     controller.playbackTransform);
+                instantiateMissingObjects = EditorGUILayout.Toggle(
+                    new GUIContent("Instantiate missing objects", "When enabled, recorded objects that are not present in the scene are instantiated for playback (querying their mesh/prefab information). When disabled, only objects already present in the scene are played back."),
+                    controller.instantiateMissingObjects);
                 replayAudio = EditorGUILayout.Toggle(
                     new GUIContent("Playback audio", "Handle recorded audio sources during replay."),
                     controller.replayAudio);
@@ -235,6 +239,7 @@ namespace VRSYS.Scripts.Recording
                 replayRoot = controller.replayRoot;
                 replayHierarchyChanges = controller.replayHierarchyChanges;
                 playbackTransform = controller.playbackTransform;
+                instantiateMissingObjects = controller.instantiateMissingObjects;
                 replayAudio = controller.replayAudio;
                 synchronisedPlayback = controller.synchronizedPlayback;
                 lateJoinPlayback = controller.lateJoinPlayback;
@@ -373,6 +378,7 @@ namespace VRSYS.Scripts.Recording
                 controller.transformRecordingStepsPerSecond = transformRecordingStepsPerSecond;
                 controller.replayHierarchyChanges = replayHierarchyChanges;
                 controller.playbackTransform = playbackTransform;
+                controller.instantiateMissingObjects = instantiateMissingObjects;
                 controller.replayAudio = replayAudio;
                 controller.recordOnLocalTransformChangesOnly = recordOnLocalTransformChangesOnly;
                 controller.createWAV = createWAV;

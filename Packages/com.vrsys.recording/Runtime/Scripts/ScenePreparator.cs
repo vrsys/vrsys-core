@@ -127,6 +127,11 @@ namespace VRSYS.Scripts.Recording
             replayGameObjectInformations.Sort((a, b) =>
                 (b.prefabLocation.Length > 0).CompareTo(a.prefabLocation.Length > 0));
 
+            // Only instantiate objects that are missing from the scene when explicitly enabled. When
+            // disabled, objects already matched above still play back; missing ones are simply skipped.
+            if (!_controller.instantiateMissingObjects)
+                return error;
+
             foreach (var information in replayGameObjectInformations)
             {
                 if (!information.instantiated)
@@ -362,8 +367,6 @@ namespace VRSYS.Scripts.Recording
                                      retrievedTransformIdCount + ", ids=[" + string.Join(", ", transformIDs) + "]");
 
             int maxSize = 10000;
-            StringBuilder buffer = new StringBuilder(maxSize);
-
             for (int i = 0; i < transformCount; ++i)
             {
                 int currentID = transformIDs[i];
@@ -372,40 +375,49 @@ namespace VRSYS.Scripts.Recording
                 // DIAGNOSTIC: the last [PrepLoop] line before a crash names the exact object
                 // (index + id), the hierarchy name read so far, and which getter ran next.
                 if (_controller.debugLogs) Debug.Log($"[PrepLoop] i={i}/{transformCount} id={currentID} step=hierarchyName");
-                buffer.Clear();
                 DebugScenePreparationLog("PrepareReplayScene before GetGameObjectHierarchyNameByID. id=" + currentID +
                                          ", maxSize=" + maxSize);
+                StringBuilder buffer = new StringBuilder(maxSize);
                 int length = GetGameObjectHierarchyNameByID(_controller.RecorderID, buffer, maxSize, currentID);
                 string gameobjectHierarchyPath = length > 0 ? buffer.ToString() : "";
                 DebugScenePreparationLog("PrepareReplayScene after GetGameObjectHierarchyNameByID. id=" + currentID +
                                          ", length=" + length + ", value=\"" + gameobjectHierarchyPath + "\"");
 
-                if (_controller.debugLogs) Debug.Log($"[PrepLoop] i={i} id={currentID} step=meshPath name='{gameobjectHierarchyPath}'");
-                buffer.Clear();
-                DebugScenePreparationLog("PrepareReplayScene before GetGameObjectMeshPathByID. id=" + currentID +
-                                         ", maxSize=" + maxSize);
-                length = GetGameObjectMeshPathByID(_controller.RecorderID, buffer, maxSize, currentID);
-                string gameobjectMeshPath = length > 0 ? buffer.ToString() : "";
-                DebugScenePreparationLog("PrepareReplayScene after GetGameObjectMeshPathByID. id=" + currentID +
-                                         ", length=" + length + ", value=\"" + gameobjectMeshPath + "\"");
+                // Mesh path and prefab location are only needed to instantiate objects that are missing
+                // from the scene. When instantiation is disabled, skip these native queries entirely;
+                // playback then only drives objects already present in the scene.
+                string gameobjectMeshPath = "";
+                string gameobjectPrefabLocation = "";
+                string gameobjectComponents = "";
+                if (_controller.instantiateMissingObjects)
+                {
+                    if (_controller.debugLogs) Debug.Log($"[PrepLoop] i={i} id={currentID} step=meshPath name='{gameobjectHierarchyPath}'");
+                    buffer = new StringBuilder(maxSize);
+                    DebugScenePreparationLog("PrepareReplayScene before GetGameObjectMeshPathByID. id=" + currentID +
+                                             ", maxSize=" + maxSize);
+                    length = GetGameObjectMeshPathByID(_controller.RecorderID, buffer, maxSize, currentID);
+                    gameobjectMeshPath = length > 0 ? buffer.ToString() : "";
+                    DebugScenePreparationLog("PrepareReplayScene after GetGameObjectMeshPathByID. id=" + currentID +
+                                             ", length=" + length + ", value=\"" + gameobjectMeshPath + "\"");
 
-                if (_controller.debugLogs) Debug.Log($"[PrepLoop] i={i} id={currentID} step=prefab");
-                buffer.Clear();
-                DebugScenePreparationLog("PrepareReplayScene before GetGameObjectPrefabByID. id=" + currentID +
-                                         ", maxSize=" + maxSize);
-                length =  GetGameObjectPrefabByID(_controller.RecorderID, buffer, maxSize, currentID);
-                string gameobjectPrefabLocation = length > 0 ? buffer.ToString() : "";
-                DebugScenePreparationLog("PrepareReplayScene after GetGameObjectPrefabByID. id=" + currentID +
-                                         ", length=" + length + ", value=\"" + gameobjectPrefabLocation + "\"");
-
-                if (_controller.debugLogs) Debug.Log($"[PrepLoop] i={i} id={currentID} step=components");
-                buffer.Clear();
-                DebugScenePreparationLog("PrepareReplayScene before GetGameObjectComponentsByID. id=" + currentID +
-                                         ", maxSize=" + maxSize);
-                length =  GetGameObjectComponentsByID(_controller.RecorderID, buffer, maxSize, currentID);
-                string gameobjectComponents = length > 0 ? buffer.ToString() : "";
-                DebugScenePreparationLog("PrepareReplayScene after GetGameObjectComponentsByID. id=" + currentID +
-                                         ", length=" + length + ", value=\"" + gameobjectComponents + "\"");
+                    if (_controller.debugLogs) Debug.Log($"[PrepLoop] i={i} id={currentID} step=prefab");
+                    buffer = new StringBuilder(maxSize);
+                    DebugScenePreparationLog("PrepareReplayScene before GetGameObjectPrefabByID. id=" + currentID +
+                                             ", maxSize=" + maxSize);
+                    length =  GetGameObjectPrefabByID(_controller.RecorderID, buffer, maxSize, currentID);
+                    gameobjectPrefabLocation = length > 0 ? buffer.ToString() : "";
+                    DebugScenePreparationLog("PrepareReplayScene after GetGameObjectPrefabByID. id=" + currentID +
+                                             ", length=" + length + ", value=\"" + gameobjectPrefabLocation + "\"");
+                    
+                    if (_controller.debugLogs) Debug.Log($"[PrepLoop] i={i} id={currentID} step=components");
+                    buffer = new StringBuilder(maxSize);
+                    DebugScenePreparationLog("PrepareReplayScene before GetGameObjectComponentsByID. id=" + currentID +
+                                             ", maxSize=" + maxSize);
+                    length =  GetGameObjectComponentsByID(_controller.RecorderID, buffer, maxSize, currentID);
+                    gameobjectComponents = length > 0 ? buffer.ToString() : "";
+                    DebugScenePreparationLog("PrepareReplayScene after GetGameObjectComponentsByID. id=" + currentID +
+                                             ", length=" + length + ", value=\"" + gameobjectComponents + "\"");
+                }
 
                 if (_controller.debugLogs) Debug.Log($"[PrepLoop] i={i} id={currentID} step=build comp='{gameobjectComponents}'");
                 DebugScenePreparationLog("PrepareReplayScene before GetGameObjectFirstSeenTimeByID. id=" + currentID);

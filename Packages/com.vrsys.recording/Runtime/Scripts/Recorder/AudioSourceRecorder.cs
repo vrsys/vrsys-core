@@ -11,16 +11,26 @@ namespace VRSYS.Scripts.Recording
         private AudioSource source;
         private bool _isPlaying;
         private int frequency;
+
+        private void Awake()
+        {
+            EnsureRecordingSamplingRate();
+        }
         
         public override void Start()
         {
             base.Start();
 
             source = GetComponent<AudioSource>();
-            if(RecordingSamplingRate == -1)
-                RecordingSamplingRate = AudioSettings.outputSampleRate;
+            EnsureRecordingSamplingRate();
             if(source != null && source.clip != null)
                 frequency = source.clip.frequency;
+        }
+
+        private void EnsureRecordingSamplingRate()
+        {
+            if(RecordingSamplingRate <= 0)
+                RecordingSamplingRate = AudioSettings.outputSampleRate;
         }
         
         public override bool Record(float recordTime)
@@ -71,6 +81,9 @@ namespace VRSYS.Scripts.Recording
             if (RecordingChannelNum == -1)
                 RecordingChannelNum = channels;
 
+            if (RecordingSamplingRate <= 0 || RecordingChannelNum <= 0 || data == null || data.Length <= 0)
+                return;
+
             // Ratio of the actual sampling rate of the audio source to the sampling rate of the audio listener
             float samplingRateRatio = 1.0f;//frequency / (float)RecordingSamplingRate;
 
@@ -79,10 +92,12 @@ namespace VRSYS.Scripts.Recording
 
             // Calculate the duration of these effective samples
             float effectiveSampleDuration = effectiveSampleCount / (float)RecordingSamplingRate;
+            if (effectiveSampleDuration <= 0.0f || float.IsNaN(effectiveSampleDuration) || float.IsInfinity(effectiveSampleDuration))
+                return;
             
             if (FirstRecord)
             {
-                RecordingTime += (new TimeSpan(DateTime.Now.Ticks - recordStartTime)).Milliseconds / 1000.0f;
+                RecordingTime += (float)(new TimeSpan(DateTime.Now.Ticks - recordStartTime)).TotalSeconds;
                 FirstRecord = false;
             }
             
@@ -99,10 +114,7 @@ namespace VRSYS.Scripts.Recording
 
                 //Debug.Log("Recording sound for id: " + id +", start time: " + recordingTimeOfChunk + ", end time: " + RecordingTime);
               
-                RecordSoundDataWithGOInfoAtTimestamp(controller.RecorderID, data, effectiveSampleCount * channels, RecordingSamplingRate, 0, RecordingChannelNum, _goIDDTO[0], recordingTimeOfChunk, id);
-                
-                //RecordingTime += duration;
-                // Update RecordingTime
+                RecordSoundDataWithGOInfoAtTimestamp(controller.RecorderID, data, effectiveSampleCount * channels, RecordingSamplingRate, 0, RecordingChannelNum, _goIDDTO[0], recordingTimeOfChunk, id)
                 RecordingTime += effectiveSampleDuration;
             }
         }

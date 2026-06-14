@@ -54,6 +54,7 @@ namespace VRSYS.Scripts.Recording
         public bool recordOnLocalTransformChangesOnly = true;
         public bool replayAudio = true;
         public bool playbackTransform = true;
+        public bool instantiateMissingObjects = true;
         public bool recordMicro = true;
         public bool recordAudioListener = true;
         public bool recordAllSoundSources = true;

@@ -113,8 +113,9 @@ namespace VRSYS.Scripts.Recording
                 }
 
                 //Debug.Log("Recording sound for id: " + id +", start time: " + recordingTimeOfChunk + ", end time: " + RecordingTime);
-              
-                RecordSoundDataWithGOInfoAtTimestamp(controller.RecorderID, data, effectiveSampleCount * channels, RecordingSamplingRate, 0, RecordingChannelNum, _goIDDTO[0], recordingTimeOfChunk, id)
+
+                RecordSoundDataWithGOInfoAtTimestamp(controller.RecorderID, data, effectiveSampleCount * channels,
+                    RecordingSamplingRate, 0, RecordingChannelNum, _goIDDTO[0], recordingTimeOfChunk, id);
                 RecordingTime += effectiveSampleDuration;
             }
         }

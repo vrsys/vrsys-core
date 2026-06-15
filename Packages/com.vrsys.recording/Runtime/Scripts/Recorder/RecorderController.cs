@@ -202,6 +202,12 @@ namespace VRSYS.Scripts.Recording
         {
             if (recorderState.currentState == State.Recording || recorderState.currentState == State.PrepareRecording)
             {
+                if (debugLogs)
+                    Debug.Log("[RecorderController] AttachSoundRecorder: recordMicro=" + recordMicro +
+                              ", recordAudioListener=" + recordAudioListener + ", recordAllSoundSources=" +
+                              recordAllSoundSources + ", Microphone.devices=" + Microphone.devices.Length +
+                              ". (0 devices means no MicrophoneRecorder/id 0 is created.)");
+
                 if (Microphone.devices.Length > 0)
                 {
                     
@@ -236,6 +242,12 @@ namespace VRSYS.Scripts.Recording
 
                         if (NetworkUser.LocalInstance != null)
                             microphoneRecorder.SetUserTransform(NetworkUser.LocalInstance.head);
+
+                        if (debugLogs)
+                            Debug.Log("[RecorderController] Created MicrophoneRecorder (id=0) on '" + newGo.name +
+                                      "'. Microphone.IsRecording(\"" + microphone + "\")=" +
+                                      Microphone.IsRecording(microphone) + ". If a voice SDK (ODIN) holds the mic, " +
+                                      "the reader must be overridden via MicrophoneRecorder.SetMicrophoneReader().");
                     }
                     // debug
                     // AudioSource testSource = newGo.AddComponent<AudioSource>();

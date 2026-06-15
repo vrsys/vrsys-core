@@ -11,6 +11,10 @@ namespace VRSYS.Scripts.Recording
         private int _audioSamplesPerRecordStep = -1;
         private Transform _userTransform;
 
+        // Debugging: throttled heartbeat timer and running chunk total to verify microphone capture.
+        private float _lastMicLogTime;
+        private int _chunksRecordedTotal;
+
         public string rerecMicDeviceOverride;
 
         private MicrophoneClipReader _rerecReader;
@@ -55,10 +59,18 @@ namespace VRSYS.Scripts.Recording
             
                 _audioData = new float[_audioSamplesPerRecordStep];
                 FirstRecord = true;
+
+                if (controller.debugLogs)
+                    Debug.Log("[MicrophoneRecorder id=" + id + "] Initialized capture: samplingRate=" +
+                              RecordingSamplingRate + ", channels=" + RecordingChannelNum + ", samplesPerStep=" +
+                              _audioSamplesPerRecordStep + ", bufferLength=" + _audioData.Length +
+                              ". (A samplingRate/bufferLength of 0 means the reader was not ready yet and no " +
+                              "microphone audio will be captured.)");
             }
-            
+
             float readAudio = 1;
             bool recordedData = false;
+            int chunksThisCall = 0;
 
             float recordedTime = 0.0f;
             
@@ -82,16 +94,33 @@ namespace VRSYS.Scripts.Recording
                         bool result = RecordSoundDataWithGOInfoAtTimestamp(controller.RecorderID, _audioData, _audioSamplesPerRecordStep, RecordingSamplingRate, 0, RecordingChannelNum, _goIDDTO[0], RecordingTime, id);
 
                         if (!result)
+                        {
+                            if (controller.debugLogs)
+                                Debug.LogWarning("[MicrophoneRecorder id=" + id + "] RecordSoundDataWithGOInfoAtTimestamp " +
+                                                 "returned false at time " + RecordingTime + "; stopping capture.");
                             return false;
+                        }
+
+                        chunksThisCall++;
                     }
 
                     RecordingTime += _audioSamplesPerRecordStep / (float)RecordingSamplingRate;
                     recordedTime = _audioSamplesPerRecordStep / (float)RecordingSamplingRate;
-                    
+
                     recordedData = true;
                 }
             }
-            
+
+            _chunksRecordedTotal += chunksThisCall;
+            if (controller.debugLogs && Time.realtimeSinceStartup - _lastMicLogTime >= 1.0f)
+            {
+                _lastMicLogTime = Time.realtimeSinceStartup;
+                Debug.Log("[MicrophoneRecorder id=" + id + "] Heartbeat: chunksThisCall=" + chunksThisCall +
+                          ", totalChunks=" + _chunksRecordedTotal + ", recordingTime=" + RecordingTime.ToString("F2") +
+                          ", bufferLength=" + (_audioData != null ? _audioData.Length : 0) +
+                          ". (chunksThisCall staying 0 means no audio is reaching the recorder.)");
+            }
+
             if (recordedData && Mathf.Abs(recordTime - (RecordingTime + recordedTime)) > 0.5f)
             {
                 if(controller.debugLogs)

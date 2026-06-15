@@ -141,8 +141,16 @@ namespace VRSYS.Scripts.Recording
 
         private int _playbackSamplingRate = -1;
         private int _playbackChannelNum = -1;
-
-        private float[][] _replayAudioData;
+        
+        private float[][] _replayAudioData =
+        {
+            new float[1000],
+            new float[512],
+            new float[1024],
+            new float[2048],
+            new float[4096],
+            new float[4800]
+        };
         private bool _initializedReplay = false;
         private float _nextSoundReplayTime;
         private int _audioWritePos;
@@ -152,19 +160,6 @@ namespace VRSYS.Scripts.Recording
 
         private GameObject _audioSourceGo;
         private GameObject _targetGo;
-
-        public override void Start()
-        {
-            base.Start();
-
-            _replayAudioData = new float[6][];
-            _replayAudioData[0] = new float[1000];
-            _replayAudioData[1] = new float[512];
-            _replayAudioData[2] = new float[1024];
-            _replayAudioData[3] = new float[2048];
-            _replayAudioData[4] = new float[4096];
-            _replayAudioData[5] = new float[4800];
-        }
 
         public override void OnDestroy()
         {

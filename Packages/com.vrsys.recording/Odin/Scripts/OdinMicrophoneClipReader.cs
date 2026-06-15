@@ -32,6 +32,12 @@ namespace VRSYS.Scripts.Recording
         // bound; oldest samples are dropped first.
         private int _maxBufferedSamples;
 
+        // Debugging: one-time flags so verifying the ODIN capture flow does not spam the log.
+        private bool _loggedFirstData;
+        private bool _loggedFirstServe;
+        private bool _loggedEmptyBufferWarning;
+        private bool _loggedStarvation;
+
         public int Channels => _accessor != null ? Mathf.Max(1, _accessor.Channels) : 1;
         public int SamplingRate => _accessor != null ? _accessor.SamplingRate : 0;
 
@@ -47,6 +53,8 @@ namespace VRSYS.Scripts.Recording
             if (buffer == null || buffer.Length == 0)
                 return;
 
+            int queuedAfter;
+            bool logFirst = false;
             lock (_lock)
             {
                 if (_maxBufferedSamples <= 0 && SamplingRate > 0)
@@ -60,24 +68,63 @@ namespace VRSYS.Scripts.Recording
                 if (_maxBufferedSamples > 0)
                     while (_samples.Count > _maxBufferedSamples)
                         _samples.Dequeue();
+
+                queuedAfter = _samples.Count;
+                if (!_loggedFirstData)
+                {
+                    _loggedFirstData = true;
+                    logFirst = true;
+                }
             }
+
+            // Logged outside the lock so the (possibly audio-thread) ODIN callback releases it quickly.
+            // One-time, so it cannot spam the log.
+            if (logFirst)
+                Debug.Log("[OdinMicrophoneClipReader] First ODIN audio buffer received: bufferLength=" +
+                          buffer.Length + ", samplingRate=" + SamplingRate + ", channels=" + Channels +
+                          ", queuedSamples=" + queuedAfter + ".");
         }
 
         public float Read(float[] buffer)
         {
             if (buffer == null || buffer.Length == 0)
+            {
+                if (!_loggedEmptyBufferWarning)
+                {
+                    _loggedEmptyBufferWarning = true;
+                    Debug.LogWarning("[OdinMicrophoneClipReader] Read was called with a zero-length buffer. The " +
+                                     "MicrophoneRecorder initialized its sampling rate before ODIN reported one " +
+                                     "(SamplingRate=0), so no microphone audio can be captured.");
+                }
                 return -1.0f;
+            }
 
             lock (_lock)
             {
                 if (_samples.Count < buffer.Length)
+                {
+                    if (!_loggedStarvation)
+                    {
+                        _loggedStarvation = true;
+                        Debug.Log("[OdinMicrophoneClipReader] Recorder requested " + buffer.Length +
+                                  " samples but only " + _samples.Count + " are buffered; waiting for more ODIN " +
+                                  "audio. (Logged once.)");
+                    }
                     return -1.0f;
+                }
 
                 // Number of buffer-fulls currently queued, mirroring MicrophoneClipReader.Read so the
                 // recorder back-dates the first sample by the existing backlog.
                 float available = _samples.Count / (float)buffer.Length;
                 for (int i = 0; i < buffer.Length; i++)
                     buffer[i] = _samples.Dequeue();
+
+                if (!_loggedFirstServe)
+                {
+                    _loggedFirstServe = true;
+                    Debug.Log("[OdinMicrophoneClipReader] First audio served to the recorder: requested=" +
+                              buffer.Length + ", bufferFullsAvailable=" + available.ToString("F2") + ".");
+                }
                 return available;
             }
         }

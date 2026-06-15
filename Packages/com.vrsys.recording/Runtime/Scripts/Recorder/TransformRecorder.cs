@@ -64,6 +64,8 @@ namespace VRSYS.Scripts.Recording
         private Vector3 _originalLocalPos;
         private Vector3 _originalLocalSca;
         private Quaternion _originalLocalRot;
+        private Transform _originalParent;
+        private bool _originalStateCaptured;
         
         private Vector3 _lastLocalPos;
         private Vector3 _lastLocalSca;
@@ -265,6 +267,11 @@ namespace VRSYS.Scripts.Recording
                 _originalLocalPos = _transform.localPosition;
                 _originalLocalRot = _transform.localRotation;
                 _originalLocalSca = _transform.localScale;
+                // Capture the parent before any reparenting is replayed below. Playback may grab/reparent
+                // this pre-existing object (TransformRecorder.SetParent), so the original parent must be
+                // remembered here to restore the hierarchy position when the replay stops (see OnDestroy).
+                _originalParent = _transform.parent;
+                _originalStateCaptured = true;
             }
 
             if (_presentInRecording == -1)
@@ -523,6 +530,13 @@ namespace VRSYS.Scripts.Recording
             base.OnDestroy();
             if (_presentInRecording == 1 && tag != "InstantiatedForPlayback")
             {
+                // Restore the original parent first: playback may have reparented this object, and the
+                // cached local TRS below is only meaningful relative to the original parent. Restoring the
+                // parent before the local TRS therefore fixes both the hierarchy position and the world
+                // pose. worldPositionStays is irrelevant here because the local values are overwritten next.
+                if (_originalStateCaptured && _originalParent != gameObject.transform.parent)
+                    gameObject.transform.SetParent(_originalParent);
+
                 gameObject.transform.localPosition = _originalLocalPos;
                 gameObject.transform.localRotation = _originalLocalRot;
                 gameObject.transform.localScale = _originalLocalSca;

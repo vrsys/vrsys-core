@@ -51,21 +51,28 @@ namespace VRSYS.Scripts.Recording
         
         public override bool Record(float recordTime)
         {
-            if (RecordingSamplingRate < 0)
+            if (RecordingSamplingRate <= 0)
             {
-                RecordingChannelNum = _microphoneClipReader.Channels;
-                RecordingSamplingRate = _microphoneClipReader.SamplingRate;
-                _audioSamplesPerRecordStep = RecordingSamplingRate / SoundRecordingStepsPerSecond;
-            
+                // Defer initialization until the reader reports a valid sampling rate. With a voice SDK such
+                // as ODIN, the microphone data accessor needs a few frames before it knows its capture rate;
+                // sampling it too early (SamplingRate == 0) latches a zero-length capture buffer for the whole
+                // recording. Bail out (still returning true so recording continues) and retry on the next tick
+                // until the reader is ready.
+                int readerSamplingRate = _microphoneClipReader.SamplingRate;
+                if (readerSamplingRate <= 0)
+                    return true;
+
+                RecordingChannelNum = Mathf.Max(1, _microphoneClipReader.Channels);
+                RecordingSamplingRate = readerSamplingRate;
+                _audioSamplesPerRecordStep = Mathf.Max(1, RecordingSamplingRate / SoundRecordingStepsPerSecond);
+
                 _audioData = new float[_audioSamplesPerRecordStep];
                 FirstRecord = true;
 
                 if (controller.debugLogs)
                     Debug.Log("[MicrophoneRecorder id=" + id + "] Initialized capture: samplingRate=" +
                               RecordingSamplingRate + ", channels=" + RecordingChannelNum + ", samplesPerStep=" +
-                              _audioSamplesPerRecordStep + ", bufferLength=" + _audioData.Length +
-                              ". (A samplingRate/bufferLength of 0 means the reader was not ready yet and no " +
-                              "microphone audio will be captured.)");
+                              _audioSamplesPerRecordStep + ", bufferLength=" + _audioData.Length + ".");
             }
 
             float readAudio = 1;

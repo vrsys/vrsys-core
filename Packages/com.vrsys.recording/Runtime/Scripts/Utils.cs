@@ -18,7 +18,6 @@ using VRSYS.Core.Networking;
 using VRSYS.Core.Utility;
 using VRSYS.Recording.Scripts;
 using VRSYS.Scripts.Recording;
-using Random = System.Random;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEditor.Build;
@@ -840,42 +839,114 @@ namespace Vrsys.Scripts.Recording
                 RemoveCustomComponents(child);
             }
 
-            bool finished = false;
-            int it = 0;
-            while (!finished && it < 100)
+            Component[] components = root.gameObject.GetComponents<Component>();
+            HashSet<Component> preservedComponents = GetPreservedComponents(root.gameObject, components);
+
+            bool removedComponent = true;
+            int iteration = 0;
+            while (removedComponent && iteration < 100)
             {
-                it++;
-                finished = true;
+                iteration++;
+                removedComponent = false;
 
-                NetworkUser networkUser = root.GetComponent<NetworkUser>();
-                
-                if(networkUser != null)
-                    UnityEngine.Object.DestroyImmediate(networkUser);
+                components = root.gameObject.GetComponents<Component>();
 
-                // Looked up by type name so the package does not take a hard dependency on URP.
-                Component cameraData = root.GetComponent("UniversalAdditionalCameraData");
-
-                if(cameraData != null)
-                    UnityEngine.Object.DestroyImmediate(cameraData);
-                
-                Component[] components = root.gameObject.GetComponents<Component>();
-                
-                Random r = new Random();
-                List<int> accessIds = Enumerable.Range(0, components.Length).OrderBy(x => r.Next()).ToList();
-
-                for (int i = 0; i < components.Length; ++i)
+                foreach (Component comp in components)
                 {
-                    Component comp = components[accessIds[i]];
-                    
-                    if (ReplayComponentPreserver.IsPreserved(comp) || comp is Transform || comp is Renderer || comp is MeshFilter || comp is TMP_Text || comp is Canvas || comp is CanvasScaler ||
-                        comp is CanvasRenderer || comp is AvatarHMDAnatomy || comp is YawTowardsLocalHead || comp is RecordingPrefabInformation ||
-                        comp is Image) continue;
+                    if (comp == null || preservedComponents.Contains(comp))
+                        continue;
+
+                    if (IsRequiredByRemainingRemovableComponent(comp, components, preservedComponents))
+                        continue;
 
                     UnityEngine.Object.DestroyImmediate(comp);
-                    finished = false;
+                    removedComponent = true;
                 }
             }
+
+            components = root.gameObject.GetComponents<Component>();
+            foreach (Component comp in components)
+            {
+                if (comp == null || preservedComponents.Contains(comp))
+                    continue;
+
+                Debug.LogWarning($"Could not remove component {comp.GetType().Name} from {root.name} without breaking component dependencies.", root);
+            }
             //Debug.Log("Trying to remove custom finished.");
+        }
+
+        private static HashSet<Component> GetPreservedComponents(GameObject go, Component[] components)
+        {
+            HashSet<Component> preservedComponents = new HashSet<Component>();
+            Queue<Component> componentsToScan = new Queue<Component>();
+
+            foreach (Component comp in components)
+            {
+                if (comp == null || !ShouldPreserveComponent(comp))
+                    continue;
+
+                preservedComponents.Add(comp);
+                componentsToScan.Enqueue(comp);
+            }
+
+            while (componentsToScan.Count > 0)
+            {
+                Component comp = componentsToScan.Dequeue();
+
+                foreach (Type requiredType in GetRequiredComponentTypes(comp.GetType()))
+                {
+                    foreach (Component requiredComponent in go.GetComponents(requiredType))
+                    {
+                        if (requiredComponent == null || preservedComponents.Contains(requiredComponent))
+                            continue;
+
+                        preservedComponents.Add(requiredComponent);
+                        componentsToScan.Enqueue(requiredComponent);
+                    }
+                }
+            }
+
+            return preservedComponents;
+        }
+
+        private static bool ShouldPreserveComponent(Component comp)
+        {
+            return ReplayComponentPreserver.IsPreserved(comp) || comp is Transform || comp is Renderer || comp is MeshFilter ||
+                   comp is TMP_Text || comp is Canvas || comp is CanvasScaler || comp is CanvasRenderer ||
+                   comp is AvatarHMDAnatomy || comp is YawTowardsLocalHead || comp is RecordingPrefabInformation ||
+                   comp is Image;
+        }
+
+        private static bool IsRequiredByRemainingRemovableComponent(Component component, Component[] components, HashSet<Component> preservedComponents)
+        {
+            Type componentType = component.GetType();
+
+            foreach (Component otherComponent in components)
+            {
+                if (otherComponent == null || otherComponent == component || preservedComponents.Contains(otherComponent))
+                    continue;
+
+                foreach (Type requiredType in GetRequiredComponentTypes(otherComponent.GetType()))
+                {
+                    if (requiredType.IsAssignableFrom(componentType))
+                        return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static IEnumerable<Type> GetRequiredComponentTypes(Type componentType)
+        {
+            foreach (RequireComponent requireComponent in componentType.GetCustomAttributes(typeof(RequireComponent), true))
+            {
+                if (requireComponent.m_Type0 != null)
+                    yield return requireComponent.m_Type0;
+                if (requireComponent.m_Type1 != null)
+                    yield return requireComponent.m_Type1;
+                if (requireComponent.m_Type2 != null)
+                    yield return requireComponent.m_Type2;
+            }
         }
 
         public static void ModifyComponents(Transform root)

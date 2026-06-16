@@ -367,8 +367,12 @@ namespace VRSYS.Scripts.Recording
                     transformRecorder.controller.recorderState.currentState == State.PreparingReplay)
                     alreadyUsedForPlayback = true;
             }
+            
+            bool isReplayRoot = recorderState.currentState == State.PreparingReplay
+                                && replayRoot != null && root.transform == replayRoot;
 
-            bool attach = !found && ((recorderState.currentState == State.PreparingReplay && !alreadyUsedForPlayback) ||
+            bool attach = !found && !isReplayRoot &&
+                          ((recorderState.currentState == State.PreparingReplay && !alreadyUsedForPlayback) ||
                                      (recorderState.currentState == State.PrepareRecording ||
                                       recorderState.currentState == State.Recording));
             if (attach)

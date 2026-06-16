@@ -37,6 +37,7 @@ namespace VRSYS.Scripts.Recording
         private bool _loggedFirstServe;
         private bool _loggedEmptyBufferWarning;
         private bool _loggedStarvation;
+        private int _buffersReceived;
 
         public int Channels => _accessor != null ? Mathf.Max(1, _accessor.Channels) : 1;
         public int SamplingRate => _accessor != null ? _accessor.SamplingRate : 0;
@@ -53,8 +54,19 @@ namespace VRSYS.Scripts.Recording
             if (buffer == null || buffer.Length == 0)
                 return;
 
+            // Peak of the buffer ODIN delivers, to confirm whether the source actually carries signal or is
+            // silence (computed outside the lock, read-only over the incoming array).
+            float peak = 0f;
+            for (int i = 0; i < buffer.Length; i++)
+            {
+                float amp = buffer[i] < 0f ? -buffer[i] : buffer[i];
+                if (amp > peak)
+                    peak = amp;
+            }
+
             int queuedAfter;
             bool logFirst = false;
+            bool logPeriodic = false;
             lock (_lock)
             {
                 if (_maxBufferedSamples <= 0 && SamplingRate > 0)
@@ -70,19 +82,27 @@ namespace VRSYS.Scripts.Recording
                         _samples.Dequeue();
 
                 queuedAfter = _samples.Count;
+                _buffersReceived++;
                 if (!_loggedFirstData)
                 {
                     _loggedFirstData = true;
                     logFirst = true;
                 }
+                else if (_buffersReceived % 200 == 0)
+                {
+                    logPeriodic = true;
+                }
             }
 
             // Logged outside the lock so the (possibly audio-thread) ODIN callback releases it quickly.
-            // One-time, so it cannot spam the log.
             if (logFirst)
                 Debug.Log("[OdinMicrophoneClipReader] First ODIN audio buffer received: bufferLength=" +
                           buffer.Length + ", samplingRate=" + SamplingRate + ", channels=" + Channels +
-                          ", queuedSamples=" + queuedAfter + ".");
+                          ", queuedSamples=" + queuedAfter + ", peakAmplitude=" + peak.ToString("F4") +
+                          ". (peakAmplitude ~0 means ODIN is delivering silence to the recorder.)");
+            else if (logPeriodic)
+                Debug.Log("[OdinMicrophoneClipReader] ODIN audio level: buffersReceived=" + _buffersReceived +
+                          ", peakAmplitude=" + peak.ToString("F4") + ", queuedSamples=" + queuedAfter + ".");
         }
 
         public float Read(float[] buffer)

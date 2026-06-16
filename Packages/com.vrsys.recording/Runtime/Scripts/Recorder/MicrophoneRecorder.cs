@@ -14,6 +14,7 @@ namespace VRSYS.Scripts.Recording
         // Debugging: throttled heartbeat timer and running chunk total to verify microphone capture.
         private float _lastMicLogTime;
         private int _chunksRecordedTotal;
+        private float _peakSinceLog;
 
         public string rerecMicDeviceOverride;
 
@@ -86,6 +87,15 @@ namespace VRSYS.Scripts.Recording
                 readAudio = _microphoneClipReader.Read(_audioData);
                 if (readAudio >= 0)
                 {
+                    // Peak of the samples actually handed to the native recorder, so the heartbeat can show
+                    // whether the recorded data carries signal or is silence.
+                    for (int s = 0; s < _audioData.Length; ++s)
+                    {
+                        float amp = _audioData[s] < 0f ? -_audioData[s] : _audioData[s];
+                        if (amp > _peakSinceLog)
+                            _peakSinceLog = amp;
+                    }
+
                     if (RecordingTime < 0 && FirstRecord)
                     {
                         RecordingTime = recordTime - readAudio / SoundRecordingStepsPerSecond;
@@ -125,7 +135,9 @@ namespace VRSYS.Scripts.Recording
                 Debug.Log("[MicrophoneRecorder id=" + id + "] Heartbeat: chunksThisCall=" + chunksThisCall +
                           ", totalChunks=" + _chunksRecordedTotal + ", recordingTime=" + RecordingTime.ToString("F2") +
                           ", bufferLength=" + (_audioData != null ? _audioData.Length : 0) +
-                          ". (chunksThisCall staying 0 means no audio is reaching the recorder.)");
+                          ", peakAmplitude=" + _peakSinceLog.ToString("F4") +
+                          ". (peakAmplitude ~0 means the data being recorded is silent.)");
+                _peakSinceLog = 0f;
             }
 
             if (recordedData && Mathf.Abs(recordTime - (RecordingTime + recordedTime)) > 0.5f)

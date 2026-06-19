@@ -130,7 +130,7 @@ namespace VRSYS.Core.PersonalMenu
         {
             foreach (var room in UserVoiceComponent.LocalInstance.currentRooms)
             {
-                AddRoomTile(room);
+                AddRoomTile(room.Value);
             }
         }
 

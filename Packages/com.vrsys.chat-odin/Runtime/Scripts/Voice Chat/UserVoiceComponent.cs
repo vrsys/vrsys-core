@@ -98,7 +98,7 @@ namespace VRSYS.Core.Chat.Odin
 
         [Header("Odin Rooms")]
         public OdinRoomsConfigurationInfo odinRoomsConfigurationInfo;
-        public List<OdinRoomConfiguration> currentRooms = new List<OdinRoomConfiguration>();
+        public Dictionary<string, OdinRoomConfiguration> currentRooms = new Dictionary<string, OdinRoomConfiguration>();
 
         [Header("Room Events")] 
         public UnityEvent<OdinRoomConfiguration> onJoinedRoom = new UnityEvent<OdinRoomConfiguration>();
@@ -236,7 +236,7 @@ namespace VRSYS.Core.Chat.Odin
             roomName = ConnectionManager.Instance.lobbySettings.lobbyName + "_" + roomName;
 
             OdinRoomConfiguration roomConfig = new OdinRoomConfiguration(roomName, true, true, false);
-            currentRooms.Add(roomConfig);
+            currentRooms.Add(roomName, roomConfig);
             OdinHandler.Instance.JoinRoom(roomName, userData);
             
             onJoinedRoom.Invoke(roomConfig);
@@ -258,7 +258,7 @@ namespace VRSYS.Core.Chat.Odin
             };
             
             roomConfig.roomName = ConnectionManager.Instance.lobbySettings.lobbyName + "_" + roomConfig.roomName;
-            currentRooms.Add(roomConfig);
+            currentRooms.Add(roomConfig.roomName, roomConfig);
             OdinHandler.Instance.JoinRoom(roomConfig.roomName, userData);
             
             onJoinedRoom.Invoke(roomConfig);
@@ -287,7 +287,7 @@ namespace VRSYS.Core.Chat.Odin
             }
             
             OdinHandler.Instance.LeaveRoom(roomName);
-            currentRooms.RemoveAll(room => room.roomName == roomName);
+            currentRooms.Remove(roomName);
             
             onLeftRoom.Invoke(roomName);
         }
@@ -295,11 +295,11 @@ namespace VRSYS.Core.Chat.Odin
         // Leave all odin voice rooms
         public void LeaveOdinRooms()
         {
-            foreach (var room in currentRooms)
+            foreach (var (roomName, _) in currentRooms)
             {
-                OdinHandler.Instance.LeaveRoom(room.roomName);
-                
-                onLeftRoom.Invoke(room.roomName);
+                OdinHandler.Instance.LeaveRoom(roomName);
+                    
+                onLeftRoom.Invoke(roomName);
             }
             
             currentRooms.Clear();
@@ -316,6 +316,10 @@ namespace VRSYS.Core.Chat.Odin
         {
             foreach (Room room in OdinHandler.Instance.Rooms)
             {
+            
+                if (!currentRooms.ContainsKey(room.Config.Name))
+                    continue;
+            
                 float[] pushedBuffer = buffer;
                 if (IsMicrophoneMuted(room.Config.Name) || isGloballyMuted)
                     pushedBuffer = new float[buffer.Length];
@@ -331,7 +335,8 @@ namespace VRSYS.Core.Chat.Odin
         
         private bool IsMicrophoneMuted(string roomName)
         {
-            return !currentRooms.Find(room => room.roomName == roomName).transmitAudio;
+            currentRooms.TryGetValue(roomName, out var room);
+            return !room.transmitAudio;
         }
         
         private void MediaAdded(object roomObject, MediaAddedEventArgs eventArgs)
@@ -469,11 +474,11 @@ namespace VRSYS.Core.Chat.Odin
                 return;
             }
             
-            OdinRoomConfiguration roomConfig = currentRooms.Find(room => room.roomName == roomName);
-            currentRooms.Remove(roomConfig);
+            OdinRoomConfiguration roomConfig = currentRooms[roomName];
+            currentRooms.Remove(roomName);
             
             roomConfig.transmitAudio = !roomConfig.transmitAudio;
-            currentRooms.Add(roomConfig);
+            currentRooms.Add(roomName, roomConfig);
         }
 
         private void ConfigureMuteGroup()

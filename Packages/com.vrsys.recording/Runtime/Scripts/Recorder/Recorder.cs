@@ -1,9 +1,8 @@
 ﻿using System.Runtime.InteropServices;
 using UnityEngine;
 using VRSYS.Core.Logging;
-using Vrsys.Scripts.Recording;
 
-namespace VRSYS.Scripts.Recording
+namespace VRSYS.Recording
 {
     public abstract class Recorder : MonoBehaviour
     {

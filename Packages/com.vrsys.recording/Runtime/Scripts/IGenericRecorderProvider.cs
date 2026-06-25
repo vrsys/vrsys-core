@@ -1,4 +1,4 @@
-namespace VRSYS.Scripts.Recording
+namespace VRSYS.Recording
 {
     /// <summary>
     /// Extension point that lets external assemblies (e.g. the optional Meta Avatar integration)

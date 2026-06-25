@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace VRSYS.Scripts.Recording
+namespace VRSYS.Recording
 {
     /// <summary>
     /// Registry of component types that must survive <see cref="Utils.RemoveCustomComponents"/> when

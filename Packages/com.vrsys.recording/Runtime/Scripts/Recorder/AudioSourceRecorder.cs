@@ -3,7 +3,7 @@ using UnityEngine;
 using VRSYS.Core.Networking;
 using VRSYS.Core.Logging;
 
-namespace VRSYS.Scripts.Recording
+namespace VRSYS.Recording
 {
     [RequireComponent(typeof(AudioSource))]
     public class AudioSourceRecorder : AudioRecorder

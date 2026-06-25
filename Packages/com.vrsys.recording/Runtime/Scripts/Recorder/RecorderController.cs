@@ -11,10 +11,8 @@ using UnityEngine.SceneManagement;
 using VRSYS.Core.Avatar;
 using VRSYS.Core.Logging;
 using VRSYS.Core.Networking;
-using VRSYS.Recording.Scripts;
-using Vrsys.Scripts.Recording;
 
-namespace VRSYS.Scripts.Recording
+namespace VRSYS.Recording
 {
     [RequireComponent(typeof(RecorderState))]
     [RequireComponent(typeof(NetworkController))]

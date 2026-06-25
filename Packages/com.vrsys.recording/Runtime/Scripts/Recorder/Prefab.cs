@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace VRSYS.Scripts.Recording
+namespace VRSYS.Recording
 {
     // as the path of a prefab in the resources folder is not available during runtime
     // a scriptable object is used to access the path. See: https://stackoverflow.com/a/69250824

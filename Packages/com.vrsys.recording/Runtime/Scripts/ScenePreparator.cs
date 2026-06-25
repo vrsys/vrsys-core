@@ -12,10 +12,8 @@ using UnityEngine.UI;
 using VRSYS.Core.Avatar;
 using VRSYS.Core.Networking;
 using VRSYS.Core.Logging;
-using VRSYS.Recording.Scripts;
-using Vrsys.Scripts.Recording;
 
-namespace VRSYS.Scripts.Recording
+namespace VRSYS.Recording
 {
     public class ReplayGameObjectInformation
     {

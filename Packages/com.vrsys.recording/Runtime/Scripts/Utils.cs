@@ -16,14 +16,12 @@ using VRSYS.Core.Logging;
 using VRSYS.Core.Navigation;
 using VRSYS.Core.Networking;
 using VRSYS.Core.Utility;
-using VRSYS.Recording.Scripts;
-using VRSYS.Scripts.Recording;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEditor.Build;
 #endif
 
-namespace Vrsys.Scripts.Recording
+namespace VRSYS.Recording
 {
     public enum BlendMode
     {
@@ -1065,7 +1063,7 @@ namespace Vrsys.Scripts.Recording
     }
 
     /// <summary>
-    /// Source of microphone PCM for the <see cref="VRSYS.Scripts.Recording.MicrophoneRecorder"/>. The
+    /// Source of microphone PCM for the <see cref="VRSYS.Recording.MicrophoneRecorder"/>. The
     /// recorder pulls fixed-size chunks via <see cref="Read"/>; implementations decide where the samples
     /// come from (Unity <c>Microphone</c> clip, an external voice SDK, etc.). Implement
     /// <see cref="System.IDisposable"/> as well if the reader holds subscriptions that must be released

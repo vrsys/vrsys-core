@@ -4,7 +4,7 @@ using UnityEngine;
 using VRSYS.Core.Networking;
 using VRSYS.Core.Logging;
 
-namespace VRSYS.Scripts.Recording
+namespace VRSYS.Recording
 {
     public class AudioListenerRecorder : AudioRecorder
     {

@@ -1,8 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
-using VRSYS.Scripts.Recording;
 
-namespace VRSYS.Recording.Scripts
+namespace VRSYS.Recording
 {
     public class RecorderStateManager : MonoBehaviour
     {

@@ -40,7 +40,7 @@ using System;
 using UnityEngine;
 using VRSYS.Core.Logging;
 
-namespace VRSYS.Scripts.Recording
+namespace VRSYS.Recording
 {
     public class MetaAvatarRecorder : GenericRecorder
     {

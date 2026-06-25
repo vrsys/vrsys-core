@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
-using VRSYS.Recording.Scripts;
 
-namespace VRSYS.Scripts.Recording
+namespace VRSYS.Recording
 {
     public enum State
     {

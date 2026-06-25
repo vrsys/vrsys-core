@@ -7,7 +7,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using VRSYS.Core.Logging;
 
-namespace VRSYS.Scripts.Recording
+namespace VRSYS.Recording
 {
     public class NetworkUtils
     {

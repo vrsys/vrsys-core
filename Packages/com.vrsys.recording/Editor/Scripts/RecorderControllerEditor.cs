@@ -4,7 +4,7 @@ using UnityEngine.UIElements;
 using System.IO;
 using Unity.Netcode; // Required for Directory access
 
-namespace VRSYS.Scripts.Recording
+namespace VRSYS.Recording
 {
 #if UNITY_EDITOR
     [ExecuteInEditMode]

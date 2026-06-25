@@ -1,4 +1,4 @@
-namespace VRSYS.Scripts.Recording
+namespace VRSYS.Recording
 {
     /// <summary>
     /// Marker implemented by a component that edits/overwrites the recording during replay (e.g. the

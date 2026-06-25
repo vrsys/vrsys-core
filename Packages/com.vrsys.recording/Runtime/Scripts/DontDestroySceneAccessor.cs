@@ -1,6 +1,6 @@
 ﻿using System;
 using UnityEngine;
-namespace VRSYS.Recording.Scripts
+namespace VRSYS.Recording
 {
     // https://forum.unity.com/threads/editor-script-how-to-access-objects-under-dontdestroyonload-while-in-play-mode.442014/
     public class DontDestroySceneAccessor : MonoBehaviour

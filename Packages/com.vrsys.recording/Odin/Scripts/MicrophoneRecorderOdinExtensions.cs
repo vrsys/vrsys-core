@@ -7,7 +7,7 @@
 using UnityEngine;
 using VRSYS.Core.Chat.Odin;
 
-namespace VRSYS.Scripts.Recording
+namespace VRSYS.Recording
 {
     /// <summary>
     /// Optional ODIN wiring for <see cref="MicrophoneRecorder"/>. The parameterless

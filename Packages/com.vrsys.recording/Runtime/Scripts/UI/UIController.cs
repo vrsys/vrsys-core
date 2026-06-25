@@ -3,9 +3,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using VRSYS.Core.Networking;
 using VRSYS.Core.Logging;
-using Vrsys.Scripts.Recording;
 
-namespace VRSYS.Scripts.Recording
+namespace VRSYS.Recording
 {
     [RequireComponent(typeof(RecorderState))]
     [RequireComponent(typeof(TimeInteractor))]

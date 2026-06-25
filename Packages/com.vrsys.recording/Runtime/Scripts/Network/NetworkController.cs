@@ -12,7 +12,7 @@ using VRSYS.Core.Avatar;
 using VRSYS.Core.Networking;
 using VRSYS.Core.Logging;
 
-namespace VRSYS.Scripts.Recording
+namespace VRSYS.Recording
 {
 
     [RequireComponent(typeof(RecorderState))]

@@ -572,7 +572,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 535fbc540f1e32f488c4c0c1261d17ca, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: vrsys.recording.meta::VRSYS.Scripts.Recording.MetaAvatarRecorderInstaller
+  m_EditorClassIdentifier: vrsys.recording.meta::VRSYS.Recording.MetaAvatarRecorderInstaller
 --- !u!1 &830940997678051809
 GameObject:
   m_ObjectHideFlags: 0

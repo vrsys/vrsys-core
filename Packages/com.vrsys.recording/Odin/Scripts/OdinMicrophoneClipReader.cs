@@ -8,9 +8,8 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using VRSYS.Core.Chat.Odin;
-using Vrsys.Scripts.Recording;
 
-namespace VRSYS.Scripts.Recording
+namespace VRSYS.Recording
 {
     /// <summary>
     /// <see cref="IMicrophoneClipReader"/> backed by ODIN's capture stream instead of a Unity

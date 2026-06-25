@@ -4,7 +4,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace VRSYS.Scripts.Recording
+namespace VRSYS.Recording
 {
 #if UNITY_EDITOR
     [CustomEditor(typeof(RecorderState))]

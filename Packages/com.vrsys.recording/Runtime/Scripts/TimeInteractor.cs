@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using VRSYS.Core.Networking;
 
-namespace VRSYS.Scripts.Recording
+namespace VRSYS.Recording
 {
 
     [RequireComponent(typeof(RecorderState))]

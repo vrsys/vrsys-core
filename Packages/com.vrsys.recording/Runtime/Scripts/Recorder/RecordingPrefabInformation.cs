@@ -1,10 +1,9 @@
 ﻿using UnityEngine;
-using VRSYS.Recording.Scripts;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
 
-namespace VRSYS.Scripts.Recording
+namespace VRSYS.Recording
 {
     [ExecuteInEditMode]
     [DisallowMultipleComponent]

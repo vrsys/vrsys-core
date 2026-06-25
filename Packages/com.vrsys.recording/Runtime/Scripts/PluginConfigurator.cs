@@ -5,7 +5,7 @@ using AOT;
 using UnityEngine;
 using VRSYS.Core.Logging;
 
-namespace VRSYS.Scripts.Recording
+namespace VRSYS.Recording
 {
     public enum LogLevel
     {

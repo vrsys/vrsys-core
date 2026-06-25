@@ -2,7 +2,7 @@
 using UnityEngine.InputSystem;
 using VRSYS.Core.Logging;
 
-namespace VRSYS.Scripts.Recording
+namespace VRSYS.Recording
 {
     
     [RequireComponent(typeof(RecorderController))]

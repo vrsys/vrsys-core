@@ -7,7 +7,7 @@
 using UnityEngine;
 using VRSYS.Meta.Avatars;
 
-namespace VRSYS.Scripts.Recording
+namespace VRSYS.Recording
 {
     /// <summary>
     /// Optional Meta Avatar integration for the recording system. Place this component on the same

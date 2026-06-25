@@ -391,7 +391,8 @@ namespace VRSYS.Scripts.Recording
                 return;
             }
             
-            Debug.Log("Start replay event received for recorder id: " + _state.recorderID);
+            if (_controller != null && _controller.debugLogs)
+                ExtendedLogger.LogInfo(GetType().Name, "Start replay event received for recorder id: " + _state.recorderID, this);
             
             if (!_replayStarted)
                 if (_controller != null && _controller.debugLogs)
@@ -460,7 +461,7 @@ namespace VRSYS.Scripts.Recording
                 _replayStarted = false;
                 _startReplayEventSent = false;
                 DebugDistributedReplayStatusIfChanged("StartReplayIfStateAllows blocked by state");
-                Debug.LogWarning("A request to start a replay was sent but the current state does not allow starting replay.");
+                ExtendedLogger.LogWarning(GetType().Name, "A request to start a replay was sent but the current state does not allow starting replay.", this);
                 return;
             }
 
@@ -469,7 +470,7 @@ namespace VRSYS.Scripts.Recording
                 _replayStarted = false;
                 _startReplayEventSent = false;
                 DebugDistributedReplayStatusIfChanged("StartReplayIfStateAllows blocked by download");
-                Debug.LogWarning("A request to start a replay was sent but downloads are still running.");
+                ExtendedLogger.LogWarning(GetType().Name, "A request to start a replay was sent but downloads are still running.", this);
                 return;
             }
 
@@ -512,9 +513,9 @@ namespace VRSYS.Scripts.Recording
             if (_globalSynchronizationTime > stopReplayTime)
             {
                 TimeSpan difference = _globalSynchronizationTime - stopReplayTime;
-                Debug.LogError("The replay should have stopped already! Time difference: " +
-                               difference.TotalMilliseconds +
-                               " ms.  Potential fix: increase the  maxSynchronizationTime!");
+                ExtendedLogger.LogError(GetType().Name, "The replay should have stopped already! Time difference: " +
+                                        difference.TotalMilliseconds +
+                                        " ms.  Potential fix: increase the  maxSynchronizationTime!", this);
                 StopReplay();
             }
             else
@@ -549,7 +550,7 @@ namespace VRSYS.Scripts.Recording
             if (_state.selectedReplayFile == "")
             {
                 DebugDistributedReplayLog("StartDownloadOnAllClientsEvent aborted: no replay file selected.");
-                Debug.LogError("No replay file selected!");
+                ExtendedLogger.LogError(GetType().Name, "No replay file selected!", this);
                 return;
             }
 
@@ -935,7 +936,7 @@ namespace VRSYS.Scripts.Recording
 
                 yield return uwr.SendWebRequest();
                 if (uwr.result != UnityWebRequest.Result.Success)
-                    Debug.LogError(uwr.error + ", url: " + completeURL);
+                    ExtendedLogger.LogError(GetType().Name, uwr.error + ", url: " + completeURL, this);
                 else
                 {
                     string response = uwr.downloadHandler.text;
@@ -1042,7 +1043,7 @@ namespace VRSYS.Scripts.Recording
 
                     if (uwr.result != UnityWebRequest.Result.Success)
                     {
-                        Debug.LogError(uwr.error + ", url: " + completeURL);
+                        ExtendedLogger.LogError(GetType().Name, uwr.error + ", url: " + completeURL, this);
                         DebugDistributedReplayLog("DownloadFileFromServer failed: fileType=" + fileType +
                                                   ", error=" + uwr.error +
                                                   ", responseCode=" + uwr.responseCode);

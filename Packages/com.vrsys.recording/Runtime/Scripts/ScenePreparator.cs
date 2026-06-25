@@ -11,6 +11,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using VRSYS.Core.Avatar;
 using VRSYS.Core.Networking;
+using VRSYS.Core.Logging;
 using VRSYS.Recording.Scripts;
 using Vrsys.Scripts.Recording;
 
@@ -82,13 +83,14 @@ namespace VRSYS.Scripts.Recording
             if (_controller == null || !_controller.debugLogs)
                 return;
 
-            Debug.Log("[ScenePreparationDebug][frame=" + Time.frameCount +
-                      "][time=" + Time.realtimeSinceStartup.ToString("F3") + "] " + message);
+            ExtendedLogger.LogInfo(GetType().Name, "[ScenePreparationDebug][frame=" + Time.frameCount +
+                      "][time=" + Time.realtimeSinceStartup.ToString("F3") + "] " + message, this);
         }
 
         private bool HandleMissingGameObject()
         {
-            Debug.Log("Trying to handle missing objects.");
+            if (_controller.debugLogs)
+                ExtendedLogger.LogInfo(GetType().Name, "Trying to handle missing objects.", this);
 
             // With a configured replay root, only objects beneath that root may be matched to the
             // recording, so restrict the existence check to its subtree. This ensures duplicates that
@@ -112,7 +114,7 @@ namespace VRSYS.Scripts.Recording
             }
 
             if (_controller.debugLogs)
-                Debug.Log("Scene Graph existence check finished.");
+                ExtendedLogger.LogInfo(GetType().Name, "Scene Graph existence check finished.", this);
 
             bool error = false;
             foreach (var info in replayGameObjectInformations)
@@ -164,10 +166,11 @@ namespace VRSYS.Scripts.Recording
             string prefabName = "";
             if (information.prefabLocation.Contains("Resources/")){
                 prefabName = information.prefabLocation.Split("Resources/").Last().Replace(".prefab", "");
-                Debug.Log(": " + information.gameObjectName + ", prefab location : " + prefabName +
-                          ", original location: " + information.prefabLocation);
+                if (_controller.debugLogs)
+                    ExtendedLogger.LogInfo(GetType().Name, ": " + information.gameObjectName + ", prefab location : " + prefabName +
+                          ", original location: " + information.prefabLocation, this);
 			} else {
-				Debug.LogWarning("The prefab that would be instantiated for replay is not in a Resources folder!");
+				ExtendedLogger.LogWarning(GetType().Name, "The prefab that would be instantiated for replay is not in a Resources folder!", this);
 			}
 
             GameObject go = prefabName != "" ? Resources.Load<GameObject>(prefabName) : null;
@@ -175,7 +178,7 @@ namespace VRSYS.Scripts.Recording
             if (go != null)
             {
                 if (_controller.debugLogs)
-                    Debug.Log("Prefab could be loaded.");
+                    ExtendedLogger.LogInfo(GetType().Name, "Prefab could be loaded.", this);
                 // Instantiate INACTIVE: the recorded user prefab (e.g. REPLAY-HMDUser) contains an
                 // OVRCameraRig + Camera. If instantiated active, their Awake/OnEnable register a second
                 // XR camera rig with the renderer for a frame before RemoveCustomComponents strips them,
@@ -187,11 +190,11 @@ namespace VRSYS.Scripts.Recording
                 GameObject newGo = Instantiate(go, parent);
                 go.SetActive(prefabWasActive);
                 if (_controller.debugLogs)
-                    Debug.Log("Removing custom components.");
+                    ExtendedLogger.LogInfo(GetType().Name, "Removing custom components.", this);
                 Utils.RemoveCustomComponents(newGo.transform);
                 Utils.ModifyComponents(newGo.transform);
                 if (_controller.debugLogs)
-                    Debug.Log("Removing custom components finished.");
+                    ExtendedLogger.LogInfo(GetType().Name, "Removing custom components finished.", this);
                 newGo.name = information.gameObjectName;
                 information.foundObject = newGo;
                 newGo.SetActive(false);
@@ -209,8 +212,8 @@ namespace VRSYS.Scripts.Recording
             else
             {
                 if (_controller.debugLogs)
-                    Debug.LogWarning("The gameobject at path: " + information.prefabLocation +
-                                     " could not be loaded! Make sure it is in a resource folder!");
+                    ExtendedLogger.LogWarning(GetType().Name, "The gameobject at path: " + information.prefabLocation +
+                                     " could not be loaded! Make sure it is in a resource folder!", this);
                 CreateEmptyGameObject(information, parent, parentName);
             }
         }
@@ -282,7 +285,7 @@ namespace VRSYS.Scripts.Recording
             fixed (int* u = _soundIDs)
             {
                 if (_controller.debugLogs)
-                    Debug.Log("Trying to get ids of all sound sources contained in recording.");
+                    ExtendedLogger.LogInfo(GetType().Name, "Trying to get ids of all sound sources contained in recording.", this);
                 DebugScenePreparationLog("HandleAudioSources before GetRecordingSoundSources. recorderId=" +
                                          _controller.RecorderID + ", maxSoundSources=" + MaxSoundSources);
                 int count = GetRecordingSoundSources(_controller.RecorderID, (IntPtr)u, MaxSoundSources);
@@ -292,7 +295,7 @@ namespace VRSYS.Scripts.Recording
                 DebugScenePreparationLog("HandleAudioSources after GetRecordingSoundSources. count=" + count +
                                          ", ids=[" + string.Join(", ", retrievedSoundIds) + "]");
                 if (_controller.debugLogs)
-                    Debug.Log("Found: " + count + " sound sources.");
+                    ExtendedLogger.LogInfo(GetType().Name, "Found: " + count + " sound sources.", this);
 
                 if (count >= 0)
                 {
@@ -303,7 +306,7 @@ namespace VRSYS.Scripts.Recording
                                                  ", id=" + soundSourceId);
                         if (soundSourceId == 1)
                         {
-                            Debug.LogWarning("The recorded audiolistener data is not played back!");
+                            ExtendedLogger.LogWarning(GetType().Name, "The recorded audiolistener data is not played back!", this);
                             continue;
                         }
 
@@ -318,13 +321,13 @@ namespace VRSYS.Scripts.Recording
                 else
                 {
                     if (_controller.debugLogs)
-                        Debug.LogError("Could not retrieve sound sources");
+                        ExtendedLogger.LogError(GetType().Name, "Could not retrieve sound sources", this);
                     return true;
                 }
             }
 
             if (_controller.debugLogs)
-                Debug.Log("Sound source retrieval and setup finished.");
+                ExtendedLogger.LogInfo(GetType().Name, "Sound source retrieval and setup finished.", this);
             DebugScenePreparationLog("HandleAudioSources finished.");
 
             return false;
@@ -335,14 +338,44 @@ namespace VRSYS.Scripts.Recording
             return replayGameObjectInformations.ToDictionary(i => i.hierarchyName, i => i.foundObject);
         }
 
+        #region Audio Source Control
+
+        private void PauseAllAudioSources()
+        {
+            AudioSource[] audioSources = (AudioSource[])FindObjectsOfType(typeof(AudioSource));
+
+            foreach (AudioSource audioSource in audioSources)
+            {
+                if (audioSource.gameObject.name != "UserSpeaker" &&
+                    !audioSource.gameObject.name.Contains("Speaker for Player"))
+                {
+                    audioSource.Pause();
+                }
+            }
+        }
+
+        private void ResumeAllAudioSources()
+        {
+            AudioSource[] audioSources = (AudioSource[])FindObjectsOfType(typeof(AudioSource));
+
+            foreach (AudioSource audioSource in audioSources)
+            {
+                audioSource.UnPause();
+            }
+        }
+
+        #endregion
+        
         public unsafe void PrepareReplayScene()
         {
+            PauseAllAudioSources();
+            
             replayGameObjectInformations.Clear();
             DebugScenePreparationLog("PrepareReplayScene entered. recorderId=" + _controller.RecorderID +
                                      ", replayRoot=" +
                                      (_controller.replayRoot == null ? "<null>" : _controller.replayRoot.name));
             if (_controller.debugLogs)
-                Debug.Log("Trying to get recording gameobjects");
+                ExtendedLogger.LogInfo(GetType().Name, "Trying to get recording gameobjects", this);
 
             DebugScenePreparationLog("PrepareReplayScene before GetRecordingTransformCount.");
             int transformCount = GetRecordingTransformCount(_controller.RecorderID);
@@ -350,8 +383,8 @@ namespace VRSYS.Scripts.Recording
                                      transformCount);
             if (transformCount <= 0)
             {
-                Debug.LogWarning(
-                    "No transforms could be retrieved from the recording for scene preparation. Is the recording file broken?");
+                ExtendedLogger.LogWarning(GetType().Name,
+                    "No transforms could be retrieved from the recording for scene preparation. Is the recording file broken?", this);
                 return;
             }
 
@@ -374,7 +407,7 @@ namespace VRSYS.Scripts.Recording
                                          ", id=" + currentID + ".");
                 // DIAGNOSTIC: the last [PrepLoop] line before a crash names the exact object
                 // (index + id), the hierarchy name read so far, and which getter ran next.
-                if (_controller.debugLogs) Debug.Log($"[PrepLoop] i={i}/{transformCount} id={currentID} step=hierarchyName");
+                if (_controller.debugLogs) ExtendedLogger.LogInfo(GetType().Name, $"[PrepLoop] i={i}/{transformCount} id={currentID} step=hierarchyName", this);
                 DebugScenePreparationLog("PrepareReplayScene before GetGameObjectHierarchyNameByID. id=" + currentID +
                                          ", maxSize=" + maxSize);
                 StringBuilder buffer = new StringBuilder(maxSize);
@@ -391,7 +424,7 @@ namespace VRSYS.Scripts.Recording
                 string gameobjectComponents = "";
                 if (_controller.instantiateMissingObjects)
                 {
-                    if (_controller.debugLogs) Debug.Log($"[PrepLoop] i={i} id={currentID} step=meshPath name='{gameobjectHierarchyPath}'");
+                    if (_controller.debugLogs) ExtendedLogger.LogInfo(GetType().Name, $"[PrepLoop] i={i} id={currentID} step=meshPath name='{gameobjectHierarchyPath}'", this);
                     buffer = new StringBuilder(maxSize);
                     DebugScenePreparationLog("PrepareReplayScene before GetGameObjectMeshPathByID. id=" + currentID +
                                              ", maxSize=" + maxSize);
@@ -400,7 +433,7 @@ namespace VRSYS.Scripts.Recording
                     DebugScenePreparationLog("PrepareReplayScene after GetGameObjectMeshPathByID. id=" + currentID +
                                              ", length=" + length + ", value=\"" + gameobjectMeshPath + "\"");
 
-                    if (_controller.debugLogs) Debug.Log($"[PrepLoop] i={i} id={currentID} step=prefab");
+                    if (_controller.debugLogs) ExtendedLogger.LogInfo(GetType().Name, $"[PrepLoop] i={i} id={currentID} step=prefab", this);
                     buffer = new StringBuilder(maxSize);
                     DebugScenePreparationLog("PrepareReplayScene before GetGameObjectPrefabByID. id=" + currentID +
                                              ", maxSize=" + maxSize);
@@ -409,7 +442,7 @@ namespace VRSYS.Scripts.Recording
                     DebugScenePreparationLog("PrepareReplayScene after GetGameObjectPrefabByID. id=" + currentID +
                                              ", length=" + length + ", value=\"" + gameobjectPrefabLocation + "\"");
                     
-                    if (_controller.debugLogs) Debug.Log($"[PrepLoop] i={i} id={currentID} step=components");
+                    if (_controller.debugLogs) ExtendedLogger.LogInfo(GetType().Name, $"[PrepLoop] i={i} id={currentID} step=components", this);
                     buffer = new StringBuilder(maxSize);
                     DebugScenePreparationLog("PrepareReplayScene before GetGameObjectComponentsByID. id=" + currentID +
                                              ", maxSize=" + maxSize);
@@ -419,7 +452,7 @@ namespace VRSYS.Scripts.Recording
                                              ", length=" + length + ", value=\"" + gameobjectComponents + "\"");
                 }
 
-                if (_controller.debugLogs) Debug.Log($"[PrepLoop] i={i} id={currentID} step=build comp='{gameobjectComponents}'");
+                if (_controller.debugLogs) ExtendedLogger.LogInfo(GetType().Name, $"[PrepLoop] i={i} id={currentID} step=build comp='{gameobjectComponents}'", this);
                 DebugScenePreparationLog("PrepareReplayScene before GetGameObjectFirstSeenTimeByID. id=" + currentID);
                 float firstSeenTime = GetGameObjectFirstSeenTimeByID(_controller.RecorderID, currentID);
                 DebugScenePreparationLog("PrepareReplayScene after GetGameObjectFirstSeenTimeByID. id=" + currentID +
@@ -449,16 +482,16 @@ namespace VRSYS.Scripts.Recording
             if (_controller.debugLogs)
             {
                 if (!error)
-                    Debug.Log("All gameObjects from the recording are present in the current scene graph!");
+                    ExtendedLogger.LogInfo(GetType().Name, "All gameObjects from the recording are present in the current scene graph!", this);
                 else
-                    Debug.LogError(
-                        "Not all gameObjects from the recording are present in the current scene graph!");
+                    ExtendedLogger.LogError(GetType().Name,
+                        "Not all gameObjects from the recording are present in the current scene graph!", this);
             }
 
             if (_controller.replayAudio)
             {
                 if (_controller.debugLogs)
-                    Debug.Log("Trying to handle missing audio sources.");
+                    ExtendedLogger.LogInfo(GetType().Name, "Trying to handle missing audio sources.", this);
                 DebugScenePreparationLog("PrepareReplayScene before HandleAudioSources.");
                 error = HandleAudioSources();
                 DebugScenePreparationLog("PrepareReplayScene after HandleAudioSources. error=" + error);
@@ -466,10 +499,10 @@ namespace VRSYS.Scripts.Recording
                 if (_controller.debugLogs)
                 {
                     if (!error)
-                        Debug.Log("All sound sources from the recording are now present in the current scene graph!");
+                        ExtendedLogger.LogInfo(GetType().Name, "All sound sources from the recording are now present in the current scene graph!", this);
                     else
-                        Debug.LogError(
-                            "Not all sound sources from the recording are present in the current scene graph!");
+                        ExtendedLogger.LogError(GetType().Name,
+                            "Not all sound sources from the recording are present in the current scene graph!", this);
                 }
             }
             else
@@ -480,7 +513,8 @@ namespace VRSYS.Scripts.Recording
 
         public void CleanReplayScene()
         {
-            Debug.Log("Cleaning replay scene by destroying objects that were instantiated for playback.");
+            if (_controller.debugLogs)
+                ExtendedLogger.LogInfo(GetType().Name, "Cleaning replay scene by destroying objects that were instantiated for playback.", this);
 
             // Snapshot the instantiated objects and reset the field immediately. Destruction is deferred
             // by dissolveTime, so a new PrepareReplayScene started within that window must not append into
@@ -495,7 +529,9 @@ namespace VRSYS.Scripts.Recording
             }
 
             // TODO: when playback changed the parents of already present objects then the cleanup does not reset to original parent!
-            Debug.Log("Cleaning replay scene done.");
+            if (_controller.debugLogs)
+                ExtendedLogger.LogInfo(GetType().Name, "Cleaning replay scene done.", this);
+            ResumeAllAudioSources();
         }
 
         private void TrackInstantiatedHierarchy(GameObject go)

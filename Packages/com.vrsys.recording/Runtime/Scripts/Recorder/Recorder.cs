@@ -1,5 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using UnityEngine;
+using VRSYS.Core.Logging;
 using Vrsys.Scripts.Recording;
 
 namespace VRSYS.Scripts.Recording
@@ -106,7 +107,7 @@ namespace VRSYS.Scripts.Recording
         {
             if (id == 99999)
             {
-                Debug.LogError("Error! Id not correctly set!");
+                ExtendedLogger.LogError(GetType().Name, "Error! Id not correctly set!", this);
             }
 
             controller.RegisterRecorder(id, this);

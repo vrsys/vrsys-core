@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.InputSystem;
+using VRSYS.Core.Logging;
 
 namespace VRSYS.Scripts.Recording
 {
@@ -9,6 +10,8 @@ namespace VRSYS.Scripts.Recording
     {
         public bool inputEnabled = true;
         public RecorderState state;
+
+        [SerializeField] private bool verbose = false;
 
         public InputActionProperty recordDesktop;
         public InputActionProperty replayDesktop;
@@ -46,12 +49,14 @@ namespace VRSYS.Scripts.Recording
         {
             if (state.currentState == State.Idle)
             {
-                Debug.Log("Preparing local playback.");
+                if (verbose)
+                    ExtendedLogger.LogInfo(GetType().Name, "Preparing local playback.", this);
                 _controller.PrepareLocalReplay();
             }
             else if (state.currentState == State.Replaying)
             {
-                Debug.Log("Local playback end.");
+                if (verbose)
+                    ExtendedLogger.LogInfo(GetType().Name, "Local playback end.", this);
                 _controller.EndReplay();
             }
         }
@@ -60,12 +65,14 @@ namespace VRSYS.Scripts.Recording
         {
             if (state.currentState == State.Idle)
             {
-                Debug.Log("Sending start replay/download event to all clients.");
+                if (verbose)
+                    ExtendedLogger.LogInfo(GetType().Name, "Sending start replay/download event to all clients.", this);
                 _controller.PrepareAndStartDistributedReplay();
             }
             else if (state.currentState == State.Replaying)
             {
-                Debug.Log("Sending end replay event to all clients.");
+                if (verbose)
+                    ExtendedLogger.LogInfo(GetType().Name, "Sending end replay event to all clients.", this);
                 _controller.SendEndReplayEvent();
             }
         }
@@ -74,12 +81,14 @@ namespace VRSYS.Scripts.Recording
         {
             if (state.currentState == State.Idle)
             {
-                Debug.Log("Sending start recording event to all clients.");
+                if (verbose)
+                    ExtendedLogger.LogInfo(GetType().Name, "Sending start recording event to all clients.", this);
                 _controller.SendStartRecordingEvents();
             }
             else if (state.currentState == State.Recording)
             {
-                Debug.Log("Sending end recording event to all clients.");
+                if (verbose)
+                    ExtendedLogger.LogInfo(GetType().Name, "Sending end recording event to all clients.", this);
                 _controller.SendEndRecordingEvent();
             }
         }
@@ -88,13 +97,15 @@ namespace VRSYS.Scripts.Recording
         {
             if (state.currentState == State.Idle)
             {
-                Debug.Log("Local recording start.");
+                if (verbose)
+                    ExtendedLogger.LogInfo(GetType().Name, "Local recording start.", this);
                 _controller.PrepareRecording();
                 _controller.StartRecording();
             }
             else if (state.currentState == State.Recording)
             {
-                Debug.Log("Local recording end.");
+                if (verbose)
+                    ExtendedLogger.LogInfo(GetType().Name, "Local recording end.", this);
                 _controller.EndRecording();
             }
         }
@@ -126,7 +137,8 @@ namespace VRSYS.Scripts.Recording
             // start/end recording
             if (recordDesktop.action.triggered || recordHMD.action.triggered)
             {
-                Debug.LogWarning("Trying to start/stop recording");
+                if (verbose)
+                    ExtendedLogger.LogInfo(GetType().Name, "Trying to start/stop recording", this);
                 bool stateSwitch = false;
 
                 if (Time.time - _recordingToggleTime > 0.5)
@@ -142,7 +154,8 @@ namespace VRSYS.Scripts.Recording
             // start/end replay
             if ((replayDesktop.action.triggered || replayHMD.action.triggered))
             {
-                Debug.LogWarning("Trying to start/stop replay");
+                if (verbose)
+                    ExtendedLogger.LogInfo(GetType().Name, "Trying to start/stop replay", this);
                 bool stateSwitch = false;
                 if (Time.time - _replayToggleTime > 0.5)
                 {

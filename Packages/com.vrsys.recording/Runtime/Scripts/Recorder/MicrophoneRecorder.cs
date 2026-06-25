@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using VRSYS.Core.Logging;
 using Vrsys.Scripts.Recording;
 
 namespace VRSYS.Scripts.Recording
@@ -71,9 +72,9 @@ namespace VRSYS.Scripts.Recording
                 FirstRecord = true;
 
                 if (controller.debugLogs)
-                    Debug.Log("[MicrophoneRecorder id=" + id + "] Initialized capture: samplingRate=" +
+                    ExtendedLogger.LogInfo(GetType().Name, "[MicrophoneRecorder id=" + id + "] Initialized capture: samplingRate=" +
                               RecordingSamplingRate + ", channels=" + RecordingChannelNum + ", samplesPerStep=" +
-                              _audioSamplesPerRecordStep + ", bufferLength=" + _audioData.Length + ".");
+                              _audioSamplesPerRecordStep + ", bufferLength=" + _audioData.Length + ".", this);
             }
 
             float readAudio = 1;
@@ -101,7 +102,7 @@ namespace VRSYS.Scripts.Recording
                         RecordingTime = recordTime - readAudio / SoundRecordingStepsPerSecond;
                         FirstRecord = false;
                         if(controller.debugLogs)
-                            Debug.Log("Initial microphone recording time: " + RecordingTime);
+                            ExtendedLogger.LogInfo(GetType().Name, "Initial microphone recording time: " + RecordingTime, this);
                     }
 
                     if (RecordingTime >= 0.0f)
@@ -113,8 +114,8 @@ namespace VRSYS.Scripts.Recording
                         if (!result)
                         {
                             if (controller.debugLogs)
-                                Debug.LogWarning("[MicrophoneRecorder id=" + id + "] RecordSoundDataWithGOInfoAtTimestamp " +
-                                                 "returned false at time " + RecordingTime + "; stopping capture.");
+                                ExtendedLogger.LogWarning(GetType().Name, "[MicrophoneRecorder id=" + id + "] RecordSoundDataWithGOInfoAtTimestamp " +
+                                                 "returned false at time " + RecordingTime + "; stopping capture.", this);
                             return false;
                         }
 
@@ -132,18 +133,18 @@ namespace VRSYS.Scripts.Recording
             if (controller.debugLogs && Time.realtimeSinceStartup - _lastMicLogTime >= 1.0f)
             {
                 _lastMicLogTime = Time.realtimeSinceStartup;
-                Debug.Log("[MicrophoneRecorder id=" + id + "] Heartbeat: chunksThisCall=" + chunksThisCall +
+                ExtendedLogger.LogInfo(GetType().Name, "[MicrophoneRecorder id=" + id + "] Heartbeat: chunksThisCall=" + chunksThisCall +
                           ", totalChunks=" + _chunksRecordedTotal + ", recordingTime=" + RecordingTime.ToString("F2") +
                           ", bufferLength=" + (_audioData != null ? _audioData.Length : 0) +
                           ", peakAmplitude=" + _peakSinceLog.ToString("F4") +
-                          ". (peakAmplitude ~0 means the data being recorded is silent.)");
+                          ". (peakAmplitude ~0 means the data being recorded is silent.)", this);
                 _peakSinceLog = 0f;
             }
 
             if (recordedData && Mathf.Abs(recordTime - (RecordingTime + recordedTime)) > 0.5f)
             {
                 if(controller.debugLogs)
-                    Debug.LogError("Error! Microphone time not aligned. Difference: " + (recordTime - (RecordingTime + recordedTime)));
+                    ExtendedLogger.LogError(GetType().Name, "Error! Microphone time not aligned. Difference: " + (recordTime - (RecordingTime + recordedTime)), this);
             }
 
             return true;
@@ -157,14 +158,14 @@ namespace VRSYS.Scripts.Recording
             _rerecDevice = ResolveRerecMicDevice();
             if (string.IsNullOrEmpty(_rerecDevice))
             {
-                Debug.LogError("MicrophoneRecorder.BeginRerecordCapture: no microphone device available");
+                ExtendedLogger.LogError(GetType().Name, "MicrophoneRecorder.BeginRerecordCapture: no microphone device available", this);
                 return;
             }
 
             AudioClip clip = Microphone.Start(_rerecDevice, true, 10, AudioSettings.outputSampleRate);
             if (clip == null)
             {
-                Debug.LogError("MicrophoneRecorder.BeginRerecordCapture: could not start microphone " + _rerecDevice);
+                ExtendedLogger.LogError(GetType().Name, "MicrophoneRecorder.BeginRerecordCapture: could not start microphone " + _rerecDevice, this);
                 _rerecDevice = null;
                 return;
             }

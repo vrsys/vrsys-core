@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using UnityEngine;
+using VRSYS.Core.Logging;
 
 namespace VRSYS.Scripts.Recording
 {
@@ -178,7 +179,7 @@ namespace VRSYS.Scripts.Recording
             _playbackChannelNum = GetChannelNum(recorderId, id);
 
             if(controller.debugLogs)
-                Debug.Log("Playback sampling rate: " + _playbackSamplingRate + ", Playback channel num: " + _playbackChannelNum);
+                ExtendedLogger.LogInfo(GetType().Name, "Playback sampling rate: " + _playbackSamplingRate + ", Playback channel num: " + _playbackChannelNum, this);
 
             if (_playbackSamplingRate < 0)
                 _playbackSamplingRate = 16000;
@@ -252,9 +253,9 @@ namespace VRSYS.Scripts.Recording
                                 if (result < 1)
                                 {
                                     if(controller.debugLogs)
-                                        Debug.LogWarning(
+                                        ExtendedLogger.LogWarning(GetType().Name,
                                         "Could not get new sound data! Reason: GetSoundChunkForTime returned a negative value for sound with id: " +
-                                        id + " for time: " + loadTime);
+                                        id + " for time: " + loadTime, this);
                                     break;
                                 }
 
@@ -267,7 +268,7 @@ namespace VRSYS.Scripts.Recording
 
                                 if (result == 1000)
                                 {
-                                    Debug.LogWarning("Received empty data for sound with id: " + id);
+                                    ExtendedLogger.LogWarning(GetType().Name, "Received empty data for sound with id: " + id, this);
                                     setData = _clip.SetData(_emptySound, _audioWritePos % _clip.samples);
                                 }
                                 else
@@ -281,7 +282,7 @@ namespace VRSYS.Scripts.Recording
                                     {
                                         float[] tmpArray = new float[result];
                                         if(controller.debugLogs)
-                                            Debug.Log("New sound array is allocated! Length: " + result);
+                                            ExtendedLogger.LogInfo(GetType().Name, "New sound array is allocated! Length: " + result, this);
                                         Array.Copy(_soundDTO, _soundDTO.GetLowerBound(0), tmpArray,
                                             tmpArray.GetLowerBound(0), result);
                                         setData = _clip.SetData(tmpArray, _audioWritePos % _clip.samples);
@@ -297,7 +298,7 @@ namespace VRSYS.Scripts.Recording
 
 
                                 if (!setData && controller.debugLogs)
-                                    Debug.LogError("Could not set audio data!");
+                                    ExtendedLogger.LogError(GetType().Name, "Could not set audio data!", this);
                                 else
                                     newData = true;
 

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using UnityEngine;
+using VRSYS.Core.Logging;
 
 namespace VRSYS.Scripts.Recording
 {
@@ -50,7 +51,7 @@ namespace VRSYS.Scripts.Recording
                     _charDTO);
 
                 if (!result && controller.debugLogs)
-                    Debug.Log("Could not record arbitrary data with id: " + id);
+                    ExtendedLogger.LogInfo(GetType().Name, "Could not record arbitrary data with id: " + id, this);
 
                 return result;
             }
@@ -79,7 +80,8 @@ namespace VRSYS.Scripts.Recording
 
                         if (!result)
                         {
-                            Debug.Log("Could not replay arbitrary data with id: " + id + " for object with name: " + gameObject.name);
+                            if (controller.debugLogs)
+                                ExtendedLogger.LogInfo(GetType().Name, "Could not replay arbitrary data with id: " + id + " for object with name: " + gameObject.name, this);
                             return false;
                         }
 

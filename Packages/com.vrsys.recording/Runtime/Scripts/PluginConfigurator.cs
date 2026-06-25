@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using AOT;
 using UnityEngine;
+using VRSYS.Core.Logging;
 
 namespace VRSYS.Scripts.Recording
 {
@@ -127,15 +128,15 @@ namespace VRSYS.Scripts.Recording
             string debugString = Marshal.PtrToStringAnsi(request, size);
 
             if ((LogLevel)level == LogLevel.Debug)
-                Debug.Log(debugString);
+                ExtendedLogger.LogInfo("RecordingPlugin", debugString);
             else if ((LogLevel)level == LogLevel.Info)
-                Debug.Log(debugString);
+                ExtendedLogger.LogInfo("RecordingPlugin", debugString);
             else if ((LogLevel)level == LogLevel.Warning)
-                Debug.LogWarning(debugString);
+                ExtendedLogger.LogWarning("RecordingPlugin", debugString);
             else if ((LogLevel)level == LogLevel.Error)
-                Debug.LogError(debugString);
+                ExtendedLogger.LogError("RecordingPlugin", debugString);
             else
-                Debug.LogAssertion(debugString);
+                ExtendedLogger.LogError("RecordingPlugin", debugString);
         }
     }
 }

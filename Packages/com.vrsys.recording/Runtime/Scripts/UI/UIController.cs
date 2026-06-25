@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using VRSYS.Core.Networking;
+using VRSYS.Core.Logging;
 using Vrsys.Scripts.Recording;
 
 namespace VRSYS.Scripts.Recording
@@ -12,6 +13,8 @@ namespace VRSYS.Scripts.Recording
     public class UIController : MonoBehaviour
     {
         public GameObject recordingUICanvas;
+
+        [SerializeField] private bool verbose = false;
 
         private RecorderState _state;
         private NetworkController _networkController;
@@ -112,12 +115,13 @@ namespace VRSYS.Scripts.Recording
 
         public void NavigateToTime(Slider userSliderComponent)
         {
-            Debug.LogError("Listener called");
+            if (verbose)
+                ExtendedLogger.LogInfo(GetType().Name, "Listener called", this);
 
             if(_state.currentState == State.Replaying && 0 <= userSliderComponent.value && userSliderComponent.value <= _state.recordingDuration)
                 _state.currentReplayTime = userSliderComponent.value;
-            else 
-                Debug.LogWarning("Cannot navigate to target ime. Incorrect state or target time.");
+            else
+                ExtendedLogger.LogWarning(GetType().Name, "Cannot navigate to target ime. Incorrect state or target time.", this);
         }
         
         private void TimeLineCollaborators()
@@ -183,7 +187,8 @@ namespace VRSYS.Scripts.Recording
                             {
                                 timeSliderButton.onClick.AddListener(() => NavigateToTime(userSliderComponent));
                                 userSliderComponent.interactable = true;
-                                Debug.LogError("Listener set");
+                                if (verbose)
+                                    ExtendedLogger.LogInfo(GetType().Name, "Listener set", this);
                             }
 
                             ColorBlock colors = new ColorBlock();
@@ -195,7 +200,8 @@ namespace VRSYS.Scripts.Recording
                             startT.SetActive(false);
                             endT.SetActive(false);
                             timeLines.SetActive(false);
-                            Debug.Log("New slider created for user: " + key);
+                            if (verbose)
+                                ExtendedLogger.LogInfo(GetType().Name, "New slider created for user: " + key, this);
                         }
 
                         Slider userSlider = tSlider.GetComponent<Slider>();

@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 using UnityEngine;
 using VRSYS.Core.Networking;
+using VRSYS.Core.Logging;
 
 namespace VRSYS.Scripts.Recording
 {
@@ -38,7 +39,7 @@ namespace VRSYS.Scripts.Recording
             if (Mathf.Abs(recordTime - RecordingTime) > 0.1f)
             {
                 if(controller.debugLogs)
-                    Debug.LogError("Error! Audio Listener time not aligned. Difference: " + (recordTime - RecordingTime));
+                    ExtendedLogger.LogError(GetType().Name, "Error! Audio Listener time not aligned. Difference: " + (recordTime - RecordingTime), this);
                 RecordingTime = recordTime;
             }
 
@@ -83,7 +84,7 @@ namespace VRSYS.Scripts.Recording
                 if (recordingTimeOfChunk < 0)
                 {
                     if(controller.debugLogs)
-                        Debug.LogError("Error! Sound recording time should not be negative!");
+                        ExtendedLogger.LogError(GetType().Name, "Error! Sound recording time should not be negative!", this);
                     recordingTimeOfChunk = 0.0f;
                     RecordingTime = duration;
                 }

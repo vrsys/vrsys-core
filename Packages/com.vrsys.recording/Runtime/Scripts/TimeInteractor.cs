@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Unity.Netcode;
+using UnityEngine;
 using UnityEngine.InputSystem;
 using VRSYS.Core.Networking;
 
@@ -89,7 +90,10 @@ namespace VRSYS.Scripts.Recording
 
             if ((pauseHMD.action.triggered || pauseDesktop.action.triggered) && Time.time - _stopToggleTime > 0.5)
             {
-                ToggleGlobalPause();
+                if(NetworkManager.Singleton == null)
+                    ToggleLocalPause();
+                else
+                    ToggleGlobalPause();
                 _stopToggleTime = Time.time;
             }
             
@@ -129,17 +133,8 @@ namespace VRSYS.Scripts.Recording
                     _state.currentReplayTime += timeDif;
             }
 
-            // this is being done to give the user a bit more control over the time selection
-            if (_state.currentState == State.Replaying && !_state.replayPaused)
-            {
-                if (_state.currentReplayTime + Time.deltaTime >= _state.recordingDuration - 0.1f)
-                {
-                    //_state.currentReplayTime = 0.01f;
-                } else {
-                    _state.currentReplayTime += Time.deltaTime;
-                }
-            }
-
+            // Linear time progression is driven by RecorderController; the interactor only adds the
+            // user-controlled offset (timeDif) on top of it.
             if(_state.currentState == State.Replaying)
                 SendCurrentTimesToCollaborators();
         }

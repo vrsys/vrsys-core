@@ -870,7 +870,7 @@ namespace Vrsys.Scripts.Recording
                 if (comp == null || preservedComponents.Contains(comp))
                     continue;
 
-                Debug.LogWarning($"Could not remove component {comp.GetType().Name} from {root.name} without breaking component dependencies.", root);
+                ExtendedLogger.LogWarning("Utils", $"Could not remove component {comp.GetType().Name} from {root.name} without breaking component dependencies.", root);
             }
             //Debug.Log("Trying to remove custom finished.");
         }

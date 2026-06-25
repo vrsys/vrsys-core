@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using UnityEngine;
+using VRSYS.Core.Logging;
 using Vrsys.Scripts.Recording;
 
 namespace VRSYS.Scripts.Recording
@@ -163,7 +164,8 @@ namespace VRSYS.Scripts.Recording
                     foreach (var prefabInfo in information)
                     {
                         // TODO: For some reason the prefab path is empty for the local player. Why?
-                        Debug.Log("Prefab path: " + prefabInfo.correspondingPrefab.assetPath + ", for object: " + gameObject.name);
+                        if (controller.debugLogs)
+                            ExtendedLogger.LogInfo(GetType().Name, "Prefab path: " + prefabInfo.correspondingPrefab.assetPath + ", for object: " + gameObject.name, this);
                         if (prefabInfo.correspondingPrefab != null && prefabInfo.correspondingPrefab.assetPath.Length > 0)
                         {
                             RegisterObjectPrefab(controller.RecorderID, id, prefabInfo.correspondingPrefab.assetPath,
@@ -200,7 +202,7 @@ namespace VRSYS.Scripts.Recording
                     {
                         teleportation = true;
                         if (controller.debugLogs)
-                            Debug.Log("Gap/teleport keyframe inserted. Pos Dif: " + posDif + ", Scale Dif: " + scaDif + ", Time Dif: " + timeDif + ", Time: " + recordTime + ", uuid: " + id);
+                            ExtendedLogger.LogInfo(GetType().Name, "Gap/teleport keyframe inserted. Pos Dif: " + posDif + ", Scale Dif: " + scaDif + ", Time Dif: " + timeDif + ", Time: " + recordTime + ", uuid: " + id, this);
                     }
                 }
              
@@ -214,7 +216,7 @@ namespace VRSYS.Scripts.Recording
                         result = RecordObjectAtTimestamp(controller.RecorderID, _name, _name.Length, id, _matrixDTO, teleportTime, _infoDTO);
                         
                         if (!result && controller.debugLogs)
-                            Debug.LogError("Recording teleportation object: Failed, " + gameObject.name);
+                            ExtendedLogger.LogError(GetType().Name, "Recording teleportation object: Failed, " + gameObject.name, this);
                     }
                 }
 
@@ -224,7 +226,7 @@ namespace VRSYS.Scripts.Recording
                 
                 if (!result && controller.debugLogs)
                 {
-                    Debug.LogError("Recording object: " + _name + " Failed");
+                    ExtendedLogger.LogError(GetType().Name, "Recording object: " + _name + " Failed", this);
                 }
                 else
                 {
@@ -311,7 +313,7 @@ namespace VRSYS.Scripts.Recording
                         {
                             lastErrorLog = Time.time;
                             if(controller.debugLogs)
-                                Debug.LogError("Could not get replay transform for: " + _name);
+                                ExtendedLogger.LogError(GetType().Name, "Could not get replay transform for: " + _name, this);
                         }
                     }
                     else

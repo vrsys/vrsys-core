@@ -19,6 +19,8 @@ namespace VRSYS.Scripts.Recording
     [RequireComponent(typeof(NetworkController))]
     public class RecorderController : MonoBehaviour
     {
+        #region Native Plugin Bindings
+
         [DllImport("RecordingPlugin")]
         private static extern bool StopRecording(int recorderId);
 
@@ -45,6 +47,10 @@ namespace VRSYS.Scripts.Recording
 
         [DllImport("RecordingPlugin")]
         private static extern bool CreateWAVFile(int recorderId, string recordingName, int recordingNameLength);
+
+        #endregion
+
+        #region Serialized Fields & Runtime State
 
         public int transformRecordingStepsPerSecond = 20;
         public int audioRecordingStepsPerSecond = 10;
@@ -82,15 +88,16 @@ namespace VRSYS.Scripts.Recording
         private Dictionary<int, Recorder> _audioRecorder = new Dictionary<int, Recorder>();
         private Dictionary<int, Recorder> _genericRecorder = new Dictionary<int, Recorder>();
 
-        private float lastPlaybackTimeWrite;
-        private string playbackStartDate;
-
         private float _lastReplayListRefresh;
         public bool localPlayback = false;
         public bool uploadFilesToServer = false;
         public bool debugLogs = true;
         private const float ReplayBoundaryPaddingSeconds = 0.1f;
         private LogLevel _lastAppliedPluginLogLevel;
+
+        #endregion
+
+        #region Logging
 
         private void DebugReplayStartupLog(string message)
         {
@@ -100,6 +107,10 @@ namespace VRSYS.Scripts.Recording
             Debug.Log("[ReplayStartupDebug][frame=" + Time.frameCount +
                       "][time=" + Time.realtimeSinceStartup.ToString("F3") + "] " + message);
         }
+
+        #endregion
+
+        #region Public Properties
 
         [HideInInspector]
         public int RecorderID
@@ -142,6 +153,10 @@ namespace VRSYS.Scripts.Recording
             get { return recorderState.currentState; }
         }
 
+        #endregion
+
+        #region Initialization
+
         public void Start()
         {
             recorderState = GetComponent<RecorderState>();
@@ -151,7 +166,7 @@ namespace VRSYS.Scripts.Recording
                 pluginSettings = new RecordingPluginSettings();
             RecordingPluginConfigurator.ApplyInitialSettings(pluginSettings, recorderState.recorderID);
             _lastAppliedPluginLogLevel = pluginSettings.logLevel;
-            
+
             if (recorderState.recordingDirectory == "")
                 recorderState.recordingDirectory = Application.persistentDataPath + "/";
 
@@ -160,7 +175,12 @@ namespace VRSYS.Scripts.Recording
             bool resultStopRep = StopReplay(recorderState.recorderID);
         }
 
-        private readonly List<IGenericRecorderProvider> _genericRecorderProviders = new List<IGenericRecorderProvider>();
+        #endregion
+
+        #region Generic Recorder Providers
+
+        private readonly List<IGenericRecorderProvider>
+            _genericRecorderProviders = new List<IGenericRecorderProvider>();
 
         /// <summary>
         /// Register an external provider (e.g. the optional Meta Avatar integration) that attaches
@@ -178,7 +198,7 @@ namespace VRSYS.Scripts.Recording
             _genericRecorderProviders.Remove(provider);
         }
 
-        private void AttachArbitraryRecorder()
+        private void AttachGenericRecorder()
         {
             foreach (IGenericRecorderProvider provider in _genericRecorderProviders)
             {
@@ -187,17 +207,21 @@ namespace VRSYS.Scripts.Recording
             }
         }
 
+        #endregion
+
+        #region Recorder Attachment
+
         public int GetNextAvailableSoundID()
         {
             for (int i = 0; i < 1000; ++i)
             {
-                if(!_audioRecorder.ContainsKey(i))
+                if (!_audioRecorder.ContainsKey(i))
                     return i;
             }
 
             return -1;
         }
-        
+
         private unsafe void AttachSoundRecorder()
         {
             if (recorderState.currentState == State.Recording || recorderState.currentState == State.PrepareRecording)
@@ -210,7 +234,6 @@ namespace VRSYS.Scripts.Recording
 
                 if (Microphone.devices.Length > 0)
                 {
-                    
                     if (recordMicro)
                     {
                         // Use the default Unity microphone device. Applications that capture audio through a
@@ -231,8 +254,10 @@ namespace VRSYS.Scripts.Recording
                         // the reader unset for the SDK-specific override (MicrophoneRecorder.SetMicrophoneReader).
                         if (!Microphone.IsRecording(microphone))
                         {
-                            AudioClip microphoneClip = Microphone.Start(microphone, true, 10, AudioSettings.outputSampleRate);
-                            microphoneRecorder.SetMicrophoneReader(new MicrophoneClipReader(microphoneClip, microphone));
+                            AudioClip microphoneClip =
+                                Microphone.Start(microphone, true, 10, AudioSettings.outputSampleRate);
+                            microphoneRecorder.SetMicrophoneReader(new MicrophoneClipReader(microphoneClip,
+                                microphone));
                         }
                         else
                         {
@@ -275,10 +300,11 @@ namespace VRSYS.Scripts.Recording
                         audioListenerRecorder.Controller = this;
                     }
                 }
-                
+
                 if (recordAllSoundSources)
                 {
-                    AudioSource[] sources = FindObjectsByType<AudioSource>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+                    AudioSource[] sources =
+                        FindObjectsByType<AudioSource>(FindObjectsInactive.Include, FindObjectsSortMode.None);
                     for (int i = 0; i < sources.Length; ++i)
                     {
                         AudioSourceRecorder recorder = sources[i].gameObject.AddComponent<AudioSourceRecorder>();
@@ -289,7 +315,7 @@ namespace VRSYS.Scripts.Recording
             }
         }
 
-        
+
         private void AttachTransformRecorder()
         {
             Debug.Log("Attaching transform recorder scripts to gameobjects in the scene");
@@ -367,14 +393,14 @@ namespace VRSYS.Scripts.Recording
                     transformRecorder.controller.recorderState.currentState == State.PreparingReplay)
                     alreadyUsedForPlayback = true;
             }
-            
+
             bool isReplayRoot = recorderState.currentState == State.PreparingReplay
                                 && replayRoot != null && root.transform == replayRoot;
 
             bool attach = !found && !isReplayRoot &&
                           ((recorderState.currentState == State.PreparingReplay && !alreadyUsedForPlayback) ||
-                                     (recorderState.currentState == State.PrepareRecording ||
-                                      recorderState.currentState == State.Recording));
+                           (recorderState.currentState == State.PrepareRecording ||
+                            recorderState.currentState == State.Recording));
             if (attach)
             {
                 TransformRecorder recorder = root.AddComponent<TransformRecorder>();
@@ -383,6 +409,10 @@ namespace VRSYS.Scripts.Recording
                 recorder.RegisterRecorder();
             }
         }
+
+        #endregion
+
+        #region Teardown
 
         private void CleanDestroy()
         {
@@ -398,7 +428,7 @@ namespace VRSYS.Scripts.Recording
                 OnReplayEnd();
                 if (!result)
                     Debug.LogError("Could not stop the replay!");
-                else 
+                else
                     recorderState.currentState = State.Idle;
             }
         }
@@ -408,15 +438,14 @@ namespace VRSYS.Scripts.Recording
             CleanDestroy();
         }
 
-        private void OnDisable()
-        {
-            //throw new NotImplementedException();
-        }
-
         public void OnApplicationQuit()
         {
             CleanDestroy();
         }
+
+        #endregion
+
+        #region Recording & Replay Session Control
 
         public void PrepareAndStartDistributedReplay()
         {
@@ -499,14 +528,11 @@ namespace VRSYS.Scripts.Recording
 
             DebugReplayStartupLog("StartReplay before GetRecordingDuration.");
             recorderState.recordingDuration = GetRecordingDuration(recorderState.recorderID);
-            DebugReplayStartupLog("StartReplay after GetRecordingDuration. duration=" + recorderState.recordingDuration);
+            DebugReplayStartupLog("StartReplay after GetRecordingDuration. duration=" +
+                                  recorderState.recordingDuration);
             recorderState.currentMinSliderValue = 0.0f;
             recorderState.currentMaxSliderValue = recorderState.recordingDuration;
 
-            DebugReplayStartupLog("StartReplay before DisableAllAudioSources.");
-            DisableAllAudioSources();
-            DebugReplayStartupLog("StartReplay after DisableAllAudioSources.");
-            
             Debug.Log("Preparing scene for playback.");
             DebugReplayStartupLog("StartReplay before PrepareReplayScene.");
             _scenePreparator.PrepareReplayScene();
@@ -523,14 +549,12 @@ namespace VRSYS.Scripts.Recording
             {
                 DebugReplayStartupLog("StartReplay skipped AttachTransformRecorder because playbackTransform=false.");
             }
-            // Audio sources are already handeled by the scene preaparator prepare replay scene
-            DebugReplayStartupLog("StartReplay before AttachArbitraryRecorder.");
-            AttachArbitraryRecorder();
-            DebugReplayStartupLog("StartReplay after AttachArbitraryRecorder. genericRecorderCount=" +
-                                  _genericRecorder.Count);
 
-            playbackStartDate = DateTime.Now.ToString("g", CultureInfo.GetCultureInfo("es-ES")).Replace(" ", "_")
-                .Replace(":", "_").Replace("/", "_");
+            // Audio sources are already handeled by the scene preaparator prepare replay scene
+            DebugReplayStartupLog("StartReplay before AttachGenericRecorder.");
+            AttachGenericRecorder();
+            DebugReplayStartupLog("StartReplay after AttachGenericRecorder. genericRecorderCount=" +
+                                  _genericRecorder.Count);
 
             DebugReplayStartupLog("StartReplay before GetNamePresent.");
             recorderState.recordedObjectPresent = _scenePreparator.GetNamePresent();
@@ -541,7 +565,7 @@ namespace VRSYS.Scripts.Recording
             recorderState.currentState = State.Replaying;
             recorderState.currentReplayTime = GetReplayStartTime();
             recorderState.currentRecordingTime = -1.0f;
-            
+
             DebugReplayStartupLog("StartReplay before OnReplayStart.");
             OnReplayStart();
             DebugReplayStartupLog("StartReplay completed. state=" + recorderState.currentState +
@@ -570,7 +594,6 @@ namespace VRSYS.Scripts.Recording
             localPlayback = false;
             DestroyRecorder();
             _scenePreparator.CleanReplayScene();
-            EnableAllAudioSources();
         }
 
         public void SendStartRecordingEvents()
@@ -585,7 +608,7 @@ namespace VRSYS.Scripts.Recording
             recorderState.currentState = State.Recording;
             recorderState.currentReplayTime = -1.0f;
             recorderState.currentRecordingTime = 0.0f;
-            
+
             OnRecordingStart();
             Debug.Log("Starting recording for recorder with id: " + recorderState.recorderID);
         }
@@ -597,7 +620,7 @@ namespace VRSYS.Scripts.Recording
 
             AttachTransformRecorder();
             AttachSoundRecorder();
-            AttachArbitraryRecorder();
+            AttachGenericRecorder();
 
             bool result = CreateNewRecordingFile(recorderState.recorderID, recorderState.recordingDirectory,
                 recorderState.recordingDirectory.Length, recorderState.recordingFile,
@@ -645,11 +668,15 @@ namespace VRSYS.Scripts.Recording
             }
 
             OnRecordingEnd();
-            
+
             _networkController.UpdateReplayList();
-            
+
             DestroyRecorder();
         }
+
+        #endregion
+
+        #region Server Upload & File Export Triggers
 
         private void UploadFilesToServer()
         {
@@ -706,6 +733,10 @@ namespace VRSYS.Scripts.Recording
         {
             StartCoroutine(CreateCSVFile());
         }
+
+        #endregion
+
+        #region Recorder Registry
 
         public void RegisterRecorder(int id, Recorder recorder)
         {
@@ -772,12 +803,16 @@ namespace VRSYS.Scripts.Recording
 
             foreach (var kv in _genericRecorder)
                 if (kv.Value != null)
-                   Destroy(kv.Value);
+                    Destroy(kv.Value);
 
             _transformRecorder.Clear();
             _audioRecorder.Clear();
             _genericRecorder.Clear();
         }
+
+        #endregion
+
+        #region Replay Startup & Late-Join
 
         public void FixedUpdate()
         {
@@ -798,7 +833,8 @@ namespace VRSYS.Scripts.Recording
 
         private void SetFixedPlaybackRecordingFileIfSet()
         {
-            if (recorderState.fixedPlaybackRecordingName != null && recorderState.fixedPlaybackRecordingName.Length > 0 &&
+            if (recorderState.fixedPlaybackRecordingName != null &&
+                recorderState.fixedPlaybackRecordingName.Length > 0 &&
                 recorderState.selectedReplayFile != recorderState.fixedPlaybackRecordingName)
             {
                 recorderState.selectedReplayFile = recorderState.fixedPlaybackRecordingName;
@@ -821,6 +857,10 @@ namespace VRSYS.Scripts.Recording
                 StartReplay();
             }
         }
+
+        #endregion
+
+        #region Recorder Lifecycle Callbacks
 
         private void OnRecordingStart()
         {
@@ -848,7 +888,7 @@ namespace VRSYS.Scripts.Recording
                 }
             }
         }
-        
+
         private void OnRecordingEnd()
         {
             Debug.Log("OnRecordingEnd called!");
@@ -875,10 +915,10 @@ namespace VRSYS.Scripts.Recording
                     kv.Value.OnRecordingEnd();
                 }
             }
-            
+
             Debug.Log("OnRecordingEnd finished!");
         }
-        
+
         private void OnReplayStart()
         {
             Debug.Log("OnReplayStart called!");
@@ -905,9 +945,10 @@ namespace VRSYS.Scripts.Recording
                     kv.Value.OnReplayStart();
                 }
             }
+
             Debug.Log("OnReplayStart finished!");
         }
-        
+
         private void OnReplayEnd()
         {
             foreach (var kv in _transformRecorder)
@@ -935,6 +976,10 @@ namespace VRSYS.Scripts.Recording
             }
         }
 
+        #endregion
+
+        #region Playback Synchronization
+
         private void SynchronizePlayback()
         {
             // make sure all users are close in time to each other in the playback
@@ -946,16 +991,18 @@ namespace VRSYS.Scripts.Recording
                 float serverPlaybackTime = _networkController.HostReplayTime;
                 if (NetworkUser.LocalInstance == null)
                     return;
-                
+
                 if (Mathf.Abs(serverPlaybackTime - recorderState.currentReplayTime) > synchronisationMaxDeviation)
                 {
                     float timeAdvance = 3.0f;
                     int it = 1;
                     int i = 0;
+                    // Here we advance the playback time step by step to avoid potential crashes and freezes caused by large jumps in time
                     while (Mathf.Abs(serverPlaybackTime - recorderState.currentReplayTime) > timeAdvance & i < it)
                     {
                         i++;
-                        Debug.Log("Current playback time: " + recorderState.currentReplayTime + ", target time: " + serverPlaybackTime);
+                        Debug.Log("Current playback time: " + recorderState.currentReplayTime + ", target time: " +
+                                  serverPlaybackTime);
 
                         if (recorderState.currentReplayTime < 1.0f)
                             recorderState.currentReplayTime = 1.0f;
@@ -1009,6 +1056,10 @@ namespace VRSYS.Scripts.Recording
             }
         }
 
+        #endregion
+
+        #region Frame Dispatch & State Handlers
+
         public void Update()
         {
             ApplyPluginLogLevelIfChanged();
@@ -1051,9 +1102,28 @@ namespace VRSYS.Scripts.Recording
             if (recorderState.currentState == State.Recording)
                 Recording();
 
-            if (recorderState.currentState == State.Replaying &&
-                recorderState.currentReplayTime < recorderState.recordingDuration)
-                Replay();
+            if (recorderState.currentState == State.Replaying)
+            {
+                AdvanceReplayTime();
+
+                if (recorderState.currentReplayTime < recorderState.recordingDuration)
+                    Replay();
+            }
+        }
+
+        // Default playback progression: replay time advances linearly while replaying and not paused,
+        // independent of whether a TimeInteractor is present. The TimeInteractor (when used) adds its
+        // own user-driven offset on top of this in Update().
+        private void AdvanceReplayTime()
+        {
+            if (recorderState.replayPaused)
+                return;
+
+            // ponytail: hold just short of the end (same as the old TimeInteractor behaviour) instead of
+            // looping/auto-ending. Change the cap here if auto-end/loop is wanted.
+            if (recorderState.currentReplayTime + Time.deltaTime <
+                recorderState.recordingDuration - ReplayBoundaryPaddingSeconds)
+                recorderState.currentReplayTime += Time.deltaTime;
         }
 
         private void Idle()
@@ -1082,7 +1152,8 @@ namespace VRSYS.Scripts.Recording
                             }
                         }
                     }
-                } catch (Exception e)
+                }
+                catch (Exception e)
                 {
                     Debug.LogError("Error while recording transforms: " + e);
                 }
@@ -1100,7 +1171,8 @@ namespace VRSYS.Scripts.Recording
                             }
                         }
                     }
-                } catch (Exception e)
+                }
+                catch (Exception e)
                 {
                     Debug.LogError("Error while recording audio: " + e);
                 }
@@ -1118,7 +1190,8 @@ namespace VRSYS.Scripts.Recording
                             }
                         }
                     }
-                } catch (Exception e)
+                }
+                catch (Exception e)
                 {
                     Debug.LogError("Error while recording arbitrary data: " + e);
                 }
@@ -1164,29 +1237,9 @@ namespace VRSYS.Scripts.Recording
                 EndReplay();
         }
 
-        private void DisableAllAudioSources()
-        {
-            AudioSource[] audioSources = (AudioSource[])FindObjectsOfType(typeof(AudioSource));
+        #endregion
 
-            foreach (AudioSource audioSource in audioSources)
-            {
-                if (audioSource.gameObject.name != "UserSpeaker" &&
-                    !audioSource.gameObject.name.Contains("Speaker for Player"))
-                {
-                    audioSource.Pause();
-                }
-            }
-        }
-
-        private void EnableAllAudioSources()
-        {
-            AudioSource[] audioSources = (AudioSource[])FindObjectsOfType(typeof(AudioSource));
-
-            foreach (AudioSource audioSource in audioSources)
-            {
-                audioSource.UnPause();
-            }
-        }
+        #region File Export Coroutines
 
         IEnumerator CreateAndUploadWAVFiles()
         {
@@ -1229,6 +1282,10 @@ namespace VRSYS.Scripts.Recording
             yield return null;
         }
 
+        #endregion
+
+        #region Object Id Mapping & Accessors
+
         public void AddOriginalIdGameobject(int originalId, int newId, GameObject go)
         {
             if (!recorderState.originalIdGameObjects.ContainsKey(originalId))
@@ -1243,5 +1300,7 @@ namespace VRSYS.Scripts.Recording
         {
             return recorderState.recordingDuration;
         }
+
+        #endregion
     }
 }

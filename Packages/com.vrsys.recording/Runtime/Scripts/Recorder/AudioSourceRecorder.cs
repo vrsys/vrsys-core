@@ -1,6 +1,7 @@
 ﻿using System;
 using UnityEngine;
 using VRSYS.Core.Networking;
+using VRSYS.Core.Logging;
 
 namespace VRSYS.Scripts.Recording
 {
@@ -108,7 +109,7 @@ namespace VRSYS.Scripts.Recording
                 if (recordingTimeOfChunk < 0)
                 {
                     if(controller.debugLogs)
-                        Debug.LogError("Error! Sound recording time should not be negative!");
+                        ExtendedLogger.LogError(GetType().Name, "Error! Sound recording time should not be negative!", this);
                     recordingTimeOfChunk = 0.0f;
                 }
 

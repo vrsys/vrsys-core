@@ -123,22 +123,22 @@ namespace VRSYS.Recording
             
             int userID1, userID2 = 0;
             Decombine(avatarData.UserID, out userID1, out userID2);
-            _intDTO[0] = userID1;
-            _intDTO[1] = userID2;
-            _intDTO[2] = _recordedDataIndex;
-            _intDTO[3] = avatarData.Data.Length;
+            _recIntDTO[0] = userID1;
+            _recIntDTO[1] = userID2;
+            _recIntDTO[2] = _recordedDataIndex;
+            _recIntDTO[3] = avatarData.Data.Length;
             
             id = (int) avatarData.UserID;
             
-            if (avatarData.Data.Length > _charDTO.Length)
+            if (avatarData.Data.Length > _recCharDTO.Length)
             {
                 Debug.LogWarning("Warning! Cannot record avatar data, as the data size is exceeding the array size.");    
                 return;
             }
             
-            Array.Copy( avatarData.Data, avatarData.Data.GetLowerBound(0), _charDTO, _charDTO.GetLowerBound(0), avatarData.Data.Length);
+            Array.Copy( avatarData.Data, avatarData.Data.GetLowerBound(0), _recCharDTO, _recCharDTO.GetLowerBound(0), avatarData.Data.Length);
 
-            bool result = RecordGenericAtTimestamp(controller.RecorderID, controller.recorderState.currentRecordingTime, id, _intDTO, _floatDTO, _charDTO);
+            bool result = RecordGenericAtTimestamp(controller.RecorderID, controller.recorderState.currentRecordingTime, id, _recIntDTO, _recFloatDTO, _recCharDTO);
 
             if (!result && controller.debugLogs)
                 Debug.Log("Could not record arbitrary data with id: " + id);
@@ -149,94 +149,20 @@ namespace VRSYS.Recording
         {
             return false;
         }
-
-        public override int GetRerecordObjectId()
-        {
-            return id;
-        }
-
-        public override void BeginRerecordCapture()
-        {
-            base.BeginRerecordCapture();
-            _rerecSampleIndex = 0;
-
-            _rerecReader = FindAnyObjectByType<MetaAvatarReplayDataReader>();
-            if (_rerecReader == null)
-            {
-                ExtendedLogger.LogError(GetType().Name,
-                    "ReRecord begin: no MetaAvatarReplayDataReader found in scene", this);
-                return;
-            }
-
-            _rerecReader.OnAvatarDataRead.AddListener(RerecordAvatarData);
-            _rerecStartedReader = _rerecReader.StartReadingData();
-            if (!_rerecStartedReader)
-                ExtendedLogger.LogWarning(GetType().Name,
-                    "ReRecord begin: avatar reader could not be started; relying on existing run", this);
-        }
-
-        public override void EndRerecordCapture()
-        {
-            base.EndRerecordCapture();
-
-            if (_rerecReader != null)
-            {
-                _rerecReader.OnAvatarDataRead.RemoveListener(RerecordAvatarData);
-                if (_rerecStartedReader)
-                    _rerecReader.StopReadingData();
-            }
-
-            _rerecReader = null;
-            _rerecStartedReader = false;
-        }
-
-        private void RerecordAvatarData(MetaAvatarReplayDataReader.AvatarData avatarData)
-        {
-            if (!inRerecordingMode)
-                return;
-            if (avatarData.Data == null || avatarData.Data.Length == 0)
-                return;
-            if (avatarData.Data.Length > _charDTO.Length)
-            {
-                Debug.LogWarning("ReRecord: avatar data exceeds char DTO size; skipping");
-                return;
-            }
-
-            int u1, u2;
-            Decombine(avatarData.UserID, out u1, out u2);
-
-            int[] ints = new int[_intDTO.Length];
-            float[] floats = new float[_floatDTO.Length];
-            byte[] chars = new byte[_charDTO.Length];
-
-            ints[0] = u1;
-            ints[1] = u2;
-            ints[2] = _rerecSampleIndex++;
-            ints[3] = avatarData.Data.Length;
-            Array.Copy(avatarData.Data, 0, chars, 0, avatarData.Data.Length);
-
-            EmitRerecordSample(new RerecordSample
-            {
-                time = controller.recorderState.currentReplayTime,
-                ints = ints,
-                floats = floats,
-                chars = chars
-            });
-        }
         
         protected override void ProcessReplayData(float replayTime)
         {
-            int userID1 = _intDTO[0];
-            int userID2 = _intDTO[1];
+            int userID1 = _replayIntDTO[0];
+            int userID2 = _replayIntDTO[1];
             ulong userID = Combine(userID1, userID2);
-            int recordedDataIndex = _intDTO[2];
-            int dataLength = _intDTO[3];
+            int recordedDataIndex = _replayIntDTO[2];
+            int dataLength = _replayIntDTO[3];
             
             // if new avatar data was received process it
             if (recordedDataIndex != _recordedDataIndex)
             {
                 byte[] data = new byte[dataLength];
-                Array.Copy( _charDTO, _charDTO.GetLowerBound(0), data, data.GetLowerBound(0), dataLength);
+                Array.Copy( _replayCharDTO, _replayCharDTO.GetLowerBound(0), data, data.GetLowerBound(0), dataLength);
                 
                 // Parse original timestamp from bytes 16..19
                 uint parsedTicks =

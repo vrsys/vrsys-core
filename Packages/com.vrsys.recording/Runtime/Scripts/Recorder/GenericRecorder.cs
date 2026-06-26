@@ -24,9 +24,17 @@ namespace VRSYS.Recording
         private static extern bool GetGenericAtTime(int recorderId, float time, int id, IntPtr intArray,
             IntPtr floatArray, IntPtr charArray);
 
-        protected int[] _intDTO = new int[10];
-        protected float[] _floatDTO = new float[10];
-        protected byte[] _charDTO = new byte[2048];
+        protected const int intDTOSize = 10;
+        protected const int floatDTOSize = 10;
+        protected const int byteDTOSize = 2048;
+        
+        protected int[] _recIntDTO = new int[intDTOSize];
+        protected float[] _recFloatDTO = new float[floatDTOSize];
+        protected byte[] _recCharDTO = new byte[byteDTOSize];
+        protected int[] _replayIntDTO = new int[intDTOSize];
+        protected float[] _replayFloatDTO = new float[floatDTOSize];
+        protected byte[] _replayCharDTO = new byte[byteDTOSize];
+        
         protected bool replay = false;
 
         private List<RerecordSample> _rerecBuffer = new List<RerecordSample>();
@@ -47,8 +55,8 @@ namespace VRSYS.Recording
 
             if (result)
             {
-                result = RecordGenericAtTimestamp(controller.RecorderID, recordTime, id, _intDTO, _floatDTO,
-                    _charDTO);
+                result = RecordGenericAtTimestamp(controller.RecorderID, recordTime, id, _recIntDTO, _recFloatDTO,
+                    _recCharDTO);
 
                 if (!result && controller.debugLogs)
                     ExtendedLogger.LogInfo(GetType().Name, "Could not record arbitrary data with id: " + id, this);
@@ -69,11 +77,11 @@ namespace VRSYS.Recording
             replay = true;
 
 
-            fixed (float* f = _floatDTO)
+            fixed (float* f = _replayFloatDTO)
             {
-                fixed (int* i = _intDTO)
+                fixed (int* i = _replayIntDTO)
                 {
-                    fixed (byte* c = _charDTO)
+                    fixed (byte* c = _replayCharDTO)
                     {
                         bool result = GetGenericAtTime(controller.RecorderID, replayTime, id, (IntPtr)i,
                             (IntPtr)f, (IntPtr)c);
@@ -115,22 +123,13 @@ namespace VRSYS.Recording
             if (!FillGenericData())
                 return;
 
-            EmitRerecordSampleFromDTO(currentReplayTime);
-        }
-
-        protected void EmitRerecordSampleFromDTO(float time)
-        {
-            int[] ints = new int[_intDTO.Length];
-            float[] floats = new float[_floatDTO.Length];
-            byte[] chars = new byte[_charDTO.Length];
-            Array.Copy(_intDTO, ints, _intDTO.Length);
-            Array.Copy(_floatDTO, floats, _floatDTO.Length);
-            Array.Copy(_charDTO, chars, _charDTO.Length);
-            EmitRerecordSample(new RerecordSample { time = time, ints = ints, floats = floats, chars = chars });
-        }
-
-        protected void EmitRerecordSample(RerecordSample sample)
-        {
+            int[] ints = new int[_recIntDTO.Length];
+            float[] floats = new float[_recFloatDTO.Length];
+            byte[] chars = new byte[_recCharDTO.Length];
+            Array.Copy(_recIntDTO, ints, _recIntDTO.Length);
+            Array.Copy(_recFloatDTO, floats, _recFloatDTO.Length);
+            Array.Copy(_recCharDTO, chars, _recCharDTO.Length);
+            var sample = new RerecordSample { time = currentReplayTime, ints = ints, floats = floats, chars = chars };
             lock (_rerecSync)
                 _rerecBuffer.Add(sample);
         }

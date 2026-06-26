@@ -24,9 +24,20 @@ namespace VRSYS.Recording
         private static extern bool GetGenericAtTime(int recorderId, float time, int id, IntPtr intArray,
             IntPtr floatArray, IntPtr charArray);
 
+        [DllImport("RecordingPlugin")]
+        private static extern int GetGenericIntArraySize();
+
+        [DllImport("RecordingPlugin")]
+        private static extern int GetGenericFloatArraySize();
+
+        [DllImport("RecordingPlugin")]
+        private static extern int GetGenericCharArraySize();
+
         protected const int intDTOSize = 10;
         protected const int floatDTOSize = 10;
         protected const int byteDTOSize = 2048;
+
+        private static bool _dtoSizesChecked = false;
         
         protected int[] _recIntDTO = new int[intDTOSize];
         protected float[] _recFloatDTO = new float[floatDTOSize];
@@ -39,6 +50,31 @@ namespace VRSYS.Recording
 
         private List<RerecordSample> _rerecBuffer = new List<RerecordSample>();
         private readonly object _rerecSync = new object();
+
+        public override void Start()
+        {
+            base.Start();
+            VerifyDTOSizes();
+        }
+
+        // The C# DTO array sizes are hard-coded constants; warn once if they drift from the plugin's layout.
+        private static void VerifyDTOSizes()
+        {
+            if (_dtoSizesChecked)
+                return;
+            _dtoSizesChecked = true;
+
+            int pluginInt = GetGenericIntArraySize();
+            int pluginFloat = GetGenericFloatArraySize();
+            int pluginChar = GetGenericCharArraySize();
+
+            if (pluginInt != intDTOSize || pluginFloat != floatDTOSize || pluginChar != byteDTOSize)
+            {
+                ExtendedLogger.LogWarning(nameof(GenericRecorder),
+                    $"Generic DTO size mismatch with plugin! C# (int/float/char): {intDTOSize}/{floatDTOSize}/{byteDTOSize}, " +
+                    $"plugin: {pluginInt}/{pluginFloat}/{pluginChar}. Recorded/replayed generic data may be corrupted.");
+            }
+        }
 
         protected virtual bool FillGenericData()
         {

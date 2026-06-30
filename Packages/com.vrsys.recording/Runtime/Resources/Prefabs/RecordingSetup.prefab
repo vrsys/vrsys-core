@@ -106,8 +106,8 @@ RectTransform:
   m_GameObject: {fileID: 427895916460650340}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 2, y: 2, z: 2}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 2819055917321607768}
   - {fileID: 7257414403500894377}
@@ -118,7 +118,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: 0, y: 287}
+  m_AnchoredPosition: {x: 0, y: 100}
   m_SizeDelta: {x: 1920, y: 40}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &7353948482475617156
@@ -257,6 +257,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   recorderID: 0
   currentState: 0
+  localRecording: 0
   OnStateChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -265,7 +266,7 @@ MonoBehaviour:
   recordingFile: 
   serverList:
   - 127.0.0.1:5000
-  fixedPlaybackRecordingName: 
+  fixedPlaybackRecordingName: Dev
   recorderController: {fileID: 0}
   currentRecordingTime: -1
   currentReplayTime: -1
@@ -277,6 +278,7 @@ MonoBehaviour:
   replayList:
     replayNames: []
   replayPaused: 0
+  useLocalReplayFiles: 1
 --- !u!114 &7483180858779729903
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -289,7 +291,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 2075347169
+  GlobalObjectIdHash: 3593777428
   InScenePlacedSourceGlobalObjectIdHash: 0
   DeferredDespawnTick: 0
   Ownership: 1
@@ -330,20 +332,37 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f8f833436c63d794f8e420161aece72d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  onReplayHasStarted:
+    m_PersistentCalls:
+      m_Calls: []
+  onReplayHasEnded:
+    m_PersistentCalls:
+      m_Calls: []
+  onRecordingHasStarted:
+    m_PersistentCalls:
+      m_Calls: []
+  onRecordingHasEnded:
+    m_PersistentCalls:
+      m_Calls: []
   transformRecordingStepsPerSecond: 30
   audioRecordingStepsPerSecond: 10
   attachTransformRecorderToAll: 1
+  replayHierarchyChanges: 1
+  recordOnLocalTransformChangesOnly: 1
   replayAudio: 1
+  playbackTransform: 1
+  instantiateMissingObjects: 1
+  recordMicro: 1
+  recordAudioListener: 1
+  recordAllSoundSources: 1
+  replayRoot: {fileID: 0}
   createWAV: 0
   createCSV: 0
-  playbackLastRecordedFile: 1
+  endPlaybackOnDurationReached: 0
   synchronizedPlayback: 1
   lateJoinPlayback: 0
   downloadFilesFromServer: 1
   recorderState: {fileID: 2889173778122889198}
-  localPlayback: 0
-  uploadFilesToServer: 1
-  debugLogs: 0
   pluginSettings:
     recordingMaxBufferSize: 1000
     replayBufferNumber: 3
@@ -352,6 +371,9 @@ MonoBehaviour:
     logLevel: 1
     versionInfo: No information
     recordingDirectory: C:/Users/Anton-Lammert/AppData/LocalLow/DefaultCompany/TemporalCollaborativeImmersiveAnalysis/1
+  localPlayback: 0
+  uploadFilesToServer: 1
+  debugLogs: 0
 --- !u!114 &8555302788377108125
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -463,6 +485,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   inputEnabled: 1
   state: {fileID: 2889173778122889198}
+  verbose: 0
   recordDesktop:
     m_UseReference: 1
     m_Action:
@@ -536,6 +559,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   recordingUICanvas: {fileID: 7799193704482659944}
+  verbose: 0
 --- !u!114 &-6316771031596623151
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1356,19 +1380,19 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7799193704482659944}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -2.311}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 0, y: 0, z: 0}
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 3606147404869579992}
   m_Father: {fileID: 6139645478921318087}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 1117, y: 638.5}
-  m_SizeDelta: {x: 2234, y: 1277}
-  m_Pivot: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0, y: 0}
 --- !u!223 &1082154988674075692
 Canvas:
   m_ObjectHideFlags: 0
@@ -1378,7 +1402,7 @@ Canvas:
   m_GameObject: {fileID: 7799193704482659944}
   m_Enabled: 1
   serializedVersion: 3
-  m_RenderMode: 2
+  m_RenderMode: 0
   m_Camera: {fileID: 0}
   m_PlaneDistance: 0.3
   m_PixelPerfect: 1
@@ -1399,7 +1423,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7799193704482659944}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
   m_Name: 
@@ -1414,7 +1438,7 @@ MonoBehaviour:
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
   m_DynamicPixelsPerUnit: 1
-  m_PresetInfoIsWorld: 1
+  m_PresetInfoIsWorld: 0
 --- !u!114 &1926415089560001414
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using Unity.Netcode;
 using Unity.XR.CoreUtils;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 using VRSYS.Core.Avatar;
 using VRSYS.Core.Logging;
@@ -51,6 +52,11 @@ namespace VRSYS.Recording
 
         #region Serialized Fields & Runtime State
 
+        public UnityEvent onReplayHasStarted = new UnityEvent();
+        public UnityEvent onReplayHasEnded = new UnityEvent();
+        public UnityEvent onRecordingHasStarted = new UnityEvent();
+        public UnityEvent onRecordingHasEnded = new UnityEvent();
+        
         public int transformRecordingStepsPerSecond = 20;
         public int audioRecordingStepsPerSecond = 10;
 
@@ -73,6 +79,7 @@ namespace VRSYS.Recording
 
         public bool createWAV = false;
         public bool createCSV = false;
+        public bool endPlaybackOnDurationReached;
         public bool synchronizedPlayback = false;
         public bool lateJoinPlayback = false;
         public bool downloadFilesFromServer = false;
@@ -579,6 +586,8 @@ namespace VRSYS.Recording
             DebugReplayStartupLog("StartReplay completed. state=" + recorderState.currentState +
                                   ", currentReplayTime=" + recorderState.currentReplayTime +
                                   ", recordingDuration=" + recorderState.recordingDuration);
+            
+            onReplayHasStarted.Invoke();
         }
 
         public void SendEndReplayEvent()
@@ -605,6 +614,7 @@ namespace VRSYS.Recording
             OnReplayEnd();
             localPlayback = false;
             DestroyRecorder();
+            onReplayHasEnded.Invoke();
             _scenePreparator.CleanReplayScene();
         }
 
@@ -624,6 +634,8 @@ namespace VRSYS.Recording
             OnRecordingStart();
             if (debugLogs)
                 ExtendedLogger.LogInfo(GetType().Name, "Starting recording for recorder with id: " + recorderState.recorderID, this);
+            
+            onRecordingHasStarted.Invoke();
         }
 
         public void PrepareRecording()
@@ -690,6 +702,8 @@ namespace VRSYS.Recording
             _networkController.UpdateReplayList();
 
             DestroyRecorder();
+            
+            onRecordingHasEnded.Invoke();
         }
 
         #endregion
@@ -1138,8 +1152,15 @@ namespace VRSYS.Recording
             {
                 AdvanceReplayTime();
 
-                if (recorderState.currentReplayTime < recorderState.recordingDuration)
+                if (recorderState.currentReplayTime < recorderState.recordingDuration - ReplayBoundaryPaddingSeconds)
                     Replay();
+                else if (endPlaybackOnDurationReached)
+                {
+                    if(!NetworkManager.Singleton)
+                        EndReplay();
+                    else 
+                        SendEndReplayEvent();
+                }
             }
         }
 
@@ -1154,7 +1175,7 @@ namespace VRSYS.Recording
             // ponytail: hold just short of the end (same as the old TimeInteractor behaviour) instead of
             // looping/auto-ending. Change the cap here if auto-end/loop is wanted.
             if (recorderState.currentReplayTime + Time.deltaTime <
-                recorderState.recordingDuration - ReplayBoundaryPaddingSeconds)
+                recorderState.recordingDuration)
                 recorderState.currentReplayTime += Time.deltaTime;
         }
 

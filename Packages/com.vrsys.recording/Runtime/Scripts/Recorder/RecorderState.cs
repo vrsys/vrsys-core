@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.Serialization;
 
 namespace VRSYS.Recording
 {
@@ -15,6 +16,13 @@ namespace VRSYS.Recording
     public class ReplayList
     {
         public string[] replayNames = null;
+    }
+
+    public enum FileNameDateSuffix
+    {
+        None,
+        Date,
+        DateTime
     }
     
     [RequireComponent(typeof(RecorderController))]
@@ -38,6 +46,8 @@ namespace VRSYS.Recording
         public string recordingDirectory;
         [Tooltip("Name of the recording file created.")]
         public string recordingFile = "New_Recording";
+        [FormerlySerializedAs("fileNameDateExtension")] [Tooltip("None: FileName, Date: FileName + Date, DateTime: FileName + Date + Timestamp")]
+        public FileNameDateSuffix fileNameDateSuffix = FileNameDateSuffix.Date;
         [Tooltip("List of all servers that can be used to upload and download recording files.")]
         public List<String> serverList;
         [Tooltip("Name of the recording that should be used for playback")]

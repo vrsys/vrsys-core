@@ -9,9 +9,9 @@ using Unity.XR.CoreUtils;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
-using VRSYS.Core.Avatar;
 using VRSYS.Core.Logging;
 using VRSYS.Core.Networking;
+using Random = UnityEngine.Random;
 
 namespace VRSYS.Recording
 {
@@ -719,11 +719,7 @@ namespace VRSYS.Recording
             string date = DateTime.Now.ToString("g", CultureInfo.GetCultureInfo("es-ES")).Replace(" ", "_")
                 .Replace(":", "_").Replace("/", "_");
 
-            string fileName = "placeholder";
-            if (recorderState.recordingFile != "")
-                fileName = recorderState.recordingFile + "_" + date;
-            else
-                fileName = date;
+            string fileName = GenerateFileName();
 
             if (debugLogs)
                 ExtendedLogger.LogInfo(GetType().Name, "Trying to transmit transform file: " + transformFile, this);
@@ -759,6 +755,27 @@ namespace VRSYS.Recording
 
             if (debugLogs)
                 ExtendedLogger.LogInfo(GetType().Name, "Finished transmitting all files.", this);
+        }
+
+        private string GenerateFileName()
+        {
+            string fileName = string.IsNullOrEmpty(recorderState.recordingFile)
+                ? "Recording"
+                : recorderState.recordingFile;
+
+            switch (recorderState.fileNameDateSuffix)
+            {
+                case FileNameDateSuffix.None:
+                    break;
+                case FileNameDateSuffix.Date: 
+                    fileName += "_" + DateTime.Now.ToString("yyyyMMdd");
+                    break;
+                case FileNameDateSuffix.DateTime:
+                    fileName += "_" + DateTime.Now.ToString("yyyyMMddHHmm");
+                    break;
+            }
+
+            return fileName;
         }
 
         public void WAVCreationCoroutine()

@@ -13,6 +13,7 @@ namespace VRSYS.Recording
         private string projectName;
         private int recorderID;
         private string recordingFile;
+        private FileNameDateSuffix fileNameDateSuffix;
         private string fixedPlaybackRecordingName;
         private string selectedServer;
         private int selectedReplayFileIndex = 0; // Add this line to store the selected string index
@@ -32,6 +33,11 @@ namespace VRSYS.Recording
             recorderID = EditorGUILayout.IntField(new GUIContent("Recorder ID", "The ID of a recorder needs to be unique."), state.recorderID);
 
             recordingFile = EditorGUILayout.TextField(new GUIContent("Recording Name: ", "Name of the recording file that will be created when recording."), state.recordingFile);
+
+            fileNameDateSuffix = (FileNameDateSuffix)EditorGUILayout.EnumPopup(
+                new GUIContent("File Name Date Suffix",
+                    "None: Not date information added to file name. Date: Date added to file name. DateTime: Date and Timestamp added to file name."),
+                state.fileNameDateSuffix);
             
             useLocalReplayFiles = EditorGUILayout.Toggle(new GUIContent("Use Local Replay Files", "If enabled, the playback dropdown lists recordings found in the local recording directory and the server is not queried for the replay list. If disabled, it lists recordings retrieved from the server."), state.useLocalReplayFiles);
 
@@ -80,6 +86,9 @@ namespace VRSYS.Recording
                 Undo.RecordObject(target, "Changed Values");
                 PrefabUtility.RecordPrefabInstancePropertyModifications(target);
                 state.recordingFile = recordingFile;
+                Undo.RecordObject(target, "Changed Values");
+                PrefabUtility.RecordPrefabInstancePropertyModifications(target);
+                state.fileNameDateSuffix = fileNameDateSuffix;
                 Undo.RecordObject(target, "Changed Values");
                 state.projectName = projectName;
                 Undo.RecordObject(target, "Changed Values");

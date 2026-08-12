@@ -74,11 +74,11 @@ namespace VRSYS.Meta.Avatars
             OvrPluginInvoke("StartFaceTracking");
             OvrPluginInvoke("StartEyeTracking");
 
-            IOvrAvatarInputTrackingDelegate inputTrackingDelegate = new VRSYSMetaInputTrackingDelegate(_ovrCameraRig);
-            var inputControlDelegate = new VRSYSMetaInputControlDelegate();
-
-            _inputTrackingProvider = new OvrAvatarInputTrackingDelegatedProvider(inputTrackingDelegate);
-            _inputControlProvider = new OvrAvatarInputControlDelegatedProvider(inputControlDelegate);
+            if (BodyTrackingContext is OvrAvatarBodyTrackingContext bodyTracking)
+            {
+                bodyTracking.InputTrackingDelegate = new VRSYSMetaInputTrackingDelegate(_ovrCameraRig);
+                bodyTracking.InputControlDelegate = new VRSYSMetaInputControlDelegate();
+            }
         }
 
         #endregion

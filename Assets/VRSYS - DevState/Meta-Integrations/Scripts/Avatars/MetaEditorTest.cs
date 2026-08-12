@@ -1,5 +1,6 @@
 using Oculus.Avatar2;
 using UnityEngine;
+using VRSYS.Meta.Avatars;
 
 public class MetaEditorTest : MonoBehaviour
 {

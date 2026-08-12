@@ -6,7 +6,7 @@
   "documentationUrl" : "https://vrsys.gitbook.io/vrsys",
   "dependencies": {
     "com.vrsys.core": "1.0.10",
-    "com.meta.xr.sdk.avatars": "35.2.0",
+    "com.meta.xr.sdk.avatars": "29.7.0",
     "com.meta.xr.sdk.core": "76.0.1"
   },
   "samples": [

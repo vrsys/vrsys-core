@@ -154,7 +154,7 @@ namespace VRSYS.Meta.Avatars
             _localAvatar.OnUserAvatarLoadedEvent.AddListener(OnAvatarLoaded);
 
             if (_bodyTracking != null)
-                _localAvatar.SetBodyTracking(_bodyTracking);
+                _localAvatar.SetInputManager(_bodyTracking);
 
             if (_lipSync != null)
                 _localAvatar.SetLipSync(_lipSync);

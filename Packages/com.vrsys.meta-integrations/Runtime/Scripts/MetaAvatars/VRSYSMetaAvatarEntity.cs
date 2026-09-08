@@ -94,6 +94,11 @@ namespace VRSYS.Meta.Avatars
             StartCoroutine(LoadAvatar());
         }
 
+        public void ConfigureActiveView(CAPI.ovrAvatar2EntityViewFlags view)
+        {
+            SetActiveView(view);
+        }
+
         #endregion
 
         #region Private Methods

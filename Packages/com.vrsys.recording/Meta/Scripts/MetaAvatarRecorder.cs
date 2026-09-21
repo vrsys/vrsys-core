@@ -51,7 +51,9 @@ namespace VRSYS.Recording
         private float _previousReplayTime = -1.0f;
         private uint _tickOffset = 0;
         private uint? _lastEmittedTicks = null;
-
+        
+        private uint? _firstEmittedRerecordTick = null;
+        
         private MetaAvatarReplayDataReader _rerecReader;
         private bool _rerecStartedReader;
         private int _rerecSampleIndex;
@@ -148,6 +150,107 @@ namespace VRSYS.Recording
         protected override bool FillGenericData()
         {
             return false;
+        }
+
+        public override int GetRerecordObjectId()
+        {
+            return id;
+        }
+
+        public override void BeginRerecordCapture()
+        {
+            base.BeginRerecordCapture();
+            _rerecSampleIndex = 0;
+
+            _rerecReader = FindAnyObjectByType<MetaAvatarReplayDataReader>();
+            if (_rerecReader == null)
+            {
+                ExtendedLogger.LogError(GetType().Name,
+                    "ReRecord begin: no MetaAvatarReplayDataReader found in scene", this);
+                return;
+            }
+
+            _rerecReader.OnAvatarDataRead.AddListener(RerecordAvatarData);
+            _rerecStartedReader = _rerecReader.StartReadingData();
+            if (!_rerecStartedReader)
+                ExtendedLogger.LogWarning(GetType().Name,
+                    "ReRecord begin: avatar reader could not be started; relying on existing run", this);
+        }
+
+        public override void EndRerecordCapture()
+        {
+            base.EndRerecordCapture();
+
+            if (_rerecReader != null)
+            {
+                _rerecReader.OnAvatarDataRead.RemoveListener(RerecordAvatarData);
+                if (_rerecStartedReader)
+                    _rerecReader.StopReadingData();
+            }
+
+            _firstEmittedRerecordTick = null;
+            _rerecReader = null;
+            _rerecStartedReader = false;
+        }
+
+        private void RerecordAvatarData(MetaAvatarReplayDataReader.AvatarData avatarData)
+        {
+            if (!inRerecordingMode)
+                return;
+            if (avatarData.Data == null || avatarData.Data.Length == 0)
+                return;
+            if (avatarData.Data.Length > _recCharDTO.Length)
+            {
+                Debug.LogWarning("ReRecord: avatar data exceeds char DTO size; skipping");
+                return;
+            }
+
+            int u1, u2;
+            Decombine(avatarData.UserID, out u1, out u2);
+
+            int[] ints = new int[_recIntDTO.Length];
+            float[] floats = new float[_recFloatDTO.Length];
+            byte[] chars = new byte[_recCharDTO.Length];
+
+            ints[0] = u1;
+            ints[1] = u2;
+            ints[2] = _rerecSampleIndex++;
+            ints[3] = avatarData.Data.Length;
+            
+            Array.Copy(avatarData.Data, 0, chars, 0, avatarData.Data.Length);
+
+            // TODO: modify the new avatar data such that the playback between the original and the new data is seamless
+            //       data parts that might need to be modified: original timestamp
+                        
+            uint parsedTicks =
+                (uint)chars[16]
+                | ((uint)chars[17] << 8)
+                | ((uint)chars[18] << 16)
+                | ((uint)chars[19] << 24);
+
+            if (!_firstEmittedRerecordTick.HasValue)
+            {
+                _firstEmittedRerecordTick = parsedTicks;
+            }
+            
+            const uint tickFreqHz = 2_000_000u;
+            _tickOffset = _lastEmittedTicks.Value + tickFreqHz / 10 - _firstEmittedRerecordTick.Value;
+
+            uint fakeTicks = parsedTicks + _tickOffset;
+
+            // Write fakeTicks back into bytes 16..19 (little-endian)
+            chars[16] = (byte)(fakeTicks & 0xFF);
+            chars[17] = (byte)((fakeTicks >> 8) & 0xFF);
+            chars[18] = (byte)((fakeTicks >> 16) & 0xFF);
+            chars[19] = (byte)((fakeTicks >> 24) & 0xFF);
+            
+            EmitRerecordSample(new RerecordSample
+            {
+                time = controller.recorderState.currentReplayTime,
+                ints = ints,
+                floats = floats,
+                chars = chars
+            });
         }
         
         protected override void ProcessReplayData(float replayTime)

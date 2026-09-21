@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using UnityEngine;
 using VRSYS.Core.Logging;
+using VRSYS.Recording;
 
 namespace VRSYS.Recording
 {
@@ -159,13 +160,22 @@ namespace VRSYS.Recording
             if (!FillGenericData())
                 return;
 
+            EmitRerecordSampleFromDTO(currentReplayTime);
+        }
+
+        protected void EmitRerecordSampleFromDTO(float time)
+        {
             int[] ints = new int[_recIntDTO.Length];
             float[] floats = new float[_recFloatDTO.Length];
             byte[] chars = new byte[_recCharDTO.Length];
             Array.Copy(_recIntDTO, ints, _recIntDTO.Length);
             Array.Copy(_recFloatDTO, floats, _recFloatDTO.Length);
             Array.Copy(_recCharDTO, chars, _recCharDTO.Length);
-            var sample = new RerecordSample { time = currentReplayTime, ints = ints, floats = floats, chars = chars };
+            EmitRerecordSample(new RerecordSample { time = time, ints = ints, floats = floats, chars = chars });
+        }
+
+        protected void EmitRerecordSample(RerecordSample sample)
+        {
             lock (_rerecSync)
                 _rerecBuffer.Add(sample);
         }

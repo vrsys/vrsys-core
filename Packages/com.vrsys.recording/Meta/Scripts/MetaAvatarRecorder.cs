@@ -161,15 +161,19 @@ namespace VRSYS.Recording
         {
             base.BeginRerecordCapture();
             _rerecSampleIndex = 0;
-
-            _rerecReader = FindAnyObjectByType<MetaAvatarReplayDataReader>();
-            if (_rerecReader == null)
-            {
-                ExtendedLogger.LogError(GetType().Name,
-                    "ReRecord begin: no MetaAvatarReplayDataReader found in scene", this);
-                return;
+            
+            if (_avatarDataWriter != null) {
+                _rerecReader = ReRecorderMetaAvatarLinker.Instance.PlaybackToRealUser[_avatarDataWriter];
+            } else  {
+                ExtendedLogger.LogError(GetType().Name, "ReRecord begin: could not identify the linked Meta avatar using the ReRecorderMetaAvatarLinker", this);
+                _rerecReader = FindAnyObjectByType<MetaAvatarReplayDataReader>();
+                if (_rerecReader == null)
+                {
+                    ExtendedLogger.LogError(GetType().Name, "ReRecord begin: no MetaAvatarReplayDataReader found in scene", this);
+                    return;
+                }
             }
-
+            
             _rerecReader.OnAvatarDataRead.AddListener(RerecordAvatarData);
             _rerecStartedReader = _rerecReader.StartReadingData();
             if (!_rerecStartedReader)

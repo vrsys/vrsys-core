@@ -59,6 +59,9 @@ namespace VRSYS.Recording
                 // sampling it too early (SamplingRate == 0) latches a zero-length capture buffer for the whole
                 // recording. Bail out (still returning true so recording continues) and retry on the next tick
                 // until the reader is ready.
+                if (_microphoneClipReader == null)
+                    return false;
+                
                 int readerSamplingRate = _microphoneClipReader.SamplingRate;
                 if (readerSamplingRate <= 0)
                     return true;

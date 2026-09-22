@@ -82,6 +82,13 @@ namespace VRSYS.Recording
             return false;
         }
 
+        protected virtual void ClearGenericData()
+        {
+            Array.Clear(_recIntDTO, 0, _recIntDTO.Length);
+            Array.Clear(_recFloatDTO, 0, _recFloatDTO.Length);
+            Array.Clear(_recCharDTO, 0, _recCharDTO.Length);
+        }
+
         protected virtual void ProcessReplayData(float replayTime)
         {
         }
@@ -98,6 +105,9 @@ namespace VRSYS.Recording
                 if (!result && controller.debugLogs)
                     ExtendedLogger.LogInfo(GetType().Name, "Could not record arbitrary data with id: " + id, this);
 
+                if(result)
+                    ClearGenericData();
+                
                 return result;
             }
             else

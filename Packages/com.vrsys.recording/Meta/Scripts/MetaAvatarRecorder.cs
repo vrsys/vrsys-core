@@ -259,6 +259,9 @@ namespace VRSYS.Recording
         
         protected override void ProcessReplayData(float replayTime)
         {
+            if(inRerecordingMode)
+                return;
+            
             int userID1 = _replayIntDTO[0];
             int userID2 = _replayIntDTO[1];
             ulong userID = Combine(userID1, userID2);

@@ -51,6 +51,7 @@ namespace VRSYS.Recording
         private float _previousReplayTime = -1.0f;
         private uint _tickOffset = 0;
         private uint? _lastEmittedTicks = null;
+        private uint? _lastEmittedTrueTicks = null;
         
         private uint? _firstEmittedRerecordTick = null;
         
@@ -58,6 +59,7 @@ namespace VRSYS.Recording
         private bool _rerecStartedReader;
         private int _rerecSampleIndex;
 
+        private const uint tickFreqHz = 2_000_000u;
         private const float SeekDetectionThreshold = 0.5f;
         
         public override void OnRecordingStart()
@@ -235,11 +237,9 @@ namespace VRSYS.Recording
             if (!_firstEmittedRerecordTick.HasValue)
             {
                 _firstEmittedRerecordTick = parsedTicks;
+                _tickOffset = _lastEmittedTrueTicks.Value + tickFreqHz / 10 - parsedTicks;
             }
             
-            const uint tickFreqHz = 2_000_000u;
-            _tickOffset = _lastEmittedTicks.Value + tickFreqHz / 10 - _firstEmittedRerecordTick.Value;
-
             uint fakeTicks = parsedTicks + _tickOffset;
 
             // Write fakeTicks back into bytes 16..19 (little-endian)
@@ -285,7 +285,6 @@ namespace VRSYS.Recording
 
                 if (isSeeked && _lastEmittedTicks.HasValue)
                 {
-                    const uint tickFreqHz = 2_000_000u;
                     _tickOffset = _lastEmittedTicks.Value + tickFreqHz / 10 - parsedTicks;
                     _recordedDataIndex = recordedDataIndex - 1;
                 }
@@ -299,6 +298,7 @@ namespace VRSYS.Recording
                 data[19] = (byte)((fakeTicks >> 24) & 0xFF);
 
                 _lastEmittedTicks = fakeTicks;
+                _lastEmittedTrueTicks = parsedTicks;
                 _previousReplayTime = replayTime;
                 
                 bool success = _avatarDataWriter.ApplyData(data);

@@ -37,7 +37,9 @@
 //-----------------------------------------------------------------
  
 using System;
+using Unity.Netcode;
 using UnityEngine;
+using VRSYS.Core.Avatar;
 using VRSYS.Core.Logging;
 
 namespace VRSYS.Recording
@@ -47,12 +49,14 @@ namespace VRSYS.Recording
         private MetaAvatarReplayDataReader _avatarDataReader;
         private MetaAvatarReplayDataWriter _avatarDataWriter;
         private int _recordedDataIndex = 0;
+
+        private AudioSourceRecorder _correspondingAudioRecorder = null;
+        
         private uint? _firstParsedTicks = null;
         private float _previousReplayTime = -1.0f;
         private uint _tickOffset = 0;
         private uint? _lastEmittedTicks = null;
         private uint? _lastEmittedTrueTicks = null;
-        
         private uint? _firstEmittedRerecordTick = null;
         
         private MetaAvatarReplayDataReader _rerecReader;
@@ -77,6 +81,10 @@ namespace VRSYS.Recording
                 ExtendedLogger.LogError(GetType().Name, "Meta Avatar Data Reader did not start reading data!", this);
             else 
                 ExtendedLogger.LogInfo(GetType().Name, "Meta Avatar Data Reader did start reading data!", this);
+            
+            // try to identify the corresponding audio recorder
+            NetworkObject userNetworkObject = GetComponentInParent<NetworkObject>();
+            _correspondingAudioRecorder = userNetworkObject.GetComponentInChildren<AudioSourceRecorder>();
         }
         
         public override void OnRecordingEnd()
@@ -131,6 +139,9 @@ namespace VRSYS.Recording
             _recIntDTO[1] = userID2;
             _recIntDTO[2] = _recordedDataIndex;
             _recIntDTO[3] = avatarData.Data.Length;
+
+            if (_correspondingAudioRecorder != null)
+                _recIntDTO[4] = _correspondingAudioRecorder.Id;
             
             id = (int) avatarData.UserID;
             
@@ -267,6 +278,12 @@ namespace VRSYS.Recording
             ulong userID = Combine(userID1, userID2);
             int recordedDataIndex = _replayIntDTO[2];
             int dataLength = _replayIntDTO[3];
+            int correspondingAudioRecorderID = _replayIntDTO[4];
+
+            if (correspondingAudioRecorderID > 0 && _correspondingAudioRecorder == null)
+            {
+                _correspondingAudioRecorder = (AudioSourceRecorder) controller.GetAudioRecorder(correspondingAudioRecorderID);
+            }
             
             // if new avatar data was received process it
             if (recordedDataIndex != _recordedDataIndex)

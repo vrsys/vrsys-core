@@ -812,21 +812,35 @@ namespace VRSYS.Recording
                 _genericRecorder.Remove(id);
         }
 
-        public Dictionary<int, Recorder> GetAudioRecorder()
+        public Dictionary<int, Recorder> GetAudioRecorderDict()
         {
             return _audioRecorder;
         }
 
-        public Dictionary<int, Recorder> GetTransformRecorders()
+        public Dictionary<int, Recorder> GetTransformRecorderDict()
         {
             return _transformRecorder;
         }
 
-        public Dictionary<int, Recorder> GetGenericRecorders()
+        public Dictionary<int, Recorder> GetGenericRecorderDict()
         {
             return _genericRecorder;
         }
 
+        public Recorder GetAudioRecorder(int id)
+        {
+            if (_audioRecorder.ContainsKey(id))
+                return _audioRecorder[id];
+            return null;
+        } 
+        
+        public Recorder GetGenericRecorder(int id)
+        {
+            if (_genericRecorder.ContainsKey(id))
+                return _genericRecorder[id];
+            return null;
+        } 
+        
         public Recorder GetTransformRecorder(int id)
         {
             if (_transformRecorder.ContainsKey(id))

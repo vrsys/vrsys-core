@@ -187,6 +187,7 @@ namespace VRSYS.Recording
                 }
             }
             
+            _avatarDataWriter.HideAvatar();
             _rerecReader.OnAvatarDataRead.AddListener(RerecordAvatarData);
             _rerecStartedReader = _rerecReader.StartReadingData();
             if (!_rerecStartedReader)
@@ -205,6 +206,7 @@ namespace VRSYS.Recording
                     _rerecReader.StopReadingData();
             }
 
+            _avatarDataWriter.ShowAvatar();
             _firstEmittedRerecordTick = null;
             _rerecReader = null;
             _rerecStartedReader = false;

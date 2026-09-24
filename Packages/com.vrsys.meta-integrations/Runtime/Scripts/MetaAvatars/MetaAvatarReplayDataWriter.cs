@@ -45,7 +45,7 @@ public class MetaAvatarReplayDataWriter : MonoBehaviour
         }
         
         _replayEntity = Instantiate(_replayEntityPrefab, transform);
-        _replayEntity.Hidden = true;
+        ShowAvatar();
 
         _userId = userId;
         _replayEntity.LoadAvatarByCdn(_userId);
@@ -66,7 +66,7 @@ public class MetaAvatarReplayDataWriter : MonoBehaviour
         if(_verbose)
             ExtendedLogger.LogInfo(GetType().Name, "Starting avatar replay...", this);
 
-        _replayEntity.Hidden = false;
+        ShowAvatar();
         _isReplaying = true;
     }
 
@@ -87,20 +87,30 @@ public class MetaAvatarReplayDataWriter : MonoBehaviour
         if(_verbose)
             ExtendedLogger.LogInfo(GetType().Name, $"Applying replay data. Data size: {data.Length}", this);
         
-        if(_replayEntity.Hidden)
-            _replayEntity.Hidden = false;
-        _replayEntity.SetPlaybackTimeDelay(0.2f);
+        _replayEntity.SetPlaybackTimeDelay(0.1f);
         return _replayEntity.ApplyStreamData(data);
     }
 
     public void StopReplay()
     {
         if(!_initialized || !_isReplaying)
-            return;
-
-        _replayEntity.Hidden = true;
-
+            return;    
+        HideAvatar();
         _isReplaying = false;
+    }
+
+    public void HideAvatar()
+    {
+        if (_replayEntity == null)
+            return;
+        _replayEntity.Hidden = true;
+    }
+
+    public void ShowAvatar()
+    {
+        if (_replayEntity == null)
+            return;
+        _replayEntity.Hidden = false;
     }
 
     public void DestroyReplayEntity()

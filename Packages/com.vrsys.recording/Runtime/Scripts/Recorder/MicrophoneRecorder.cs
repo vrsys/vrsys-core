@@ -109,7 +109,7 @@ namespace VRSYS.Recording
 
                     if (RecordingTime >= 0.0f)
                     {
-                        _goIDDTO[0] = gameObject.GetInstanceID();
+                        _goIDDTO[0] = _userTransform != null ? _userTransform.gameObject.GetInstanceID() : gameObject.GetInstanceID();
 
                         bool result = RecordSoundDataWithGOInfoAtTimestamp(controller.RecorderID, _audioData, _audioSamplesPerRecordStep, RecordingSamplingRate, 0, RecordingChannelNum, _goIDDTO[0], RecordingTime, id);
 

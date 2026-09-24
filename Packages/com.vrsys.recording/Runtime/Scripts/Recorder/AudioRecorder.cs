@@ -31,6 +31,8 @@ namespace VRSYS.Recording
 
         [DllImport("RecordingPlugin")]
         private static extern int GetChannelNum(int recorderId, int soundOrigin);
+        [DllImport("RecordingPlugin")]
+        private static extern float GetSoundStartTime(int recorderId, int soundOrigin);
         
         public struct RerecordChunk
         {
@@ -49,23 +51,28 @@ namespace VRSYS.Recording
         private readonly object _pendingSync = new object();
         private List<float[]> _pendingChunks = new List<float[]>();
         private List<int> _pendingChannels = new List<int>();
-        private float _rerecNextChunkTime = -1.0f;
+        private List<float> _pendingTimes = new List<float>();
+        private double _captureDspStart;
+        private float _captureReplayStart;
         protected int _rerecCorrespondingGoId;
 
         public override void BeginRerecordCapture()
         {
-            base.BeginRerecordCapture();
             lock (_rerecSync)
                 _rerecBuffer.Clear();
             lock (_pendingSync)
             {
                 _pendingChunks.Clear();
                 _pendingChannels.Clear();
+                _pendingTimes.Clear();
             }
-            _rerecNextChunkTime = -1.0f;
+            _captureDspStart = AudioSettings.dspTime;
+            _captureReplayStart = controller.recorderState.currentReplayTime;
 
             GameObject go = correspondingGameObject != null ? correspondingGameObject : gameObject;
             _rerecCorrespondingGoId = controller.recorderState.ResolveOriginalId(go);
+            base.BeginRerecordCapture();
+            SuspendPlayback();
         }
 
         protected void EmitRerecordChunk(RerecordChunk chunk)
@@ -76,7 +83,7 @@ namespace VRSYS.Recording
 
         protected void QueueRerecordRawChunk(float[] data, int channels)
         {
-            if (!inRerecordingMode)
+            if (!inRerecordingMode || data == null || channels <= 0)
                 return;
             float[] copy = new float[data.Length];
             Array.Copy(data, copy, data.Length);
@@ -84,24 +91,25 @@ namespace VRSYS.Recording
             {
                 _pendingChunks.Add(copy);
                 _pendingChannels.Add(channels);
+                _pendingTimes.Add(_captureReplayStart + (float)(AudioSettings.dspTime - _captureDspStart));
             }
         }
 
         protected void DrainPendingChunksToRerecBuffer(float currentReplayTime, int samplingRate)
         {
-            if (_rerecNextChunkTime < 0.0f)
-                _rerecNextChunkTime = currentReplayTime;
-
             List<float[]> chunks;
             List<int> channels;
+            List<float> times;
             lock (_pendingSync)
             {
                 if (_pendingChunks.Count == 0)
                     return;
                 chunks = _pendingChunks;
                 channels = _pendingChannels;
+                times = _pendingTimes;
                 _pendingChunks = new List<float[]>();
                 _pendingChannels = new List<int>();
+                _pendingTimes = new List<float>();
             }
 
             for (int i = 0; i < chunks.Count; ++i)
@@ -110,13 +118,12 @@ namespace VRSYS.Recording
                 int ch = Mathf.Max(1, channels[i]);
                 EmitRerecordChunk(new RerecordChunk
                 {
-                    time = _rerecNextChunkTime,
+                    time = times[i],
                     samples = samples,
                     samplingRate = samplingRate,
                     channelNum = ch,
                     correspondingGameobjectId = _rerecCorrespondingGoId
                 });
-                _rerecNextChunkTime += samples.Length / (float)(samplingRate * ch);
             }
         }
 
@@ -162,12 +169,59 @@ namespace VRSYS.Recording
         private GameObject _audioSourceGo;
         private GameObject _targetGo;
 
+        public struct PlaybackAudioInfo
+        {
+            public int samplingRate, channels, originalGameObjectId;
+        }
+
+        // Query the actual recorded emitter, not this replay object's runtime instance ID.
+        public unsafe bool TryGetPlaybackAudioInfo(float time, out PlaybackAudioInfo info)
+        {
+            info = new PlaybackAudioInfo
+            {
+                samplingRate = GetSamplingRate(controller.RecorderID, id),
+                channels = GetChannelNum(controller.RecorderID, id),
+                originalGameObjectId = int.MinValue
+            };
+            if (info.samplingRate <= 0 || info.channels <= 0) return false;
+            var samples = new float[4800];
+            var emitter = new[] { int.MinValue };
+            fixed (float* p = samples)
+            fixed (int* e = emitter)
+            {
+                GetSoundChunkAndGOInformationForTime(controller.RecorderID, id, time, (IntPtr)p, (IntPtr)e);
+                if (emitter[0] == int.MinValue)
+                {
+                    float first = GetSoundStartTime(controller.RecorderID, id);
+                    if (first >= 0)
+                        GetSoundChunkAndGOInformationForTime(controller.RecorderID, id, first, (IntPtr)p, (IntPtr)e);
+                }
+            }
+            info.originalGameObjectId = emitter[0];
+            return emitter[0] != int.MinValue;
+        }
+
+        public void SuspendPlayback()
+        {
+            if (_source != null) _source.Stop();
+        }
+
+        public void ResumePlayback(float time)
+        {
+            if (_source != null) _source.Stop();
+            if (_clip != null) _clip.SetData(new float[_clip.samples * _clip.channels], 0);
+            _audioWritePos = 0;
+            _nextSoundReplayTime = time;
+            _lastReplayTime = float.NegativeInfinity;
+        }
+
         public override void OnDestroy()
         {
             base.OnDestroy();
 
             if (_source != null)
                 Destroy(_source);
+            if (_clip != null) Destroy(_clip);
         }
 
         protected void InitializeReplayData()
@@ -211,6 +265,9 @@ namespace VRSYS.Recording
 
         unsafe public override bool Replay(float replayTime)
         {
+            if (inRerecordingMode) 
+                return true;
+            
             if (!_initializedReplay)
                 InitializeReplayData();
 

@@ -435,6 +435,7 @@ namespace VRSYS.Recording
             if (recorderState.currentState == State.Replaying ||
                 recorderState.currentState == State.PreparingReplay)
             {
+                GetComponent<IRecordingEditor>()?.CompletePendingEdits();
                 bool result = StopReplay(recorderState.recorderID);
                 OnReplayEnd();
                 if (!result)
@@ -597,6 +598,7 @@ namespace VRSYS.Recording
 
         public void EndReplay()
         {
+            GetComponent<IRecordingEditor>()?.CompletePendingEdits();
             recorderState.currentState = State.Idle;
             if (debugLogs)
                 ExtendedLogger.LogInfo(GetType().Name, "Stopping replay for recorder with id: " + recorderState.recorderID, this);

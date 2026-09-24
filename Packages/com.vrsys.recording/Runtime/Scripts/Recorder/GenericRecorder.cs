@@ -26,6 +26,10 @@ namespace VRSYS.Recording
             IntPtr floatArray, IntPtr charArray);
 
         [DllImport("RecordingPlugin")]
+        private static extern bool RegisterGenericDescription(int recorderId, int id, byte[] description,
+            int descriptionLength);
+
+        [DllImport("RecordingPlugin")]
         private static extern int GetGenericIntArraySize();
 
         [DllImport("RecordingPlugin")]
@@ -39,6 +43,7 @@ namespace VRSYS.Recording
         protected const int byteDTOSize = 2048;
 
         private static bool _dtoSizesChecked = false;
+        private static bool _descriptionEndpointMissingLogged = false;
         
         protected int[] _recIntDTO = new int[intDTOSize];
         protected float[] _recFloatDTO = new float[floatDTOSize];
@@ -74,6 +79,34 @@ namespace VRSYS.Recording
                 ExtendedLogger.LogWarning(nameof(GenericRecorder),
                     $"Generic DTO size mismatch with plugin! C# (int/float/char): {intDTOSize}/{floatDTOSize}/{byteDTOSize}, " +
                     $"plugin: {pluginInt}/{pluginFloat}/{pluginChar}. Recorded/replayed generic data may be corrupted.");
+            }
+        }
+
+        /// <summary>
+        /// Stores a free-text description of what this recorder's generic id records (e.g. how the int, float and
+        /// char slots are used) in the recording's meta information (.recordmeta). Must be called while recording,
+        /// after <see cref="Recorder.id"/> has its final value. Registering again replaces the description.
+        /// </summary>
+        protected bool RegisterDescription(string description)
+        {
+            if (controller == null)
+                return false;
+
+            byte[] bytes = System.Text.Encoding.UTF8.GetBytes(description ?? string.Empty);
+            try
+            {
+                return RegisterGenericDescription(controller.RecorderID, id, bytes, bytes.Length);
+            }
+            catch (EntryPointNotFoundException)
+            {
+                // Plugin binary built before RegisterGenericDescription existed: recording continues without it.
+                if (!_descriptionEndpointMissingLogged)
+                {
+                    _descriptionEndpointMissingLogged = true;
+                    ExtendedLogger.LogWarning(nameof(GenericRecorder),
+                        "RecordingPlugin has no RegisterGenericDescription endpoint; rebuild the plugin to store generic data descriptions.");
+                }
+                return false;
             }
         }
 

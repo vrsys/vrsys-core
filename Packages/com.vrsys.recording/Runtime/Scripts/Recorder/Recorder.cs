@@ -116,7 +116,7 @@ namespace VRSYS.Recording
 
         public void DeregisterRecorder()
         {
-            if(controller != null)
+            if(registered && controller != null)
                 controller.DeregisterRecorder(id, this);
             recorderId = 99999;
             registered = false;

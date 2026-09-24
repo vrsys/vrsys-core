@@ -9,5 +9,7 @@ namespace VRSYS.Recording
     /// </summary>
     public interface IRecordingEditor
     {
+        // Called on the main thread before the native replay is closed, including teardown.
+        void CompletePendingEdits();
     }
 }

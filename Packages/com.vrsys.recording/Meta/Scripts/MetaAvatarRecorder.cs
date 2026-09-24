@@ -1,4 +1,4 @@
-﻿﻿// VRSYS plugin of Virtual Reality and Visualization Group (Bauhaus-University Weimar)
+﻿// VRSYS plugin of Virtual Reality and Visualization Group (Bauhaus-University Weimar)
 //  _    ______  _______  _______
 // | |  / / __ \/ ___/\ \/ / ___/
 // | | / / /_/ /\__ \  \  /\__ \
@@ -50,7 +50,15 @@ namespace VRSYS.Recording
         private MetaAvatarReplayDataWriter _avatarDataWriter;
         private int _recordedDataIndex = 0;
 
-        private AudioSourceRecorder _correspondingAudioRecorder = null;
+        private AudioRecorder _correspondingAudioRecorder = null;
+        private int _recordedSoundId = -1;
+        private bool _hasAudioAssociation;
+
+        public bool TryGetRecordedAudioId(out int soundId)
+        {
+            soundId = _recordedSoundId;
+            return _hasAudioAssociation && soundId >= 0;
+        }
         
         private uint? _firstParsedTicks = null;
         private float _previousReplayTime = -1.0f;
@@ -76,21 +84,26 @@ namespace VRSYS.Recording
             _recordedDataIndex = 0;
             id = (int) _avatarDataReader.GetUserId();
             Debug.Log("Avatar users id: " + _avatarDataReader.GetUserId());
+            // Resolve before StartReadingData, whose coroutine can emit immediately.
+            NetworkObject userNetworkObject = GetComponentInParent<NetworkObject>();
+            _correspondingAudioRecorder = userNetworkObject != null
+                ? userNetworkObject.GetComponentInChildren<AudioRecorder>() : null;
+            _recordedSoundId = _correspondingAudioRecorder != null ? _correspondingAudioRecorder.Id : -1;
+            _hasAudioAssociation = _recordedSoundId >= 0;
+            RegisterDescription(BuildGenericDescription(_avatarDataReader.GetUserId()));
             bool startedReadingData = _avatarDataReader.StartReadingData();
             if(!startedReadingData)
                 ExtendedLogger.LogError(GetType().Name, "Meta Avatar Data Reader did not start reading data!", this);
             else 
                 ExtendedLogger.LogInfo(GetType().Name, "Meta Avatar Data Reader did start reading data!", this);
             
-            // try to identify the corresponding audio recorder
-            NetworkObject userNetworkObject = GetComponentInParent<NetworkObject>();
-            _correspondingAudioRecorder = userNetworkObject.GetComponentInChildren<AudioSourceRecorder>();
         }
         
         public override void OnRecordingEnd()
         {
             ExtendedLogger.LogInfo(GetType().Name, "Meta Avatar Recorder On Recording End Called", this);
             base.OnRecordingEnd();
+            _avatarDataReader.OnAvatarDataRead.RemoveListener(RecordAvatarData);
             _avatarDataReader.StopReadingData();
         }
 
@@ -100,7 +113,9 @@ namespace VRSYS.Recording
             base.OnReplayStart();
             if(_avatarDataWriter == null)
                 _avatarDataWriter = GetComponent<MetaAvatarReplayDataWriter>();
-            _recordedDataIndex = 0;
+            _recordedDataIndex = -1;
+            _hasAudioAssociation = false;
+            _recordedSoundId = -1;
             bool intializeReplayDataWriter = _avatarDataWriter.Initialize();
             id = (int) _avatarDataWriter.GetUserId();
             if (!intializeReplayDataWriter)
@@ -116,6 +131,19 @@ namespace VRSYS.Recording
                 _avatarDataWriter = GetComponent<MetaAvatarReplayDataWriter>();
             _avatarDataWriter.StopReplay();
             _avatarDataWriter.DestroyReplayEntity();
+        }
+
+        // Layout written by RecordAvatarData / RerecordAvatarData and read by ProcessReplayData.
+        private string BuildGenericDescription(ulong userId)
+        {
+            return "MetaAvatarRecorder: Meta Avatar SDK streaming data of user " + userId +
+                   "i[0]/i[1]: Meta user id, low/high 32 bits; " +
+                   "i[2]: sample index; " +
+                   "i[3]: length in bytes of the avatar data in c; " +
+                   "i[4]: id of the corresponding audio recorder (" + _recordedSoundId + ", -1 = none); " +
+                   "i[5]: 1 if i[4] is a valid audio association; " +
+                   "f: unused; " +
+                   "c[0..i[3]): Meta avatar stream packet:";
         }
 
         private static ulong Combine(int a, int b) {
@@ -140,8 +168,8 @@ namespace VRSYS.Recording
             _recIntDTO[2] = _recordedDataIndex;
             _recIntDTO[3] = avatarData.Data.Length;
 
-            if (_correspondingAudioRecorder != null)
-                _recIntDTO[4] = _correspondingAudioRecorder.Id;
+            _recIntDTO[4] = _recordedSoundId;
+            _recIntDTO[5] = 1; // audio-association field present; legacy zero meant "unknown"
             
             id = (int) avatarData.UserID;
             
@@ -172,27 +200,23 @@ namespace VRSYS.Recording
 
         public override void BeginRerecordCapture()
         {
+            if (_avatarDataWriter == null || ReRecorderMetaAvatarLinker.Instance == null ||
+                !ReRecorderMetaAvatarLinker.Instance.PlaybackToRealUser.TryGetValue(_avatarDataWriter, out var reader))
+                throw new InvalidOperationException("No live reader is linked to the playback avatar.");
+            BeginRerecordCapture(reader);
+        }
+
+        public void BeginRerecordCapture(MetaAvatarReplayDataReader reader)
+        {
+            if (reader == null) throw new ArgumentNullException(nameof(reader));
             base.BeginRerecordCapture();
-            _rerecSampleIndex = 0;
-            
-            if (_avatarDataWriter != null) {
-                _rerecReader = ReRecorderMetaAvatarLinker.Instance.PlaybackToRealUser[_avatarDataWriter];
-            } else  {
-                ExtendedLogger.LogError(GetType().Name, "ReRecord begin: could not identify the linked Meta avatar using the ReRecorderMetaAvatarLinker", this);
-                _rerecReader = FindAnyObjectByType<MetaAvatarReplayDataReader>();
-                if (_rerecReader == null)
-                {
-                    ExtendedLogger.LogError(GetType().Name, "ReRecord begin: no MetaAvatarReplayDataReader found in scene", this);
-                    return;
-                }
-            }
-            
+            _rerecSampleIndex = _recordedDataIndex + 1;
+            _rerecReader = reader;
             _avatarDataWriter.HideAvatar();
             _rerecReader.OnAvatarDataRead.AddListener(RerecordAvatarData);
             _rerecStartedReader = _rerecReader.StartReadingData();
             if (!_rerecStartedReader)
-                ExtendedLogger.LogWarning(GetType().Name,
-                    "ReRecord begin: avatar reader could not be started; relying on existing run", this);
+                throw new InvalidOperationException("The linked avatar reader is not ready.");
         }
 
         public override void EndRerecordCapture()
@@ -206,7 +230,8 @@ namespace VRSYS.Recording
                     _rerecReader.StopReadingData();
             }
 
-            _avatarDataWriter.ShowAvatar();
+            if (_avatarDataWriter != null) 
+                _avatarDataWriter.ShowAvatar();
             _firstEmittedRerecordTick = null;
             _rerecReader = null;
             _rerecStartedReader = false;
@@ -216,7 +241,7 @@ namespace VRSYS.Recording
         {
             if (!inRerecordingMode)
                 return;
-            if (avatarData.Data == null || avatarData.Data.Length == 0)
+            if (avatarData.Data == null || avatarData.Data.Length < 20)
                 return;
             if (avatarData.Data.Length > _recCharDTO.Length)
             {
@@ -235,6 +260,8 @@ namespace VRSYS.Recording
             ints[1] = u2;
             ints[2] = _rerecSampleIndex++;
             ints[3] = avatarData.Data.Length;
+            ints[4] = _recordedSoundId;
+            ints[5] = _hasAudioAssociation ? 1 : 0;
             
             Array.Copy(avatarData.Data, 0, chars, 0, avatarData.Data.Length);
 
@@ -250,7 +277,8 @@ namespace VRSYS.Recording
             if (!_firstEmittedRerecordTick.HasValue)
             {
                 _firstEmittedRerecordTick = parsedTicks;
-                _tickOffset = _lastEmittedTrueTicks.Value + tickFreqHz / 10 - parsedTicks;
+                _tickOffset = _lastEmittedTrueTicks.HasValue
+                    ? _lastEmittedTrueTicks.Value + tickFreqHz / 10 - parsedTicks : 0;
             }
             
             uint fakeTicks = parsedTicks + _tickOffset;
@@ -281,11 +309,8 @@ namespace VRSYS.Recording
             int recordedDataIndex = _replayIntDTO[2];
             int dataLength = _replayIntDTO[3];
             int correspondingAudioRecorderID = _replayIntDTO[4];
-
-            if (correspondingAudioRecorderID > 0 && _correspondingAudioRecorder == null)
-            {
-                _correspondingAudioRecorder = (AudioSourceRecorder) controller.GetAudioRecorder(correspondingAudioRecorderID);
-            }
+            _recordedSoundId = correspondingAudioRecorderID;
+            _hasAudioAssociation = _replayIntDTO[5] == 1 && correspondingAudioRecorderID >= 0;
             
             // if new avatar data was received process it
             if (recordedDataIndex != _recordedDataIndex)

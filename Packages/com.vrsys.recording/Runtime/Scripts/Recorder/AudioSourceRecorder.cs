@@ -61,7 +61,7 @@ namespace VRSYS.Recording
         {
             base.Update();
             _goIDDTO[0] = gameObject.GetInstanceID();
-            _isPlaying = source.isPlaying;
+            _isPlaying = source != null && source.isPlaying;
         }
 
         public override void TickRerecordCapture(float currentReplayTime)

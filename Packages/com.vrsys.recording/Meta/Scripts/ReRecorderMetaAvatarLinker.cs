@@ -33,6 +33,9 @@ namespace VRSYS.Recording
 
         public NetworkList<UserLink> _links;
 
+        // Server only: set by OverwriteLinksRpc. While set, BuildLinks keeps the given links instead of auto-linking.
+        private bool _manualLinks;
+
         private Dictionary<MetaAvatarReplayDataWriter, MetaAvatarReplayDataReader> _playbackToRealUser =
             new Dictionary<MetaAvatarReplayDataWriter, MetaAvatarReplayDataReader>();
 
@@ -67,6 +70,12 @@ namespace VRSYS.Recording
         {
             if (!IsServer)
                 return;
+
+            if (_manualLinks)
+            {
+                ApplyLinks(); // keep the manual id pairs, only re-resolve them to the current local avatars
+                return;
+            }
 
             _links.Clear();
 
@@ -228,8 +237,21 @@ namespace VRSYS.Recording
  
         public void ClearLinks()
         {
-            if (IsServer)
-                _links.Clear(); // OnListChanged -> ApplyLinks clears the local dictionary on every peer
+            if (!IsServer)
+                return;
+            _manualLinks = false;
+            _links.Clear(); // OnListChanged -> ApplyLinks clears the local dictionary on every peer
+        }
+
+        // Replaces the current links (e.g. chosen on the tablet). An empty array switches back to automatic linking.
+        [Rpc(SendTo.Server)]
+        public void OverwriteLinksRpc(UserLink[] links)
+        {
+            _manualLinks = links != null && links.Length > 0;
+            _links.Clear();
+            if (links != null)
+                foreach (UserLink link in links)
+                    _links.Add(link);
         }
     }
 }

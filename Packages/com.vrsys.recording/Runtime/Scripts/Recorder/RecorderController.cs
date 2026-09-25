@@ -649,8 +649,8 @@ namespace VRSYS.Recording
                 ExtendedLogger.LogInfo(GetType().Name, "Preparing recording for recorder with id: " + recorderState.recorderID, this);
             recorderState.currentState = State.PrepareRecording;
 
-            AttachTransformRecorder();
             AttachSoundRecorder();
+            AttachTransformRecorder();
             AttachGenericRecorder();
 
             bool result = CreateNewRecordingFile(recorderState.recorderID, recorderState.recordingDirectory,

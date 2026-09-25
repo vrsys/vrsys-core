@@ -88,6 +88,11 @@ namespace VRSYS.Recording
             NetworkObject userNetworkObject = GetComponentInParent<NetworkObject>();
             _correspondingAudioRecorder = userNetworkObject != null
                 ? userNetworkObject.GetComponentInChildren<AudioRecorder>() : null;
+            var t = userNetworkObject.GetComponentsInChildren<AudioRecorder>();
+            foreach (var v in t)
+            {
+                Debug.Log("Found audio recorder: " + v.gameObject.name);
+            }
             _recordedSoundId = _correspondingAudioRecorder != null ? _correspondingAudioRecorder.Id : -1;
             _hasAudioAssociation = _recordedSoundId >= 0;
             RegisterDescription(BuildGenericDescription(_avatarDataReader.GetUserId()));

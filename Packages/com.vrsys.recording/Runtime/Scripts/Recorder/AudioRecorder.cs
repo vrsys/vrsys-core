@@ -179,26 +179,12 @@ namespace VRSYS.Recording
         {
             info = new PlaybackAudioInfo
             {
-                samplingRate = GetSamplingRate(controller.RecorderID, id),
-                channels = GetChannelNum(controller.RecorderID, id),
+                samplingRate = _playbackSamplingRate,
+                channels = _playbackChannelNum,
                 originalGameObjectId = int.MinValue
             };
             if (info.samplingRate <= 0 || info.channels <= 0) return false;
-            var samples = new float[4800];
-            var emitter = new[] { int.MinValue };
-            fixed (float* p = samples)
-            fixed (int* e = emitter)
-            {
-                GetSoundChunkAndGOInformationForTime(controller.RecorderID, id, time, (IntPtr)p, (IntPtr)e);
-                if (emitter[0] == int.MinValue)
-                {
-                    float first = GetSoundStartTime(controller.RecorderID, id);
-                    if (first >= 0)
-                        GetSoundChunkAndGOInformationForTime(controller.RecorderID, id, first, (IntPtr)p, (IntPtr)e);
-                }
-            }
-            info.originalGameObjectId = emitter[0];
-            return emitter[0] != int.MinValue;
+            return true;
         }
 
         public void SuspendPlayback()

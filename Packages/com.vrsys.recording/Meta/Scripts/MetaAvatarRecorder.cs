@@ -86,13 +86,18 @@ namespace VRSYS.Recording
             Debug.Log("Avatar users id: " + _avatarDataReader.GetUserId());
             // Resolve before StartReadingData, whose coroutine can emit immediately.
             NetworkObject userNetworkObject = GetComponentInParent<NetworkObject>();
-            _correspondingAudioRecorder = userNetworkObject != null
-                ? userNetworkObject.GetComponentInChildren<AudioRecorder>() : null;
-            var t = userNetworkObject.GetComponentsInChildren<AudioRecorder>();
-            foreach (var v in t)
+            var micRecorder = _correspondingAudioRecorder = userNetworkObject != null
+                ? userNetworkObject.GetComponentInChildren<MicrophoneRecorder>() : null;
+            if (micRecorder == null)
             {
-                Debug.Log("Found audio recorder: " + v.gameObject.name);
+                _correspondingAudioRecorder = userNetworkObject != null
+                    ? userNetworkObject.GetComponentInChildren<AudioRecorder>() : null;
             }
+            else
+            {
+                _correspondingAudioRecorder = micRecorder;
+            }
+            
             _recordedSoundId = _correspondingAudioRecorder != null ? _correspondingAudioRecorder.Id : -1;
             _hasAudioAssociation = _recordedSoundId >= 0;
             RegisterDescription(BuildGenericDescription(_avatarDataReader.GetUserId()));

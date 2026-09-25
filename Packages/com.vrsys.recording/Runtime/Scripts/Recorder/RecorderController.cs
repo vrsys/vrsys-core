@@ -250,7 +250,10 @@ namespace VRSYS.Recording
 
                         GameObject newGo = new GameObject();
                         newGo.name = "SoundSource:0";
-                        newGo.transform.parent = transform;
+                        if(NetworkUser.LocalInstance != null)
+                            newGo.transform.parent = NetworkUser.LocalInstance.transform;
+                        else
+                            newGo.transform.parent = transform;
                         MicrophoneRecorder microphoneRecorder = newGo.AddComponent<MicrophoneRecorder>();
                         microphoneRecorder.SetId(0);
                         microphoneRecorder.Controller = this;

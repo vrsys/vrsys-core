@@ -60,7 +60,7 @@ namespace VRSYS.Recording
                 // recording. Bail out (still returning true so recording continues) and retry on the next tick
                 // until the reader is ready.
                 if (_microphoneClipReader == null)
-                    return false;
+                    return true;
                 
                 int readerSamplingRate = _microphoneClipReader.SamplingRate;
                 if (readerSamplingRate <= 0)

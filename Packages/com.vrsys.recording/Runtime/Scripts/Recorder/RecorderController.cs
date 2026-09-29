@@ -1325,7 +1325,7 @@ namespace VRSYS.Recording
                 }
             }
 
-            if (recorderState.currentReplayTime > recorderState.recordingDuration)
+            if (recorderState.currentReplayTime > recorderState.recordingDuration && !indefinitePlayback)
                 EndReplay();
         }
 

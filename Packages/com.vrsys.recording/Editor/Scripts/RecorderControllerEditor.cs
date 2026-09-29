@@ -14,6 +14,7 @@ namespace VRSYS.Recording
         private bool synchronisedPlayback;
         private bool lateJoinPlayback;
         private bool endPlaybackOnDurationReached;
+        private bool indefinitePlayback;
         private bool recordMicro;
         private bool recordAudioListener;
         private bool recordAllSoundSources;
@@ -223,6 +224,9 @@ namespace VRSYS.Recording
                 endPlaybackOnDurationReached = EditorGUILayout.Toggle(
                     new GUIContent("End Playback on Duration Reached", "Once playback time has reached the duration, the playback will be stopped."),
                     controller.endPlaybackOnDurationReached);
+                indefinitePlayback = EditorGUILayout.Toggle(
+                    new GUIContent("Indefinite Playback", "Playback time will advance beyond the recording duration. Relevant for Rerecording."),
+                    controller.indefinitePlayback);
                 synchronisedPlayback = EditorGUILayout.Toggle(
                     new GUIContent("Synchronised playback", "Keep playback time synchronised across all networked clients."),
                     controller.synchronizedPlayback);
@@ -247,6 +251,7 @@ namespace VRSYS.Recording
                 replayAudio = controller.replayAudio;
                 synchronisedPlayback = controller.synchronizedPlayback;
                 endPlaybackOnDurationReached = controller.endPlaybackOnDurationReached;
+                indefinitePlayback = controller.indefinitePlayback;
                 lateJoinPlayback = controller.lateJoinPlayback;
                 if (networkController != null)
                     maxSynchronizationTimeMS = networkController.maxSynchronizationTimeMS;
@@ -394,6 +399,9 @@ namespace VRSYS.Recording
                 Undo.RecordObject(target, "Changed Values");
                 PrefabUtility.RecordPrefabInstancePropertyModifications(target);
                 controller.endPlaybackOnDurationReached = endPlaybackOnDurationReached;
+                Undo.RecordObject(target, "Changed Values");
+                PrefabUtility.RecordPrefabInstancePropertyModifications(target);
+                controller.indefinitePlayback = indefinitePlayback;
                 Undo.RecordObject(target, "Changed Values");
                 PrefabUtility.RecordPrefabInstancePropertyModifications(target);
                 controller.lateJoinPlayback = lateJoinPlayback;

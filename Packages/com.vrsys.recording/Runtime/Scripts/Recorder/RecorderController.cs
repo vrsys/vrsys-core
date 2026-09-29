@@ -79,7 +79,8 @@ namespace VRSYS.Recording
 
         public bool createWAV = false;
         public bool createCSV = false;
-        public bool endPlaybackOnDurationReached;
+        public bool indefinitePlayback = false;
+        public bool endPlaybackOnDurationReached = false;
         public bool synchronizedPlayback = false;
         public bool lateJoinPlayback = false;
         public bool downloadFilesFromServer = false;
@@ -1188,7 +1189,7 @@ namespace VRSYS.Recording
             {
                 AdvanceReplayTime();
 
-                if (recorderState.currentReplayTime < recorderState.recordingDuration - ReplayBoundaryPaddingSeconds)
+                if (recorderState.currentReplayTime < recorderState.recordingDuration - ReplayBoundaryPaddingSeconds || indefinitePlayback)
                     Replay();
                 else if (endPlaybackOnDurationReached)
                 {
@@ -1208,11 +1209,13 @@ namespace VRSYS.Recording
             if (recorderState.replayPaused)
                 return;
 
-            // ponytail: hold just short of the end (same as the old TimeInteractor behaviour) instead of
+            // hold just short of the end (same as the old TimeInteractor behaviour) instead of
             // looping/auto-ending. Change the cap here if auto-end/loop is wanted.
-            if (recorderState.currentReplayTime + Time.deltaTime <
-                recorderState.recordingDuration)
-                recorderState.currentReplayTime += Time.deltaTime;
+            float nextPlaybackTime = recorderState.currentReplayTime + Time.deltaTime;
+            bool nextTimeWithinDuration = nextPlaybackTime < recorderState.recordingDuration;
+            
+            if (nextTimeWithinDuration || indefinitePlayback)
+                recorderState.currentReplayTime = nextPlaybackTime;
         }
 
         private void Idle()

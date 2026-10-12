@@ -36,6 +36,9 @@ namespace VRSYS.Meta.Collocation
             Vector3 rotationAngles = userHead.rotation.eulerAngles;
             rotationAngles = new Vector3(0, rotationAngles.y, 0);
             transform.rotation = Quaternion.Euler(rotationAngles);
+
+            _sessionNameInputField.text = "Collocate_" + Random.Range(1, 1000);
+            _sessionName = _sessionNameInputField.text;
             
             _sessionNameInputField.onValueChanged.AddListener(OnSessionNameInputChanged);
             _createButton.onClick.AddListener(OnClickCreateSession);
@@ -58,10 +61,8 @@ namespace VRSYS.Meta.Collocation
         {
             if (_sessionNameInputField.text.IsNullOrEmpty())
             {
-                _warningText.SetActive(true);
-                return;
+                _sessionName = "Collocate_" + Random.Range(1, 1000);
             }
-            
             _stateHandler.CreateSession(_sessionName);
         }
 

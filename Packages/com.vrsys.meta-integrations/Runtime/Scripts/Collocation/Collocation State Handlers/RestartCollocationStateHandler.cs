@@ -91,7 +91,10 @@ namespace VRSYS.Meta.Collocation
 
             _manager.ResetSessionData();
 
-            GameObject.Destroy(_manager.CurrentAnchor.gameObject);
+            if (_manager.CurrentAnchor != null)
+                GameObject.Destroy(_manager.CurrentAnchor.gameObject);
+
+            _manager.SetCurrentAnchor(null);
             
             _manager.SetIsSuccessfullyCollocated(false);
             _manager.SetIsFailed(false);

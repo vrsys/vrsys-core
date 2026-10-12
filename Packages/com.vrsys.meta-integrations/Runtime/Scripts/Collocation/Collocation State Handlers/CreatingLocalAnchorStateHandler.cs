@@ -80,6 +80,8 @@ namespace VRSYS.Meta.Collocation
         
         protected override void EndState()
         {
+            _anchorCreationManager.OnUserDefinedAnchor.RemoveListener(OnUserDefinedAnchor);
+
             CollocationStateMessage stateMessage = new CollocationStateMessage(State, CollocationStateStatus.Success,
                 "Local Anchor created successfully.");
             _manager.BroadcastState(stateMessage);
@@ -104,7 +106,8 @@ namespace VRSYS.Meta.Collocation
                 if (anchor == null)
                 {
                     _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Failed,
-                        "Could not create spatial anchor."));
+                        "Could not create spatial anchor. Restarting local anchor creation."));
+                    _anchorCreationManager.SetupAnchorCreationMode();
                     return;
                 }
                 SaveAnchor(anchor);
@@ -118,16 +121,19 @@ namespace VRSYS.Meta.Collocation
         // copied from CollocationManagerOld.cs TODO: refactor to have only one method :)
         private async Task<OVRSpatialAnchor> CreateAnchor(Vector3 position, Quaternion rotation)
         {
+            GameObject anchorObject = null;
+
             try
             {
                 // create anchor at given position and rotation
-                var go = GameObject.Instantiate(_manager.AnchorPrefab, position, rotation);
-                OVRSpatialAnchor anchor = go.GetComponent<OVRSpatialAnchor>();
-                
-                // wait for anchor UUID to be valid
-                while (!anchor.Created)
+                OVRSpatialAnchor anchor = GameObject.Instantiate(_manager.AnchorPrefab, position, rotation);
+                anchorObject = anchor.gameObject;
+
+                bool created = await anchor.WhenCreatedAsync();
+                if (!created)
                 {
-                    await Task.Yield();
+                    GameObject.Destroy(anchorObject);
+                    return null;
                 }
 
                 ExtendedLogger.LogInfo(GetType().Name, $"Anchor created successfully. UUID: {anchor.Uuid}");
@@ -135,6 +141,9 @@ namespace VRSYS.Meta.Collocation
             }
             catch (Exception e)
             {
+                if (anchorObject != null)
+                    GameObject.Destroy(anchorObject);
+
                 ExtendedLogger.LogError(GetType().Name, $"Error during anchor creation: {e.Message}");
                 return null;
             }

@@ -105,48 +105,74 @@ namespace VRSYS.Meta.Collocation
             _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Running,
                 $"Aligning tracking space with current position {trackingOrigin.position} to current anchor " 
                 + $"with position {alignmentAnchor.transform.position}"));
+
+            // The navigation node (parent of the tracking origin) determines the target world pose for the anchor
+            var targetPos = trackingOrigin.parent != null ? trackingOrigin.parent.position : Vector3.zero;
+            Debug.Log($"[Collocation] Aliging anchor to target {targetPos}");
+            Matrix4x4 targetWorldMatrix = trackingOrigin.parent != null ? trackingOrigin.parent.localToWorldMatrix : Matrix4x4.identity;
+            Matrix4x4 alignmentMatrix = ComputeAlignmentMatrix(alignmentAnchor.transform, trackingOrigin, targetWorldMatrix);
             
-            Matrix4x4 O = Matrix4x4.TRS(
-                trackingOrigin.position,
-                trackingOrigin.rotation,
-                Vector3.one
-            );
-
-            Matrix4x4 A = Matrix4x4.TRS(
-                alignmentAnchor.transform.position,
-                Quaternion.LookRotation(alignmentAnchor.transform.forward),
-                Vector3.one);
-
-            var alignmentMatrix = O * A.inverse;
-
-            trackingOrigin.position = alignmentMatrix.GetColumn(3);
-            trackingOrigin.rotation = alignmentMatrix.rotation;
-            trackingOrigin.localScale = alignmentMatrix.lossyScale;
+            trackingOrigin.localPosition = alignmentMatrix.GetColumn(3);
+            trackingOrigin.localRotation = alignmentMatrix.rotation;
             
-            Debug.Log($"Tracking origin now in: {NetworkUser.LocalInstance.transform.position}, anchor in {alignmentAnchor.transform.position}");
+            Debug.Log($"[Recording] Tracking space origin now in: {NetworkUser.LocalInstance.transform.position}, {alignmentAnchor.transform.position}");
             
             _manager.SetIsSuccessfullyCollocated(true);
             
             _manager.BroadcastState(new CollocationStateMessage(CollocationState.AligningToAnchor, CollocationStateStatus.Success,
                 "Colocated."));
         }
+
+        private Matrix4x4 ComputeAlignmentMatrix(Transform anchor, Transform origin, Matrix4x4 targetWorldMatrix)
+        {
+            // 1. Calculate the anchor's pose relative to the tracking origin (Tracking Space Pose)
+            // This represents where the anchor is according to the SLAM system.
+            Matrix4x4 anchorInTrackingSpace = origin.worldToLocalMatrix * anchor.localToWorldMatrix;
+
+            // 2. Extract the yaw-only component from the tracking space pose
+            Vector3 relativePosition = anchorInTrackingSpace.GetColumn(3);
+            Vector3 forward = anchorInTrackingSpace.MultiplyVector(Vector3.forward);
+            forward.y = 0;
+            if (forward.sqrMagnitude < 0.0001f)
+            {
+                forward = anchorInTrackingSpace.MultiplyVector(Vector3.up);
+                forward.y = 0;
+            }
+            forward.Normalize();
+            Quaternion yawOnlyRotation = Quaternion.LookRotation(forward, Vector3.up);
+
+            // 3. Construct the cleaned tracking space matrix
+            Matrix4x4 aTracking = Matrix4x4.TRS(relativePosition, yawOnlyRotation, Vector3.one);
+
+            // 4. Calculate the new tracking origin pose.
+            // Goal: find T_world such that T_world * A_tracking = Target_world
+            // T_world = Target_world * A_tracking^-1
+            Matrix4x4 targetTrackingOriginWorldMatrix = targetWorldMatrix * aTracking.inverse;
+
+            // 5. Convert the world pose back to the tracking origin's parent's local space
+            if (origin.parent != null)
+            {
+                return origin.parent.worldToLocalMatrix * targetTrackingOriginWorldMatrix;
+            }
+
+            return targetTrackingOriginWorldMatrix;
+        }
         
         private void OnTrackingOriginUpdated(XRInputSubsystem obj)
         {
             _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Started,
                 $"TrackingOriginUpdated Event received. origin {NetworkUser.LocalInstance.transform.position}, anchor {_manager.CurrentAnchor.transform.position}"));
-            _manager.StartCoroutine(ResetAlignmentWithDelay());
+            _manager.StartCoroutine(ResetAlignmentNextFrame());
         }
         
-        IEnumerator ResetAlignmentWithDelay()
+        IEnumerator ResetAlignmentNextFrame()
         {
             Debug.Log("Resetting scene alignment...");
             ResetTrackingOrigin();
             
-            // Wait for two frames, because after resetting the new tracked anchor position is not yet available
+            // Wait for one frame, because after resetting the new tracked anchor position is not yet available
             // TODO: Is it possible to fetch the new anchor position without waiting?
-            for(int i = 0; i < 2; i++)
-                yield return null;  
+            yield return null;  
             
             Debug.Log("Aliging scene to spatial anchor...");
             AlignScene();
@@ -156,8 +182,8 @@ namespace VRSYS.Meta.Collocation
         {
             Debug.Log($"Before reset: origin {NetworkUser.LocalInstance.transform.position}, anchor {_manager.CurrentAnchor.transform.position}");
             var origin = NetworkUser.LocalInstance.transform;
-            origin.position = Vector3.zero;
-            origin.rotation = Quaternion.identity;
+            origin.localPosition = Vector3.zero;
+            origin.localRotation = Quaternion.identity;
             origin.localScale = Vector3.one;
             Debug.Log($"After reset: origin {NetworkUser.LocalInstance.transform.position}, anchor {_manager.CurrentAnchor.transform.position}");
         }

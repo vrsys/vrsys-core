@@ -238,6 +238,10 @@ namespace VRSYS.Meta.Collocation
             
             _restartWithLocalAnchorButton.gameObject.SetActive(_collocationManager.CanRestart);
             _restartWithSessionAnchorButton.gameObject.SetActive(_collocationManager.CanRestart);
+
+            if (stateMessage.State == CollocationState.AligningToAnchor &&
+                stateMessage.Status == CollocationStateStatus.Success)
+                gameObject.SetActive(false);
         }
 
         private void ToggleUI(InputAction.CallbackContext obj) => ToggleUI();

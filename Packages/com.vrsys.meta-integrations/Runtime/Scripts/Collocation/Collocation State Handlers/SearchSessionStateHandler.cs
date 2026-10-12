@@ -54,6 +54,14 @@ public class SearchSessionStateHandler : CollocationStateHandler
 
     public override void StartState()
     {
+        if (_manager.SkipSessionSearch)
+        {
+            _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Success,
+                "Skipped search for existing collocation sessions."));
+            _manager.EnterState<CreateSessionStateHandler>();
+            return;
+        }
+
         StartDiscoveringSessions();
     }
     

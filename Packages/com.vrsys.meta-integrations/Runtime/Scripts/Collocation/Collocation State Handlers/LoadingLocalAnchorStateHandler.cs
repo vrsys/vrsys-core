@@ -98,23 +98,22 @@ namespace VRSYS.Meta.Collocation
             var unboundAnchors = new List<OVRSpatialAnchor.UnboundAnchor>();
             var result = await OVRSpatialAnchor.LoadUnboundAnchorsAsync(new []{anchorUuid}, unboundAnchors);
 
-            if (result.Success)
+            if (result.Success && unboundAnchors.Count > 0 &&
+                await unboundAnchors[0].LocalizeAsync() &&
+                unboundAnchors[0].TryGetPose(out Pose pose))
             {
-                if (await unboundAnchors[0].LocalizeAsync())
-                {
-                    var pose = unboundAnchors[0].Pose;
-                    loadedAnchor = GameObject.Instantiate(_manager.AnchorPrefab, pose.position, pose.rotation);
-                    unboundAnchors[0].BindTo(loadedAnchor);
-                    _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Running, "Spatial anchor loaded sucessfully."));
-                    WaitForConfirmation();
-                }
+                loadedAnchor = GameObject.Instantiate(_manager.AnchorPrefab, pose.position, pose.rotation);
+                unboundAnchors[0].BindTo(loadedAnchor);
+                _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Running,
+                    "Spatial anchor loaded sucessfully."));
+                WaitForConfirmation();
+                return;
             }
-            else
-            {
-                SavedAnchorIDManager.DeleteIDfromSaved(anchorUuid); // Clean up ID that cannot be loaded
-                _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Failed, "Failed to load spatial anchor."));
-                _manager.EnterState<CreatingLocalAnchorStateHandler>();
-            }
+
+            await SavedAnchorIDManager.DeleteIDfromSaved(anchorUuid);
+            _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Failed,
+                "Failed to load or localize spatial anchor. Starting local anchor creation."));
+            _manager.EnterState<CreatingLocalAnchorStateHandler>();
         }
 
         private void WaitForConfirmation()

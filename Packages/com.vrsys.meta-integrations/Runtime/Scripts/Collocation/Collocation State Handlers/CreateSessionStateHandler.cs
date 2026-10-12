@@ -39,6 +39,7 @@
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
+using VRSYS.Core.Networking;
 
 namespace VRSYS.Meta.Collocation
 {
@@ -63,12 +64,22 @@ namespace VRSYS.Meta.Collocation
 
         public override void StartState()
         {
+            if (_manager.SkipSessionSearch)
+            {
+                string sessionName = $"dev_{NetworkUser.LocalInstance.OwnerClientId}";
+                _manager.BroadcastState(new CollocationStateMessage(State, CollocationStateStatus.Started,
+                    $"Creating development collocation session {sessionName}."));
+                CreateSession(sessionName);
+                return;
+            }
+
             InitializeCreateSessionUi();
         }
 
         protected override void EndState()
         {
-            Object.Destroy(_createSessionUi.gameObject);
+            if (_createSessionUi != null)
+                Object.Destroy(_createSessionUi.gameObject);
             
             _manager.EnterState<CreateSessionAnchorStateHandler>();
         }

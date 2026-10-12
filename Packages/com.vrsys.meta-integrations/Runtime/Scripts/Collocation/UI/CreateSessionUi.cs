@@ -25,6 +25,7 @@ namespace VRSYS.Meta.Collocation
 
         public void Initialize(CreateSessionStateHandler stateHandler)
         {
+            Debug.Log("Initializing 'Create Session' UI");
             _stateHandler = stateHandler;
             
             // Set position & rotation

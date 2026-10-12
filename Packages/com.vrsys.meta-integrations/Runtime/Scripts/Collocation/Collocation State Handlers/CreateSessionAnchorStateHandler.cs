@@ -131,15 +131,16 @@ namespace VRSYS.Meta.Collocation
             CollocationStateMessage stateMessage = new CollocationStateMessage(State, status, message);
             _manager.BroadcastState(stateMessage);
 
+            GameObject anchorObject = null;
+
             try
             {
                 OVRSpatialAnchor anchor =
                     Object.Instantiate(_manager.AnchorPrefab, targetWorldPosition, targetWorldRotation);
+                anchorObject = anchor.gameObject;
 
-                while (!anchor.Created)
-                {
-                    await Task.Yield();
-                }
+                if (!await anchor.WhenCreatedAsync())
+                    throw new InvalidOperationException("Spatial anchor creation failed.");
                 
                 _manager.SetCurrentAnchor(anchor);
                 
@@ -147,6 +148,18 @@ namespace VRSYS.Meta.Collocation
             }
             catch(Exception e)
             {
+                if (anchorObject != null)
+                    Object.Destroy(anchorObject);
+
+                if (!_manager.UseDefaultSessionAnchor)
+                {
+                    stateMessage = new CollocationStateMessage(State, CollocationStateStatus.Failed,
+                        $"Could not create custom session anchor. Restarting custom anchor creation. Exception: {e.Message}");
+                    _manager.BroadcastState(stateMessage);
+                    _anchorCreationManager.SetupAnchorCreationMode();
+                    return;
+                }
+
                 if (_retryCount == _manager.MaxRetries)
                 {
                     _manager.SetIsFailed(true);

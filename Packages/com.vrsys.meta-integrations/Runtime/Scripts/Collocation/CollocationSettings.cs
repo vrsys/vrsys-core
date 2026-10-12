@@ -80,6 +80,10 @@ namespace VRSYS.Meta.Collocation
             }
         }
 
+        [SerializeField, Tooltip("If true, skips discovery and immediately creates a development session.")]
+        private bool _skipSessionSearch = false;
+        public bool SkipSessionSearch => _skipSessionSearch;
+
         [SerializeField, Tooltip("Time in seconds defining how long system waits before retrying failed action.")]
         private float _retryTime = 1f;
         public float RetryTime

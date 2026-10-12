@@ -148,7 +148,7 @@ namespace VRSYS.Meta.Collocation
             _isAnchorCreationActive = true;
             _anchorCreationAction.action.Enable();
             _anchorPreview = Instantiate(_anchorPrefab);
-            _anchorPrefab.SetActive(false);
+            _anchorPreview.SetActive(false);
             
             _confirmationUI = Instantiate(_confirmationUIPrefab);
             _confirmationUI.Initialize(AnchorConfirmed, RedoAnchor);
@@ -201,15 +201,21 @@ namespace VRSYS.Meta.Collocation
         /// </summary>
         private void AnchorConfirmed()
         {
+            Vector3 anchorPosition = _anchorPreview.transform.position;
+            Quaternion anchorRotation = _anchorPreview.transform.rotation;
+
             _rayVisual.enabled = false;
             _anchorCreationAction.action.Disable();
             
             // Teardown
+            _anchorPreview.SetActive(false);
             Destroy(_anchorPreview);
             Destroy(_confirmationUI.gameObject);
             Destroy(_floorPlane);
             
-            OnUserDefinedAnchor.Invoke(_anchorPreview.transform.position, _anchorPreview.transform.rotation);
+            Debug.Log("Anchor confirmed");
+            
+            OnUserDefinedAnchor.Invoke(anchorPosition, anchorRotation);
         }
 
         /// <summary>

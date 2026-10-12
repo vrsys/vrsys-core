@@ -70,6 +70,8 @@ namespace VRSYS.Meta.Collocation
         public List<UserRole> CollocationRoles => _collocationRoles;
         
         public float DiscoverTime => _collocationSettings.DiscoverTime;
+
+        public bool SkipSessionSearch => _collocationSettings.SkipSessionSearch;
         
         public float RetryTime => _collocationSettings.RetryTime;
         
@@ -126,12 +128,17 @@ namespace VRSYS.Meta.Collocation
         public SavedAnchorIDManager SavedAnchorIDManager { get; private set; }
 
         private bool _isSuccessfullyCollocated = false;
+        public bool IsSuccessfullyCollocated => _isSuccessfullyCollocated;
 
         private bool _isFailed = false;
+        public bool IsFailed => _isFailed;
 
         public bool CanRestart => _isSuccessfullyCollocated || _isFailed;
         
         private CollocationStateHandler _currentState;
+        public bool HasStarted => _currentState != null;
+        public bool HasLastStateMessage { get; private set; }
+        public CollocationStateMessage LastStateMessage { get; private set; }
         
         #endregion
 
@@ -157,8 +164,22 @@ namespace VRSYS.Meta.Collocation
 
         public void BroadcastState(CollocationStateMessage message)
         {
+            LastStateMessage = message;
+            HasLastStateMessage = true;
             OnStateChanged.Invoke(message);
             LogStateMessage(message);
+        }
+
+        public bool TryGetCurrentState(out CollocationState state)
+        {
+            if (_currentState == null)
+            {
+                state = default;
+                return false;
+            }
+
+            state = _currentState.State;
+            return true;
         }
 
         public void EnterState<T>() where T : CollocationStateHandler
@@ -224,18 +245,6 @@ namespace VRSYS.Meta.Collocation
                     ? EnterState<LoadingLocalAnchorStateHandler>
                     : EnterState<CreatingLocalAnchorStateHandler>);
             _currentState.StartState();
-        }
-
-        public void TriggerRealign()
-        {
-            if (_currentState.State != CollocationState.AligningToAnchor)
-            {
-                ExtendedLogger.LogWarning(GetType().Name, $"Collocation still running. Cannot realign yet. Collocation state: {_currentState.State}", this);
-                return;
-            }
-
-            var state = _currentState as AligningToAnchorStateHandler;
-            state.AlignScene();
         }
 
         public void RestartCollocationWithSessionAnchor()

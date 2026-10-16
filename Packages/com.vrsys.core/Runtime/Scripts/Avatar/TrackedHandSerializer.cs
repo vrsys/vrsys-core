@@ -41,9 +41,11 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.XR.Hands;
 using UnityEngine.XR.Interaction.Toolkit.Inputs;
 using VRSYS.Core.Logging;
+using VRSYS.Core.Utility;
 
 
 namespace VRSYS.Core.Avatar
@@ -87,7 +89,7 @@ namespace VRSYS.Core.Avatar
         {
             public FingerJoints[] fingerJoints;
         }
-
+        
         #endregion
 
         #region Properties
@@ -95,7 +97,10 @@ namespace VRSYS.Core.Avatar
         [Header("Fidelity Level Settings")]
         [SerializeField] private FidelityLevel _fidelityLevel;
 
-        [Header("Hand Components")] [SerializeField, Tooltip("Specifies the root node of the actual tracked hand.")]
+        [Header("Hand Components")] [SerializeField]
+        private HandType _handedness;
+        
+        [SerializeField, Tooltip("Specifies the root node of the actual tracked hand.")]
         private GameObject _hand;
         
         [SerializeField, Tooltip("Specifies where the root bone of the hand is.")] 
@@ -105,6 +110,12 @@ namespace VRSYS.Core.Avatar
         private SkinnedMeshRenderer _handRenderer;
 
         private XRInputModalityManager _modalityManager;
+        // Whether the handtracking is active in the XRInputModalityManager
+        private bool _handtrackingIsActive = false;
+        
+        private XRHandSubsystem _HandSubsystem;
+        // Whether the handtracking InputModality is active AND we are receiving tracking input from the hand
+        private bool _handIsTracked = false;
 
         [Header("Update Configurations")]
         [SerializeField, Tooltip("Defines how fast the finger rotate.")]
@@ -135,14 +146,14 @@ namespace VRSYS.Core.Avatar
         [Header("Others")]
         [SerializeField, Tooltip("Components that get destroyed on remote users.")]
         private List<Behaviour> _localBehaviours;
-
+        
         #endregion
 
         #region Networked Properties
 
         private NetworkVariable<bool> _initialized = new(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
 
-        private NetworkVariable<bool> _isActive = new(true, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+        private NetworkVariable<bool> _trackedHandActive = new(true, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
 
         private NetworkVariable<Vector3> _rootPosition = new(Vector3.zero, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
 
@@ -166,6 +177,8 @@ namespace VRSYS.Core.Avatar
         {
             if (IsOwner)
             {
+                CheckAndAssignHandSubsystem();
+                
                 _modalityManager = GetComponentInParent<XRInputModalityManager>();
 
                 if (_modalityManager != null)
@@ -177,7 +190,7 @@ namespace VRSYS.Core.Avatar
 
                 InitializeNetworkProperties();
 
-                StartCoroutine(ActiveStateSanityCheck());
+                // StartCoroutine(ActiveStateSanityCheck());
             }
             else
             {
@@ -187,10 +200,16 @@ namespace VRSYS.Core.Avatar
 
         private void Update()
         {
-            if(!_initialized.Value || !_isActive.Value)
+            // Don't sync if hand is not initialised, handtracking mode isn't active, or hand currently not tracked.
+            if(!_initialized.Value || !_trackedHandActive.Value)
                 return;
             
             SyncRootNode();
+            
+            if (IsOwner)
+            {
+                CheckAndAssignHandSubsystem();
+            }
             
             switch (_fidelityLevel)
             {
@@ -325,6 +344,73 @@ namespace VRSYS.Core.Avatar
             }
         }
 
+        private void CheckAndAssignHandSubsystem()
+        {
+            // Retry finding the running hand subsystem if necessary.
+            if (_HandSubsystem == null || !_HandSubsystem.running)
+            {
+                var handSubsystems = new List<XRHandSubsystem>();
+                SubsystemManager.GetSubsystems(handSubsystems);
+                for (var i = 0; i < handSubsystems.Count; ++i)
+                {
+                    var handSubsystem = handSubsystems[i];
+                    if (handSubsystem.running)
+                    {
+                        _HandSubsystem = handSubsystem;
+                        break;
+                    }
+                }
+            }
+        }
+
+        private bool GetHandIsTracked()
+        {
+            return _handedness == HandType.Left
+                ? XRInputTrackingAggregator.GetLeftTrackedHandStatus().isTracked
+                : XRInputTrackingAggregator.GetRightTrackedHandStatus().isTracked;
+        }
+        
+        void SubscribeHandSubsystem()
+        {
+            if (_HandSubsystem != null)
+            {
+                _HandSubsystem.trackingAcquired += OnHandTrackingAcquired;
+                _HandSubsystem.trackingLost += OnHandTrackingLost;
+            }
+        }
+
+        void UnsubscribeHandSubsystem()
+        {
+            if (_HandSubsystem != null)
+            {
+                _HandSubsystem.trackingAcquired -= OnHandTrackingAcquired;
+                _HandSubsystem.trackingLost -= OnHandTrackingLost;
+            }
+        }
+        
+        void OnHandTrackingAcquired(XRHand hand)
+        {
+            if (SameHandednessAsXRHand(hand))
+            {
+                _handIsTracked = true;
+                UpdateIsActive();
+            }
+        }
+        
+        void OnHandTrackingLost(XRHand hand)
+        {
+            if (SameHandednessAsXRHand(hand))
+            {
+                _handIsTracked = false;
+                UpdateIsActive();
+            }
+        }
+        
+        private bool SameHandednessAsXRHand(XRHand hand) =>
+            (hand.handedness == Handedness.Left && _handedness == HandType.Left) ||
+            (hand.handedness == Handedness.Right && _handedness == HandType.Right);
+        
+
         private void WriteRootNodeValues()
         {
             _rootPosition.Value = _handRoot.position;
@@ -458,28 +544,56 @@ namespace VRSYS.Core.Avatar
                 _localBehaviours.RemoveAt(0);
             }
 
-            // setup hand active handling
-            _isActive.OnValueChanged += OnIsActiveChanged;
+            // Setup hand active handling
+            _trackedHandActive.OnValueChanged += OnIsActiveChanged;
+            
             UpdateHandVisualsActive();
 
             // Set renderer active by default
             _handRenderer.enabled = true;
         }
 
-        private void UpdateHandVisualsActive() => _hand.SetActive(_isActive.Value);
-
+        private void UpdateHandVisualsActive() => _hand.SetActive(_trackedHandActive.Value);
+        
         #endregion
 
         #region Event Callbacks
 
-        private void OnTrackedHandModeStarted() => _isActive.Value = true;
+        private void OnTrackedHandModeStarted()
+        {
+            _handIsTracked = GetHandIsTracked();
+            _handtrackingIsActive = true;
+            SubscribeHandSubsystem();
+            UpdateIsActive();
+        }
 
-        private void OnTrackedHandModeEnded() => _isActive.Value = false;
+        private void OnTrackedHandModeEnded()
+        {
+            _handIsTracked = false;
+            _handtrackingIsActive = false;
+            UnsubscribeHandSubsystem();
+            UpdateIsActive();
+        }
 
-        private void OnControllerModeStarted() => _isActive.Value = false;
+        private void UpdateIsActive()
+        {
+            _trackedHandActive.Value = _handtrackingIsActive && _handIsTracked;
+        }
+        
+        private void OnControllerModeStarted()
+        {
+            // This sometimes seems to be called while handtracking is still active??
+            // Threrefore keep tracking hand unless OnTrackedHandModeEnded
+            // _handtrackingIsActive = false;
+            // _handIsTracked = false;
+            // UnsubscribeHandSubsystem();
+        }
 
-        private void OnIsActiveChanged(bool previousValue, bool newValue) => UpdateHandVisualsActive();
-
+        private void OnIsActiveChanged(bool previousValue, bool newValue)
+        {
+            UpdateHandVisualsActive();   
+        }
+        
         #endregion
 
         #region Coroutines
@@ -488,8 +602,8 @@ namespace VRSYS.Core.Avatar
         {
             while (true)
             {
-                if (_isActive.Value != _hand.activeSelf)
-                    _isActive.Value = _hand.activeSelf;
+                if (_trackedHandActive.Value != _hand.activeSelf)
+                    _trackedHandActive.Value = _hand.activeSelf;
 
                 yield return new WaitForSeconds(1f);
             }

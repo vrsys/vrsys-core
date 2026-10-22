@@ -15,6 +15,15 @@ using VRSYS.Core.Logging;
 namespace VRSYS.Recording
 {
 
+    /// <remarks>
+    /// RPC conventions: commands that change shared replay/recording state (download,
+    /// recording/replay start/end, play/pause) are sent to the server, which relays them to every peer.
+    /// The relay gives all peers the same order when several users issue commands at once; a single
+    /// SendTo.Everyone RPC would run the sender's own call first and let peers diverge.
+    /// Per-user reports and idempotent commands use a single SendTo.Everyone RPC.
+    /// Download status is reported to the server only; the server starts the synchronized replay once every
+    /// participating client has its files.
+    /// </remarks>
     [RequireComponent(typeof(RecorderState))]
     [RequireComponent(typeof(RecorderController))]
     public class NetworkController : NetworkBehaviour
@@ -23,10 +32,8 @@ namespace VRSYS.Recording
         private static extern bool RegisterRecordingStartGlobalTimeOffset(int recorderId, float globalTimeOffset);
 
         [HideInInspector] public float maxSynchronizationTimeMS;
-        [HideInInspector] public List<String> _userNames = new List<string>();
         [HideInInspector] public Dictionary<string, float> _userReplayTimes = new Dictionary<string, float>();
         [HideInInspector] public Dictionary<string, float> _userReplayTimesUpdateTime = new Dictionary<string, float>();
-        [HideInInspector] public Dictionary<string, bool> _userDownloadStatus = new Dictionary<string, bool>();
         [HideInInspector] public float currentLatency;
 
         /// <summary>
@@ -47,8 +54,13 @@ namespace VRSYS.Recording
         private bool _soundsDownloadFailed = false;
         private bool _metaInformationDownloadFailed = false;
         private bool _genericDownloadFailed = false;
-        private bool _allUsersFinishedLoading = false;
-        private bool _startReplayEventSent = false;
+        // Client side: the download status last reported to the server during the current replay preparation.
+        private bool _downloadStatusReported = false;
+        private bool _lastReportedDownloading = false;
+
+        // Server side: clients taking part in the current replay preparation, and whether each is still downloading.
+        private readonly Dictionary<ulong, bool> _clientDownloading = new Dictionary<ulong, bool>();
+        private bool _awaitingDownloads = false;
         private Coroutine _startRecordingCoroutine;
         private Coroutine _startReplayCoroutine;
         private Coroutine _endRecordingCoroutine;
@@ -73,6 +85,18 @@ namespace VRSYS.Recording
             // servers. All synchronized-time reads below use the cached offset.
             StartCoroutine(KeepClockSynchronized());
         }
+
+        public override void OnNetworkSpawn()
+        {
+            if (IsServer)
+                NetworkManager.OnClientDisconnectCallback += OnClientDisconnected;
+        }
+
+        public override void OnNetworkDespawn()
+        {
+            if (NetworkManager != null)
+                NetworkManager.OnClientDisconnectCallback -= OnClientDisconnected;
+        }
         
         #region RecordingFileDownload
         private string LocalDownloadStatusSummary()
@@ -89,22 +113,21 @@ namespace VRSYS.Recording
         
         private string UserDownloadStatusSummary()
         {
-            if (_userDownloadStatus.Count == 0)
+            if (_clientDownloading.Count == 0)
                 return "<none>";
 
             string result = "";
-            foreach (var entry in _userDownloadStatus)
+            foreach (var entry in _clientDownloading)
             {
                 if (result.Length > 0)
                     result += ", ";
 
-                result += entry.Key + "=" + entry.Value;
+                result += entry.Key + (entry.Value ? "=downloading" : "=finished");
             }
 
             return result;
         }
         
-                
         public void StartDownloadOnAllClientsEvent()
         {
             
@@ -127,17 +150,30 @@ namespace VRSYS.Recording
             StartDownloadsServerRpc(_state.selectedReplayFile, _state.recorderID);
         }
 
-        [ServerRpc(RequireOwnership = false)]
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
         private void StartDownloadsServerRpc(string replayFile, int recorderId)
         {
             DebugDistributedReplayLog("StartDownloadsServerRpc: replayFile=" + replayFile +
                                       ", recorderId=" + recorderId +
                                       ", isServer=" + IsServer +
                                       ", isClient=" + IsClient);
+
+            if (_awaitingDownloads)
+            {
+                DebugDistributedReplayLog("StartDownloadsServerRpc ignored: a replay preparation is already waiting for downloads.");
+                return;
+            }
+
+            _clientDownloading.Clear();
+            foreach (ulong clientId in NetworkManager.ConnectedClientsIds)
+                _clientDownloading[clientId] = true;
+            _awaitingDownloads = _clientDownloading.Count > 0;
+            DebugDistributedReplayStatusIfChanged("StartDownloadsServerRpc");
+
             StartDownloadsClientRpc(replayFile, recorderId);
         }
 
-        [ClientRpc]
+        [Rpc(SendTo.ClientsAndHost, InvokePermission = RpcInvokePermission.Server)]
         private void StartDownloadsClientRpc(string replayFile, int recorderId)
         {
             DebugDistributedReplayLog("StartDownloadsClientRpc received: replayFile=" + replayFile +
@@ -165,8 +201,7 @@ namespace VRSYS.Recording
                 _metaInformationDownloaded = false;
                 _genericDownloaded = false;
                 _replayStarted = false;
-                _allUsersFinishedLoading = false;
-                _startReplayEventSent = false;
+                _downloadStatusReported = false;
 
                 if (_state.recordingDirectory == "" || true)
                 {
@@ -174,14 +209,7 @@ namespace VRSYS.Recording
                 }
 
                 StartDownloadCoroutines();
-                _userDownloadStatus.Clear();
-
                 _state.currentState = State.PreparingReplay;
-                
-                foreach (var player in _userNames)
-                {
-                    _userDownloadStatus.Add(player, false);
-                }
 
                 DebugDistributedReplayStatusIfChanged("StartDownloadsClientRpc after state change");
             }
@@ -189,6 +217,8 @@ namespace VRSYS.Recording
             {
                 DebugDistributedReplayLog("StartDownloadsClientRpc ignored: state is " + _state.currentState +
                                           " instead of Idle.");
+                // Tell the server not to wait for this client.
+                ReportDownloadStatusRpc(_state.recorderID, false, false);
             }
         }
         
@@ -210,8 +240,7 @@ namespace VRSYS.Recording
                 _metaInformationDownloaded = false;
                 _genericDownloaded = false;
                 _replayStarted = false;
-                _allUsersFinishedLoading = false;
-                _startReplayEventSent = false;
+                _downloadStatusReported = false;
 
                 if (_state.recordingDirectory == "")
                 {
@@ -223,134 +252,100 @@ namespace VRSYS.Recording
             }
         }
         
+        /// <summary>
+        /// Called every FixedUpdate while a replay is being prepared. Keeps failed downloads retrying
+        /// (IsDownloading) and reports the local download status to the server whenever it changes.
+        /// </summary>
         public void UpdateDownloadStatusEvent()
         {
-            
             bool downloadState = IsDownloading();
-            DebugDistributedReplayStatusIfChanged("UpdateDownloadStatusEvent before send");
-            object[] recordingData = new object[] { downloadState, _state.recorderID };
-            string userName = "Local User";
-            if(NetworkUser.LocalInstance != null)
-                userName = NetworkUser.LocalInstance.name;
+            DebugDistributedReplayStatusIfChanged("UpdateDownloadStatusEvent");
 
-            if (_state.currentState == State.PreparingReplay)
+            if (_state.currentState != State.PreparingReplay)
+                return;
+
+            if (_controller.localPlayback)
             {
-                if (_controller.localPlayback)
+                if (!downloadState)
                 {
-                    if (!downloadState)
-                    {
-                        if (_controller != null && _controller.debugLogs)
-                            ExtendedLogger.LogInfo(GetType().Name, "Download of files finished. Starting local playback.", this);
-                        _controller.StartReplay();
-                    }
+                    if (_controller != null && _controller.debugLogs)
+                        ExtendedLogger.LogInfo(GetType().Name, "Download of files finished. Starting local playback.", this);
+                    _controller.StartReplay();
                 }
-                else
-                {
-                    DebugDistributedReplayLog("UpdateDownloadStatusEvent: sending status. user=" + userName +
-                                              ", downloadState=" + downloadState +
-                                              ", recorderId=" + _state.recorderID);
-                    UpdateDownloadStatusServerRpc(downloadState, _state.recorderID, userName);
-                }
-            }
-        }
-
-        [ServerRpc(RequireOwnership = false)]
-        private void UpdateDownloadStatusServerRpc(bool downloadStatus, int recorderId, string userName)
-        {
-            DebugDistributedReplayLog("UpdateDownloadStatusServerRpc: user=" + userName +
-                                      ", downloadStatus=" + downloadStatus +
-                                      ", recorderId=" + recorderId);
-            UpdateDownloadStatusClientRpc(downloadStatus, recorderId, userName);
-        }
-        
-
-        [ClientRpc]
-        private void UpdateDownloadStatusClientRpc(bool downloadStatus, int recorderId, string userName)
-        {
-            if(recorderId != _state.recorderID)
-            {
-                DebugDistributedReplayLog("UpdateDownloadStatusClientRpc ignored: incomingRecorderId=" + recorderId +
-                                          ", localRecorderId=" + _state.recorderID +
-                                          ", user=" + userName);
                 return;
             }
 
-            DebugDistributedReplayLog("UpdateDownloadStatusClientRpc: user=" + userName +
-                                      ", downloadStatus=" + downloadStatus +
-                                      ", allUsersFinishedLoadingBefore=" + _allUsersFinishedLoading);
-            
-            if (!_allUsersFinishedLoading)
+            if (_downloadStatusReported && _lastReportedDownloading == downloadState)
+                return;
+
+            _downloadStatusReported = true;
+            _lastReportedDownloading = downloadState;
+            DebugDistributedReplayLog("UpdateDownloadStatusEvent: reporting downloadState=" + downloadState +
+                                      ", recorderId=" + _state.recorderID);
+            ReportDownloadStatusRpc(_state.recorderID, true, downloadState);
+        }
+
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+        private void ReportDownloadStatusRpc(int recorderId, bool participating, bool downloading, RpcParams rpcParams = default)
+        {
+            ulong clientId = rpcParams.Receive.SenderClientId;
+            if (recorderId != _state.recorderID || !_awaitingDownloads || !_clientDownloading.ContainsKey(clientId))
             {
-                //Debug.Log("Player: " + sender + ", Download state: " + downloadStatus);
-
-                if (!_userNames.Contains(userName))
-                {
-                    _userNames.Add(userName);
-                }
-                foreach (var player in _userNames)
-                {
-                    if (player == NetworkUser.LocalInstance.name)
-                    {
-                        if (_userDownloadStatus.ContainsKey(player))
-                        {
-                            _userDownloadStatus[player] = downloadStatus;
-                        }
-                        else
-                        {
-                            _userDownloadStatus.Add(player, downloadStatus);
-                        }
-                    }
-                }
-
-                // TODO: Fix this!
-                /*
-                foreach (var player in _userDownloadStatus.Keys.ToList())
-                {
-                    if (!PhotonNetwork.CurrentRoom.Players.ContainsKey(player))
-                    {
-                        _userDownloadStatus.Remove(player);
-                    }
-                }*/
-                
-                _allUsersFinishedLoading = true;
-                foreach (var player in _userNames)
-                {
-                    if (!_userDownloadStatus.ContainsKey(player))
-                    {
-                        //Debug.Log("User: " + player.ActorNumber + " not finished downloading.");
-                        _userDownloadStatus[player] = false;
-                        _allUsersFinishedLoading = false;
-                    }
-                    else if (_userDownloadStatus[player])
-                    {
-                        //Debug.Log("User: " + player.ActorNumber + " not finished downloading.");
-                        _allUsersFinishedLoading = false;
-                    }
-                }
-                
-                _allUsersFinishedLoading = _allUsersFinishedLoading && !IsDownloading();
-                DebugDistributedReplayStatusIfChanged("UpdateDownloadStatusClientRpc after aggregation");
-
-                //if (_allUsersFinishedLoading)
-                //    Debug.Log("All user finished downloading the recording file.");
-
-                //if (!_replayStarted)
-                //    Debug.Log("Replay has not started yet.");
-
-                //if (!IsDownloading())
-                //    Debug.Log("Not downloading anymore.");
-                //else 
-                //    Debug.Log("Still downloading.");
+                DebugDistributedReplayLog("ReportDownloadStatusRpc ignored: client=" + clientId +
+                                          ", incomingRecorderId=" + recorderId +
+                                          ", localRecorderId=" + _state.recorderID +
+                                          ", awaitingDownloads=" + _awaitingDownloads);
+                return;
             }
 
-            if (_allUsersFinishedLoading && !_replayStarted && !_startReplayEventSent)
+            if (participating)
+                _clientDownloading[clientId] = downloading;
+            else
+                _clientDownloading.Remove(clientId);
+
+            DebugDistributedReplayLog("ReportDownloadStatusRpc: client=" + clientId +
+                                      ", participating=" + participating +
+                                      ", downloading=" + downloading);
+            TryStartReplayWhenAllDownloaded();
+        }
+
+        private void OnClientDisconnected(ulong clientId)
+        {
+            if (!_clientDownloading.Remove(clientId))
+                return;
+
+            DebugDistributedReplayLog("Client " + clientId + " disconnected during replay preparation.");
+            TryStartReplayWhenAllDownloaded();
+        }
+
+        // Server only: starts the synchronized replay once every participating client has its files.
+        private void TryStartReplayWhenAllDownloaded()
+        {
+            if (!_awaitingDownloads)
+                return;
+
+            if (_clientDownloading.Count == 0)
             {
-                DebugDistributedReplayLog("UpdateDownloadStatusClientRpc: all users finished, starting synchronized replay event.");
-                StartReplayOnAllClientsEvent();
+                _awaitingDownloads = false;
+                DebugDistributedReplayLog("Replay preparation cancelled: no participating clients left.");
+                return;
             }
+
+            foreach (bool downloading in _clientDownloading.Values)
+            {
+                if (downloading)
+                {
+                    DebugDistributedReplayStatusIfChanged("TryStartReplayWhenAllDownloaded waiting");
+                    return;
+                }
+            }
+
+            _awaitingDownloads = false;
+            DebugDistributedReplayLog("All clients finished downloading, starting synchronized replay.");
+            StartReplayOnAllClients();
         }
         
-                public bool IsDownloading()
+        public bool IsDownloading()
         {
             if (!_soundsDownloaded || !_transformsDownloaded || !_metaInformationDownloaded || !_genericDownloaded)
             {
@@ -537,17 +532,12 @@ namespace VRSYS.Recording
         public void SwitchSelectedServerEvent()
         {
             int newSelectedServerId = (_selectedServerId + 1) % _state.serverList.Count;
-            SwitchSelectedServerServerRpc(newSelectedServerId, _state.recorderID);
+            SwitchSelectedServerRpc(newSelectedServerId, _state.recorderID);
         }
         
-        [ServerRpc(RequireOwnership = false)]
-        private void SwitchSelectedServerServerRpc(int selectedServerId, int recorderId)
-        {
-           SwitchSelectedServerClientRPC(selectedServerId,recorderId);
-        }
-        
-        [ClientRpc]
-        private void SwitchSelectedServerClientRPC(int selectedServerId, int recorderId)
+        // Carries the absolute server index, so concurrent switches converge without a server relay.
+        [Rpc(SendTo.Everyone)]
+        private void SwitchSelectedServerRpc(int selectedServerId, int recorderId)
         {
             
             if(_state.recorderID != recorderId)
@@ -580,17 +570,11 @@ namespace VRSYS.Recording
         #region RecordingStart
         public void PrepareRecordingOnAllClientsEvent()
         {
-            PrepareRecordingOnServerRpc(_state.recorderID);
+            PrepareRecordingRpc(_state.recorderID);
         }
 
-        [ServerRpc(RequireOwnership = false)]
-        private void PrepareRecordingOnServerRpc(int recorderId)
-        {
-            PrepareRecordingOnClientRpc(recorderId);
-        }
-
-        [ClientRpc]
-        private void PrepareRecordingOnClientRpc(int recorderId)
+        [Rpc(SendTo.Everyone)]
+        private void PrepareRecordingRpc(int recorderId)
         {
             if(_state.recorderID != recorderId)
                 return;
@@ -612,13 +596,13 @@ namespace VRSYS.Recording
             StartRecordingOnServerRpc(startRecordingTime.ToFileTime(), _state.recorderID);
         }
 
-        [ServerRpc(RequireOwnership = false)]
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
         private void StartRecordingOnServerRpc(long startTime, int recorderId)
         {
             StartRecordingOnClientRpc(startTime, recorderId);
         }
         
-        [ClientRpc]
+        [Rpc(SendTo.ClientsAndHost, InvokePermission = RpcInvokePermission.Server)]
         private void StartRecordingOnClientRpc(long startTime, int recorderId)
         {
             DateTime startRecordingTime = DateTime.FromFileTime(startTime);
@@ -695,13 +679,13 @@ namespace VRSYS.Recording
             EndRecordingOnServerRpc(endRecordingTime.ToFileTime(), _state.recorderID);
         }
 
-        [ServerRpc(RequireOwnership = false)]
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
         private void EndRecordingOnServerRpc(long stopTime, int recorderId)
         {
             EndRecordingOnClientRpc(stopTime, recorderId);
         }
         
-        [ClientRpc]
+        [Rpc(SendTo.ClientsAndHost, InvokePermission = RpcInvokePermission.Server)]
         private void EndRecordingOnClientRpc(long stopTime, int recorderId)
         {
             DateTime stopRecordingTime = DateTime.FromFileTime(stopTime);
@@ -747,51 +731,44 @@ namespace VRSYS.Recording
             }
 
             _controller.EndRecording();
-            
-            _allUsersFinishedLoading = false;
         }
         
         #endregion
 
         #region ReplayStart
-        public void StartReplayOnAllClientsEvent()
+        // Server only: schedules the replay start on all peers.
+        private void StartReplayOnAllClients()
         {
-            
+            if (!IsServer)
+            {
+                ExtendedLogger.LogWarning(GetType().Name, "Only the server can start a synchronized replay.", this);
+                return;
+            }
+
             if (_controller != null && _controller.debugLogs)
                 ExtendedLogger.LogInfo(GetType().Name, "Sending event to start replay on all clients.", this);
 
-            _startReplayEventSent = true;
             _globalSynchronizationTime = NetworkUtils.GetSynchronizedTime();
             DateTime startReplayTime = _globalSynchronizationTime.AddMilliseconds(maxSynchronizationTimeMS);
-            DebugDistributedReplayLog("StartReplayOnAllClientsEvent: now=" + _globalSynchronizationTime +
+            DebugDistributedReplayLog("StartReplayOnAllClients: now=" + _globalSynchronizationTime +
                                       ", target=" + startReplayTime +
                                       ", maxSynchronizationTimeMS=" + maxSynchronizationTimeMS +
                                       ", recorderId=" + _state.recorderID +
                                       ", selectedReplayFile=" + _state.selectedReplayFile +
                                       ", recordingDirectory=" + _state.recordingDirectory +
                                       ", selectedServer=" + _state.selectedServer);
-            DebugDistributedReplayStatusIfChanged("StartReplayOnAllClientsEvent");
-            StartReplayOnServerRpc(startReplayTime.ToFileTime(), _state.recorderID);
-        }
-
-        [ServerRpc(RequireOwnership = false)]
-        private void StartReplayOnServerRpc(long startTime, int recorderId)
-        {
-            DebugDistributedReplayLog("StartReplayOnServerRpc: recorderId=" + recorderId +
-                                      ", targetFileTime=" + startTime +
-                                      ", isServer=" + IsServer +
-                                      ", isClient=" + IsClient);
-            StartReplayOnClientRpc(startTime, recorderId);
+            DebugDistributedReplayStatusIfChanged("StartReplayOnAllClients");
+            StartReplayRpc(startReplayTime.ToFileTime(), _state.recorderID);
         }
         
-        [ClientRpc]
-        private void StartReplayOnClientRpc(long startTime, int recorderId)
+        [Rpc(SendTo.ClientsAndHost, InvokePermission = RpcInvokePermission.Server)]
+        private void StartReplayRpc(long startTime, int recorderId)
         {
             DateTime startReplayTime = DateTime.FromFileTime(startTime);
 
             if (recorderId != _state.recorderID)
             {
-                DebugDistributedReplayLog("StartReplayOnClientRpc ignored: incomingRecorderId=" + recorderId +
+                DebugDistributedReplayLog("StartReplayRpc ignored: incomingRecorderId=" + recorderId +
                                           ", localRecorderId=" + _state.recorderID);
                 return;
             }
@@ -804,13 +781,13 @@ namespace VRSYS.Recording
                     ExtendedLogger.LogInfo(GetType().Name, "Replay not yet started.", this);
 
             bool isDownloading = IsDownloading();
-            DebugDistributedReplayLog("StartReplayOnClientRpc: target=" + startReplayTime +
+            DebugDistributedReplayLog("StartReplayRpc: target=" + startReplayTime +
                                       ", now=" + NetworkUtils.GetSynchronizedTime() +
                                       ", state=" + _state.currentState +
                                       ", isDownloading=" + isDownloading +
                                       ", replayStarted=" + _replayStarted +
                                       ", localDownloads=" + LocalDownloadStatusSummary());
-            DebugDistributedReplayStatusIfChanged("StartReplayOnClientRpc");
+            DebugDistributedReplayStatusIfChanged("StartReplayRpc");
 
             if (!isDownloading)
                 if (_controller != null && _controller.debugLogs)
@@ -833,17 +810,17 @@ namespace VRSYS.Recording
                 {
                     if (_startReplayCoroutine != null)
                     {
-                        DebugDistributedReplayLog("StartReplayOnClientRpc: stopping previous start replay coroutine before scheduling a new one.");
+                        DebugDistributedReplayLog("StartReplayRpc: stopping previous start replay coroutine before scheduling a new one.");
                         StopCoroutine(_startReplayCoroutine);
                     }
 
-                    DebugDistributedReplayLog("StartReplayOnClientRpc: scheduling StartReplayWhenReady for target=" + startReplayTime);
+                    DebugDistributedReplayLog("StartReplayRpc: scheduling StartReplayWhenReady for target=" + startReplayTime);
                     _startReplayCoroutine = StartCoroutine(StartReplayWhenReady(startReplayTime));
                 }
             }
             else
             {
-                DebugDistributedReplayLog("StartReplayOnClientRpc: replay start conditions not met. state=" +
+                DebugDistributedReplayLog("StartReplayRpc: replay start conditions not met. state=" +
                                           _state.currentState +
                                           ", isDownloading=" + isDownloading +
                                           ", replayStarted=" + _replayStarted);
@@ -864,7 +841,6 @@ namespace VRSYS.Recording
             if (_state.currentState != State.PreparingReplay)
             {
                 _replayStarted = false;
-                _startReplayEventSent = false;
                 DebugDistributedReplayStatusIfChanged("StartReplayIfStateAllows blocked by state");
                 ExtendedLogger.LogWarning(GetType().Name, "A request to start a replay was sent but the current state does not allow starting replay.", this);
                 return;
@@ -873,7 +849,6 @@ namespace VRSYS.Recording
             if (IsDownloading())
             {
                 _replayStarted = false;
-                _startReplayEventSent = false;
                 DebugDistributedReplayStatusIfChanged("StartReplayIfStateAllows blocked by download");
                 ExtendedLogger.LogWarning(GetType().Name, "A request to start a replay was sent but downloads are still running.", this);
                 return;
@@ -894,13 +869,15 @@ namespace VRSYS.Recording
             EndReplayOnServerRpc(stopReplayTime.ToFileTime(), _state.recorderID);
         }
 
-        [ServerRpc(RequireOwnership = false)]
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
         private void EndReplayOnServerRpc(long stopTime, int recorderId)
         {
+            _awaitingDownloads = false;
+            _clientDownloading.Clear();
             EndReplayOnClientRpc(stopTime, recorderId);
         }
 
-        [ClientRpc]
+        [Rpc(SendTo.ClientsAndHost, InvokePermission = RpcInvokePermission.Server)]
         private void EndReplayOnClientRpc(long stopTime, int recorderId)
         {
             DateTime stopReplayTime = DateTime.FromFileTime(stopTime);
@@ -945,7 +922,6 @@ namespace VRSYS.Recording
             }
 
             _replayStarted = false;
-            _startReplayEventSent = false;
             _controller.EndReplay();
         }
         #endregion
@@ -956,14 +932,14 @@ namespace VRSYS.Recording
             TogglePlayPauseReplayServerRpc(paused, _state.recorderID);
         }
 
-        [ServerRpc(RequireOwnership = false)]
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
         private void TogglePlayPauseReplayServerRpc(bool isPaused, int recorderId)
         {
             //_state.replayPaused = isPaused;
             TogglePlayPauseReplayClientRpc(isPaused, recorderId);
         }
 
-        [ClientRpc]
+        [Rpc(SendTo.ClientsAndHost, InvokePermission = RpcInvokePermission.Server)]
         private void TogglePlayPauseReplayClientRpc(bool isPaused, int recorderId)
         {
             if(recorderId != _state.recorderID)
@@ -975,17 +951,11 @@ namespace VRSYS.Recording
         public void UpdateUserReplayTimeOnAllClientsEvent(float currentUserTime)
         {
             if(NetworkUser.LocalInstance != null)
-                UpdateUserReplayTimeServerRpc(currentUserTime, _state.recorderID, NetworkUser.LocalInstance.name);
+                UpdateUserReplayTimeRpc(currentUserTime, _state.recorderID, NetworkUser.LocalInstance.name);
         }
 
-        [ServerRpc(RequireOwnership = false)]
-        private void UpdateUserReplayTimeServerRpc(float userReplayTime, int recorderId, string userName)
-        {
-            UpdateUserReplayTimeClientRpc(userReplayTime, recorderId, userName);
-        }
-
-        [ClientRpc]
-        private void UpdateUserReplayTimeClientRpc(float userReplayTime, int recorderId, string userName)
+        [Rpc(SendTo.Everyone)]
+        private void UpdateUserReplayTimeRpc(float userReplayTime, int recorderId, string userName)
         {
             if(recorderId != _state.recorderID)
                 return;
@@ -1023,11 +993,11 @@ namespace VRSYS.Recording
                 return;
 
             HostReplayTime = replayTime;
-            PublishHostReplayTimeClientRpc(replayTime, _state.recorderID);
+            PublishHostReplayTimeRpc(replayTime, _state.recorderID);
         }
 
-        [ClientRpc]
-        private void PublishHostReplayTimeClientRpc(float replayTime, int recorderId)
+        [Rpc(SendTo.NotServer, InvokePermission = RpcInvokePermission.Server)]
+        private void PublishHostReplayTimeRpc(float replayTime, int recorderId)
         {
             if (recorderId != _state.recorderID)
                 return;
@@ -1128,10 +1098,9 @@ namespace VRSYS.Recording
 
             string status = "state=" + _state.currentState +
                             ", replayStarted=" + _replayStarted +
-                            ", startReplayEventSent=" + _startReplayEventSent +
-                            ", allUsersFinishedLoading=" + _allUsersFinishedLoading +
+                            ", awaitingDownloads=" + _awaitingDownloads +
                             ", localDownloads=" + LocalDownloadStatusSummary() +
-                            ", users=" + UserDownloadStatusSummary();
+                            ", clients=" + UserDownloadStatusSummary();
 
             if (_lastDistributedReplayStatusLog == status)
                 return;

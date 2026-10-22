@@ -1,6 +1,6 @@
 {
   "name": "com.vrsys.recording",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "displayName": "VRSYS Recording",
   "description": "Recording and replay of networked VRSYS sessions (transforms, audio and generic data tracks).",
   "documentationUrl": "https://vrsys.gitbook.io/vrsys",

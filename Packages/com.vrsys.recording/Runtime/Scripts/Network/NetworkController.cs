@@ -62,35 +62,19 @@ namespace VRSYS.Recording
 
         private int _selectedServerId = 0;
         private TextMeshProUGUI _serverText;
-
-        private void DebugDistributedReplayLog(string message)
+        
+        public void Start()
         {
-            if (_controller == null || !_controller.debugLogs)
-                return;
+            _state = GetComponent<RecorderState>();
+            _controller = GetComponent<RecorderController>();
 
-            ExtendedLogger.LogInfo(GetType().Name, "[DistributedReplayDebug][frame=" + Time.frameCount +
-                      "][time=" + Time.realtimeSinceStartup.ToString("F3") + "] " + message, this);
+            // Establish and periodically refresh the NTP clock offset in the background so the
+            // (blocking) UDP query never stalls the main thread, and so we never flood the NTP
+            // servers. All synchronized-time reads below use the cached offset.
+            StartCoroutine(KeepClockSynchronized());
         }
-
-        private void DebugDistributedReplayStatusIfChanged(string context)
-        {
-            if (_controller == null || !_controller.debugLogs)
-                return;
-
-            string status = "state=" + _state.currentState +
-                            ", replayStarted=" + _replayStarted +
-                            ", startReplayEventSent=" + _startReplayEventSent +
-                            ", allUsersFinishedLoading=" + _allUsersFinishedLoading +
-                            ", localDownloads=" + LocalDownloadStatusSummary() +
-                            ", users=" + UserDownloadStatusSummary();
-
-            if (_lastDistributedReplayStatusLog == status)
-                return;
-
-            _lastDistributedReplayStatusLog = status;
-            DebugDistributedReplayLog(context + ": " + status);
-        }
-
+        
+        #region RecordingFileDownload
         private string LocalDownloadStatusSummary()
         {
             return "sounds=" + _soundsDownloaded +
@@ -102,7 +86,7 @@ namespace VRSYS.Recording
                    ", meta=" + _metaInformationDownloadFailed +
                    ", generic=" + _genericDownloadFailed + ")";
         }
-
+        
         private string UserDownloadStatusSummary()
         {
             if (_userDownloadStatus.Count == 0)
@@ -119,431 +103,8 @@ namespace VRSYS.Recording
 
             return result;
         }
-
-        public void Start()
-        {
-            _state = GetComponent<RecorderState>();
-            _controller = GetComponent<RecorderController>();
-
-            // Establish and periodically refresh the NTP clock offset in the background so the
-            // (blocking) UDP query never stalls the main thread, and so we never flood the NTP
-            // servers. All synchronized-time reads below use the cached offset.
-            StartCoroutine(KeepClockSynchronized());
-        }
-
-        private IEnumerator KeepClockSynchronized()
-        {
-            while (true)
-            {
-                var syncTask = Task.Run(() => NetworkUtils.SynchronizeClock(true));
-                yield return new WaitUntil(() => syncTask.IsCompleted);
-                yield return new WaitForSeconds(30f);
-            }
-        }
-
-        public override void OnNetworkSpawn()
-        {
-            base.OnNetworkSpawn();
-        }
         
-        public void SwitchSelectedServerEvent()
-        {
-            int newSelectedServerId = (_selectedServerId + 1) % _state.serverList.Count;
-            SwitchSelectedServerServerRpc(newSelectedServerId, _state.recorderID);
-        }
-        
-        [ServerRpc(RequireOwnership = false)]
-        private void SwitchSelectedServerServerRpc(int selectedServerId, int recorderId)
-        {
-           SwitchSelectedServerClientRPC(selectedServerId,recorderId);
-        }
-        
-        [ClientRpc]
-        private void SwitchSelectedServerClientRPC(int selectedServerId, int recorderId)
-        {
-            
-            if(_state.recorderID != recorderId)
-                return;
-            
-            if (_controller != null && _controller.debugLogs)
-                ExtendedLogger.LogInfo(GetType().Name, "Switch selected server event received. Recorder id: " + _state.recorderID, this);
-
-            _selectedServerId = selectedServerId;
-            _state.selectedServer = _state.serverList[_selectedServerId];
-            _state.replayList = new ReplayList();
-            if(_serverText != null)
-                _serverText.text = "Server: " + _state.selectedServer;
-            
-            UpdateReplayList();
-        }
-        
-        public void PrepareRecordingOnAllClientsEvent()
-        {
-            PrepareRecordingOnServerRpc(_state.recorderID);
-        }
-
-        [ServerRpc(RequireOwnership = false)]
-        private void PrepareRecordingOnServerRpc(int recorderId)
-        {
-            PrepareRecordingOnClientRpc(recorderId);
-        }
-        
-        
-        [ClientRpc]
-        private void PrepareRecordingOnClientRpc(int recorderId)
-        {
-            if(_state.recorderID != recorderId)
-                return;
-            
-            if (_controller != null && _controller.debugLogs)
-                ExtendedLogger.LogInfo(GetType().Name, "Preparing for recording. Recorder id: " + _state.recorderID, this);
-            
-            _controller.PrepareRecording();
-        }
-        
-        public void StartRecordingOnAllClientsEvent()
-        {
-            _globalSynchronizationTime = NetworkUtils.GetSynchronizedTime();
-            if (_controller != null && _controller.debugLogs)
-                ExtendedLogger.LogInfo(GetType().Name, "Global time before offset: " + _globalSynchronizationTime, this);
-            DateTime startRecordingTime = _globalSynchronizationTime.AddMilliseconds(maxSynchronizationTimeMS);
-            if (_controller != null && _controller.debugLogs)
-                ExtendedLogger.LogInfo(GetType().Name, "Start recording time: " + _globalSynchronizationTime, this);
-            StartRecordingOnServerRpc(startRecordingTime.ToFileTime(), _state.recorderID);
-        }
-
-        [ServerRpc(RequireOwnership = false)]
-        private void StartRecordingOnServerRpc(long startTime, int recorderId)
-        {
-            StartRecordingOnClientRpc(startTime, recorderId);
-        }
-        
-        [ClientRpc]
-        private void StartRecordingOnClientRpc(long startTime, int recorderId)
-        {
-            DateTime startRecordingTime = DateTime.FromFileTime(startTime);
-            
-            if (_state.recorderID != recorderId)
-                return;
-            
-            if (_controller != null && _controller.debugLogs)
-                ExtendedLogger.LogInfo(GetType().Name, "Received start recording time: " + startRecordingTime + ". Recorder id: " + _state.recorderID, this);
-
-            _globalSynchronizationTime = NetworkUtils.GetSynchronizedTime();
-            if (_startRecordingCoroutine != null)
-            {
-                StopCoroutine(_startRecordingCoroutine);
-                _startRecordingCoroutine = null;
-            }
-
-            if (_globalSynchronizationTime > startRecordingTime)
-            {
-                TimeSpan difference = _globalSynchronizationTime - startRecordingTime;
-                ExtendedLogger.LogError(GetType().Name, "The recording should have started already! Time difference: " + difference.TotalMilliseconds + " ms.  Potential fix: increase the  maxSynchronizationTime!", this);
-                StartRecordingIfStateAllows(startRecordingTime);
-            }
-            else
-            {
-                _startRecordingCoroutine = StartCoroutine(StartRecordingWhenReady(startRecordingTime));
-            }
-        }
-
-        private IEnumerator StartRecordingWhenReady(DateTime startRecordingTime)
-        {
-            yield return WaitUntilSynchronizedTime(startRecordingTime);
-            _startRecordingCoroutine = null;
-            StartRecordingIfStateAllows(startRecordingTime);
-        }
-
-        private void StartRecordingIfStateAllows(DateTime startRecordingTime)
-        {
-            if (_state.currentState == State.PrepareRecording)
-            {
-                _globalSynchronizationTime = NetworkUtils.GetSynchronizedTime();
-                TimeSpan diff = _globalSynchronizationTime - startRecordingTime;
-                RegisterRecordingStartGlobalTimeOffset(_state.recorderID, (float)diff.TotalMilliseconds);
-                _controller.StartRecording();
-            }
-            else
-            {
-                ExtendedLogger.LogWarning(GetType().Name, "A request to start a recording was sent but the current state does not allow starting new recording.", this);
-            }
-        }
-
-        private IEnumerator WaitUntilSynchronizedTime(DateTime time)
-        {
-            _globalSynchronizationTime = NetworkUtils.GetSynchronizedTime();
-
-            while (_globalSynchronizationTime < time)
-            {
-                TimeSpan difference = _globalSynchronizationTime - time;
-                _globalRecordStartDifference = difference;
-                yield return null;
-                _globalSynchronizationTime = NetworkUtils.GetSynchronizedTime();
-            }
-
-            if (_controller != null && _controller.debugLogs)
-                ExtendedLogger.LogInfo(GetType().Name, "Target time passed.", this);
-        }
-
-        public void EndRecordingOnAllClientsEvent()
-        {
-            _globalSynchronizationTime = NetworkUtils.GetSynchronizedTime();
-            DateTime endRecordingTime = _globalSynchronizationTime.AddMilliseconds(maxSynchronizationTimeMS);
-            EndRecordingOnServerRpc(endRecordingTime.ToFileTime(), _state.recorderID);
-        }
-
-        [ServerRpc(RequireOwnership = false)]
-        private void EndRecordingOnServerRpc(long stopTime, int recorderId)
-        {
-            EndRecordingOnClientRpc(stopTime, recorderId);
-        }
-        
-        [ClientRpc]
-        private void EndRecordingOnClientRpc(long stopTime, int recorderId)
-        {
-            DateTime stopRecordingTime = DateTime.FromFileTime(stopTime);
-
-
-            if (recorderId != _state.recorderID)
-                return;
-            
-            _globalSynchronizationTime = NetworkUtils.GetSynchronizedTime();
-            if (_endRecordingCoroutine != null)
-            {
-                StopCoroutine(_endRecordingCoroutine);
-                _endRecordingCoroutine = null;
-            }
-
-            if (_globalSynchronizationTime > stopRecordingTime)
-            {
-                TimeSpan difference = _globalSynchronizationTime - stopRecordingTime;
-                ExtendedLogger.LogError(GetType().Name, "The recording should have stopped already! Time difference: " +
-                               difference.TotalMilliseconds +
-                               " ms.  Potential fix: increase the  maxSynchronizationTime!", this);
-                StopRecording();
-            }
-            else
-            {
-                _endRecordingCoroutine = StartCoroutine(StopRecordingWhenReady(stopRecordingTime));
-            }
-        }
-
-        private IEnumerator StopRecordingWhenReady(DateTime stopRecordingTime)
-        {
-            yield return WaitUntilSynchronizedTime(stopRecordingTime);
-            _endRecordingCoroutine = null;
-            StopRecording();
-        }
-
-        private void StopRecording()
-        {
-            if (_startRecordingCoroutine != null)
-            {
-                StopCoroutine(_startRecordingCoroutine);
-                _startRecordingCoroutine = null;
-            }
-
-            _controller.EndRecording();
-            
-            _allUsersFinishedLoading = false;
-        }
-        
-        public void StartReplayOnAllClientsEvent()
-        {
-            
-            if (_controller != null && _controller.debugLogs)
-                ExtendedLogger.LogInfo(GetType().Name, "Sending event to start replay on all clients.", this);
-
-            _startReplayEventSent = true;
-            _globalSynchronizationTime = NetworkUtils.GetSynchronizedTime();
-            DateTime startReplayTime = _globalSynchronizationTime.AddMilliseconds(maxSynchronizationTimeMS);
-            DebugDistributedReplayLog("StartReplayOnAllClientsEvent: now=" + _globalSynchronizationTime +
-                                      ", target=" + startReplayTime +
-                                      ", maxSynchronizationTimeMS=" + maxSynchronizationTimeMS +
-                                      ", recorderId=" + _state.recorderID +
-                                      ", selectedReplayFile=" + _state.selectedReplayFile +
-                                      ", recordingDirectory=" + _state.recordingDirectory +
-                                      ", selectedServer=" + _state.selectedServer);
-            DebugDistributedReplayStatusIfChanged("StartReplayOnAllClientsEvent");
-            StartReplayOnServerRpc(startReplayTime.ToFileTime(), _state.recorderID);
-        }
-
-        [ServerRpc(RequireOwnership = false)]
-        private void StartReplayOnServerRpc(long startTime, int recorderId)
-        {
-            DebugDistributedReplayLog("StartReplayOnServerRpc: recorderId=" + recorderId +
-                                      ", targetFileTime=" + startTime +
-                                      ", isServer=" + IsServer +
-                                      ", isClient=" + IsClient);
-            StartReplayOnClientRpc(startTime, recorderId);
-        }
-        
-        [ClientRpc]
-        private void StartReplayOnClientRpc(long startTime, int recorderId)
-        {
-            DateTime startReplayTime = DateTime.FromFileTime(startTime);
-
-            if (recorderId != _state.recorderID)
-            {
-                DebugDistributedReplayLog("StartReplayOnClientRpc ignored: incomingRecorderId=" + recorderId +
-                                          ", localRecorderId=" + _state.recorderID);
-                return;
-            }
-            
-            if (_controller != null && _controller.debugLogs)
-                ExtendedLogger.LogInfo(GetType().Name, "Start replay event received for recorder id: " + _state.recorderID, this);
-            
-            if (!_replayStarted)
-                if (_controller != null && _controller.debugLogs)
-                    ExtendedLogger.LogInfo(GetType().Name, "Replay not yet started.", this);
-
-            bool isDownloading = IsDownloading();
-            DebugDistributedReplayLog("StartReplayOnClientRpc: target=" + startReplayTime +
-                                      ", now=" + NetworkUtils.GetSynchronizedTime() +
-                                      ", state=" + _state.currentState +
-                                      ", isDownloading=" + isDownloading +
-                                      ", replayStarted=" + _replayStarted +
-                                      ", localDownloads=" + LocalDownloadStatusSummary());
-            DebugDistributedReplayStatusIfChanged("StartReplayOnClientRpc");
-
-            if (!isDownloading)
-                if (_controller != null && _controller.debugLogs)
-                    ExtendedLogger.LogInfo(GetType().Name, "Not downloading files.", this);
-
-            if (!_replayStarted && !isDownloading && _state.currentState == State.PreparingReplay)
-            {
-                _replayStarted = true;
-
-                _globalSynchronizationTime = NetworkUtils.GetSynchronizedTime();
-                if (_globalSynchronizationTime > startReplayTime)
-                {
-                    TimeSpan difference = _globalSynchronizationTime - startReplayTime;
-                    ExtendedLogger.LogError(GetType().Name, "The replay should have started already! Time difference: " +
-                                   difference.TotalMilliseconds +
-                                   " ms.  Potential fix: increase the  maxSynchronizationTime!", this);
-                    StartReplayIfStateAllows();
-                }
-                else
-                {
-                    if (_startReplayCoroutine != null)
-                    {
-                        DebugDistributedReplayLog("StartReplayOnClientRpc: stopping previous start replay coroutine before scheduling a new one.");
-                        StopCoroutine(_startReplayCoroutine);
-                    }
-
-                    DebugDistributedReplayLog("StartReplayOnClientRpc: scheduling StartReplayWhenReady for target=" + startReplayTime);
-                    _startReplayCoroutine = StartCoroutine(StartReplayWhenReady(startReplayTime));
-                }
-            }
-            else
-            {
-                DebugDistributedReplayLog("StartReplayOnClientRpc: replay start conditions not met. state=" +
-                                          _state.currentState +
-                                          ", isDownloading=" + isDownloading +
-                                          ", replayStarted=" + _replayStarted);
-            }
-        }
-        
-        private IEnumerator StartReplayWhenReady(DateTime startReplayTime)
-        {
-            DebugDistributedReplayLog("StartReplayWhenReady: waiting for target=" + startReplayTime);
-            yield return WaitUntilSynchronizedTime(startReplayTime);
-            _startReplayCoroutine = null;
-            DebugDistributedReplayLog("StartReplayWhenReady: target reached, evaluating start conditions.");
-            StartReplayIfStateAllows();
-        }
-
-        private void StartReplayIfStateAllows()
-        {
-            if (_state.currentState != State.PreparingReplay)
-            {
-                _replayStarted = false;
-                _startReplayEventSent = false;
-                DebugDistributedReplayStatusIfChanged("StartReplayIfStateAllows blocked by state");
-                ExtendedLogger.LogWarning(GetType().Name, "A request to start a replay was sent but the current state does not allow starting replay.", this);
-                return;
-            }
-
-            if (IsDownloading())
-            {
-                _replayStarted = false;
-                _startReplayEventSent = false;
-                DebugDistributedReplayStatusIfChanged("StartReplayIfStateAllows blocked by download");
-                ExtendedLogger.LogWarning(GetType().Name, "A request to start a replay was sent but downloads are still running.", this);
-                return;
-            }
-
-            if (_controller != null && _controller.debugLogs)
-                ExtendedLogger.LogInfo(GetType().Name, "Target time passed. Starting replay.", this);
-            DebugDistributedReplayLog("StartReplayIfStateAllows: calling RecorderController.StartReplay.");
-            _controller.StartReplay();
-            DebugDistributedReplayLog("StartReplayIfStateAllows: RecorderController.StartReplay returned. state=" +
-                                      _state.currentState);
-        }
-
-        public void EndReplayOnAllClientsEvent()
-        {
-            _globalSynchronizationTime = NetworkUtils.GetSynchronizedTime();
-            DateTime stopReplayTime = _globalSynchronizationTime.AddMilliseconds(maxSynchronizationTimeMS);
-            EndReplayOnServerRpc(stopReplayTime.ToFileTime(), _state.recorderID);
-        }
-
-        [ServerRpc(RequireOwnership = false)]
-        private void EndReplayOnServerRpc(long stopTime, int recorderId)
-        {
-            EndReplayOnClientRpc(stopTime, recorderId);
-        }
-
-        [ClientRpc]
-        private void EndReplayOnClientRpc(long stopTime, int recorderId)
-        {
-            DateTime stopReplayTime = DateTime.FromFileTime(stopTime);
-
-            if (recorderId != _state.recorderID)
-                return;
-            
-            _globalSynchronizationTime = NetworkUtils.GetSynchronizedTime();
-            if (_endReplayCoroutine != null)
-            {
-                StopCoroutine(_endReplayCoroutine);
-                _endReplayCoroutine = null;
-            }
-
-            if (_globalSynchronizationTime > stopReplayTime)
-            {
-                TimeSpan difference = _globalSynchronizationTime - stopReplayTime;
-                ExtendedLogger.LogError(GetType().Name, "The replay should have stopped already! Time difference: " +
-                                        difference.TotalMilliseconds +
-                                        " ms.  Potential fix: increase the  maxSynchronizationTime!", this);
-                StopReplay();
-            }
-            else
-            {
-                _endReplayCoroutine = StartCoroutine(StopReplayWhenReady(stopReplayTime));
-            }
-        }
-
-        private IEnumerator StopReplayWhenReady(DateTime stopReplayTime)
-        {
-            yield return WaitUntilSynchronizedTime(stopReplayTime);
-            _endReplayCoroutine = null;
-            StopReplay();
-        }
-
-        private void StopReplay()
-        {
-            if (_startReplayCoroutine != null)
-            {
-                StopCoroutine(_startReplayCoroutine);
-                _startReplayCoroutine = null;
-            }
-
-            _replayStarted = false;
-            _startReplayEventSent = false;
-            _controller.EndReplay();
-        }
-
+                
         public void StartDownloadOnAllClientsEvent()
         {
             
@@ -788,167 +349,8 @@ namespace VRSYS.Recording
                 StartReplayOnAllClientsEvent();
             }
         }
-
-        public void TogglePlayPauseReplayOnAllClients(bool paused)
-        {
-            TogglePlayPauseReplayServerRpc(paused, _state.recorderID);
-        }
-
-        [ServerRpc(RequireOwnership = false)]
-        private void TogglePlayPauseReplayServerRpc(bool isPaused, int recorderId)
-        {
-            //_state.replayPaused = isPaused;
-            TogglePlayPauseReplayClientRpc(isPaused, recorderId);
-        }
         
-
-        [ClientRpc]
-        private void TogglePlayPauseReplayClientRpc(bool isPaused, int recorderId)
-        {
-            if(recorderId != _state.recorderID)
-                return;
-            
-            _state.replayPaused = isPaused;
-        }
-
-        public void UpdateUserReplayTimeOnAllClientsEvent(float currentUserTime)
-        {
-            if(NetworkUser.LocalInstance != null)
-                UpdateUserReplayTimeServerRpc(currentUserTime, _state.recorderID, NetworkUser.LocalInstance.name);
-        }
-
-        [ServerRpc(RequireOwnership = false)]
-        private void UpdateUserReplayTimeServerRpc(float userReplayTime, int recorderId, string userName)
-        {
-            UpdateUserReplayTimeClientRpc(userReplayTime, recorderId, userName);
-        }
-
-        [ClientRpc]
-        private void UpdateUserReplayTimeClientRpc(float userReplayTime, int recorderId, string userName)
-        {
-            if(recorderId != _state.recorderID)
-                return;
-            
-            if (!_userReplayTimes.ContainsKey(userName))
-            {
-                _userReplayTimes.Add(userName, userReplayTime);
-                _userReplayTimesUpdateTime.Add(userName, Time.time);
-            }
-            else
-            {
-                _userReplayTimes[userName] = userReplayTime;
-                _userReplayTimesUpdateTime[userName] = Time.time;
-            }
-
-            // TODO: Fix this
-            /*
-            foreach (var key in _userReplayTimes.Keys.ToList())
-            {
-                if (!PhotonNetwork.CurrentRoom.Players.ContainsKey(key))
-                {
-                    _userReplayTimes.Remove(key);
-                    _userReplayTimesUpdateTime.Remove(key);
-                }
-            }*/
-        }
-        
-        /// <summary>
-        /// Called on the host each replay tick to broadcast the authoritative replay time to all
-        /// clients, which use it as the synchronization target in synchronized playback.
-        /// </summary>
-        public void PublishHostReplayTime(float replayTime)
-        {
-            if (!IsServer)
-                return;
-
-            HostReplayTime = replayTime;
-            PublishHostReplayTimeClientRpc(replayTime, _state.recorderID);
-        }
-
-        [ClientRpc]
-        private void PublishHostReplayTimeClientRpc(float replayTime, int recorderId)
-        {
-            if (recorderId != _state.recorderID)
-                return;
-
-            HostReplayTime = replayTime;
-        }
-
-        public void Upload(string projectName, string filePath, string fileName, string serverAddress)
-        {
-
-            StartCoroutine(NetworkUtils.UploadToServer(projectName, filePath, fileName, serverAddress));
-        }
-
-        public void UpdateReplayList()
-        {
-            // When using local replay files, populate the list from the local recording directory
-            // and do not query the server (which would otherwise log connection errors when offline).
-            if (_state.useLocalReplayFiles)
-            {
-                UpdateLocalReplayList();
-                return;
-            }
-
-            StartCoroutine(GetReplayList(_state.selectedServer, _state.projectName));
-        }
-
-        private void UpdateLocalReplayList()
-        {
-            string directory = string.IsNullOrEmpty(_state.recordingDirectory)
-                ? Application.persistentDataPath
-                : _state.recordingDirectory;
-
-            if (!Directory.Exists(directory))
-                return;
-
-            string[] filesWithPaths = Directory.GetFiles(directory, "*.recordmeta");
-            string[] replayNames = new string[filesWithPaths.Length];
-            for (int i = 0; i < filesWithPaths.Length; i++)
-                replayNames[i] = Path.GetFileNameWithoutExtension(filesWithPaths[i]);
-
-            if (_state.replayList == null || _state.replayList.replayNames == null ||
-                replayNames.Length != _state.replayList.replayNames.Length)
-            {
-                _state.replayList = new ReplayList { replayNames = replayNames };
-            }
-        }
-
-        public void UpdateSelectedServerText(TextMeshProUGUI text)
-        {
-            if(text == null)
-                return;
-
-            if (_serverText == null)
-                _serverText = text;
-
-            _serverText.text = "Server: " + _state.selectedServer;
-        }
-
-        private IEnumerator GetReplayList(string serverAddress, string projectName)
-        {
-            string completeURL = serverAddress + "/all_recording_names/project/" + projectName;
-
-            using (var uwr = new UnityWebRequest(completeURL, UnityWebRequest.kHttpVerbGET))
-            {
-                DownloadHandlerBuffer dH = new DownloadHandlerBuffer();
-                uwr.downloadHandler = dH;
-
-                yield return uwr.SendWebRequest();
-                if (uwr.result != UnityWebRequest.Result.Success)
-                    ExtendedLogger.LogError(GetType().Name, uwr.error + ", url: " + completeURL, this);
-                else
-                {
-                    string response = uwr.downloadHandler.text;
-                    ReplayList newReplayList = JsonUtility.FromJson<ReplayList>(response);
-          
-                    if (_state.replayList == null || _state.replayList.replayNames == null || newReplayList.replayNames.Length != _state.replayList.replayNames.Length)
-                        _state.replayList = newReplayList;
-                }
-            }
-        }
-
-        public bool IsDownloading()
+                public bool IsDownloading()
         {
             if (!_soundsDownloaded || !_transformsDownloaded || !_metaInformationDownloaded || !_genericDownloaded)
             {
@@ -1129,5 +531,614 @@ namespace VRSYS.Recording
             StartCoroutine(DownloadFileFromServer(projectName, _state.recordingDirectory, "get_meta_recording", replayFile));
             StartCoroutine(DownloadFileFromServer(projectName, _state.recordingDirectory, "get_generic_recording", replayFile));
         }
+        #endregion
+        
+        #region RecordingFileServerManagement
+        public void SwitchSelectedServerEvent()
+        {
+            int newSelectedServerId = (_selectedServerId + 1) % _state.serverList.Count;
+            SwitchSelectedServerServerRpc(newSelectedServerId, _state.recorderID);
+        }
+        
+        [ServerRpc(RequireOwnership = false)]
+        private void SwitchSelectedServerServerRpc(int selectedServerId, int recorderId)
+        {
+           SwitchSelectedServerClientRPC(selectedServerId,recorderId);
+        }
+        
+        [ClientRpc]
+        private void SwitchSelectedServerClientRPC(int selectedServerId, int recorderId)
+        {
+            
+            if(_state.recorderID != recorderId)
+                return;
+            
+            if (_controller != null && _controller.debugLogs)
+                ExtendedLogger.LogInfo(GetType().Name, "Switch selected server event received. Recorder id: " + _state.recorderID, this);
+
+            _selectedServerId = selectedServerId;
+            _state.selectedServer = _state.serverList[_selectedServerId];
+            _state.replayList = new ReplayList();
+            if(_serverText != null)
+                _serverText.text = "Server: " + _state.selectedServer;
+            
+            UpdateReplayList();
+        }
+        
+        public void UpdateSelectedServerText(TextMeshProUGUI text)
+        {
+            if(text == null)
+                return;
+
+            if (_serverText == null)
+                _serverText = text;
+
+            _serverText.text = "Server: " + _state.selectedServer;
+        }
+        #endregion
+        
+        #region RecordingStart
+        public void PrepareRecordingOnAllClientsEvent()
+        {
+            PrepareRecordingOnServerRpc(_state.recorderID);
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        private void PrepareRecordingOnServerRpc(int recorderId)
+        {
+            PrepareRecordingOnClientRpc(recorderId);
+        }
+
+        [ClientRpc]
+        private void PrepareRecordingOnClientRpc(int recorderId)
+        {
+            if(_state.recorderID != recorderId)
+                return;
+            
+            if (_controller != null && _controller.debugLogs)
+                ExtendedLogger.LogInfo(GetType().Name, "Preparing for recording. Recorder id: " + _state.recorderID, this);
+            
+            _controller.PrepareRecording();
+        }
+        
+        public void StartRecordingOnAllClientsEvent()
+        {
+            _globalSynchronizationTime = NetworkUtils.GetSynchronizedTime();
+            if (_controller != null && _controller.debugLogs)
+                ExtendedLogger.LogInfo(GetType().Name, "Global time before offset: " + _globalSynchronizationTime, this);
+            DateTime startRecordingTime = _globalSynchronizationTime.AddMilliseconds(maxSynchronizationTimeMS);
+            if (_controller != null && _controller.debugLogs)
+                ExtendedLogger.LogInfo(GetType().Name, "Start recording time: " + _globalSynchronizationTime, this);
+            StartRecordingOnServerRpc(startRecordingTime.ToFileTime(), _state.recorderID);
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        private void StartRecordingOnServerRpc(long startTime, int recorderId)
+        {
+            StartRecordingOnClientRpc(startTime, recorderId);
+        }
+        
+        [ClientRpc]
+        private void StartRecordingOnClientRpc(long startTime, int recorderId)
+        {
+            DateTime startRecordingTime = DateTime.FromFileTime(startTime);
+            
+            if (_state.recorderID != recorderId)
+                return;
+            
+            if (_controller != null && _controller.debugLogs)
+                ExtendedLogger.LogInfo(GetType().Name, "Received start recording time: " + startRecordingTime + ". Recorder id: " + _state.recorderID, this);
+
+            _globalSynchronizationTime = NetworkUtils.GetSynchronizedTime();
+            if (_startRecordingCoroutine != null)
+            {
+                StopCoroutine(_startRecordingCoroutine);
+                _startRecordingCoroutine = null;
+            }
+
+            if (_globalSynchronizationTime > startRecordingTime)
+            {
+                TimeSpan difference = _globalSynchronizationTime - startRecordingTime;
+                ExtendedLogger.LogError(GetType().Name, "The recording should have started already! Time difference: " + difference.TotalMilliseconds + " ms.  Potential fix: increase the  maxSynchronizationTime!", this);
+                StartRecordingIfStateAllows(startRecordingTime);
+            }
+            else
+            {
+                _startRecordingCoroutine = StartCoroutine(StartRecordingWhenReady(startRecordingTime));
+            }
+        }
+
+        private IEnumerator StartRecordingWhenReady(DateTime startRecordingTime)
+        {
+            yield return WaitUntilSynchronizedTime(startRecordingTime);
+            _startRecordingCoroutine = null;
+            StartRecordingIfStateAllows(startRecordingTime);
+        }
+
+        private void StartRecordingIfStateAllows(DateTime startRecordingTime)
+        {
+            if (_state.currentState == State.PrepareRecording)
+            {
+                _globalSynchronizationTime = NetworkUtils.GetSynchronizedTime();
+                TimeSpan diff = _globalSynchronizationTime - startRecordingTime;
+                RegisterRecordingStartGlobalTimeOffset(_state.recorderID, (float)diff.TotalMilliseconds);
+                _controller.StartRecording();
+            }
+            else
+            {
+                ExtendedLogger.LogWarning(GetType().Name, "A request to start a recording was sent but the current state does not allow starting new recording.", this);
+            }
+        }
+        #endregion
+
+        #region RecordingStop
+        private IEnumerator WaitUntilSynchronizedTime(DateTime time)
+        {
+            _globalSynchronizationTime = NetworkUtils.GetSynchronizedTime();
+
+            while (_globalSynchronizationTime < time)
+            {
+                TimeSpan difference = _globalSynchronizationTime - time;
+                _globalRecordStartDifference = difference;
+                yield return null;
+                _globalSynchronizationTime = NetworkUtils.GetSynchronizedTime();
+            }
+
+            if (_controller != null && _controller.debugLogs)
+                ExtendedLogger.LogInfo(GetType().Name, "Target time passed.", this);
+        }
+
+        public void EndRecordingOnAllClientsEvent()
+        {
+            _globalSynchronizationTime = NetworkUtils.GetSynchronizedTime();
+            DateTime endRecordingTime = _globalSynchronizationTime.AddMilliseconds(maxSynchronizationTimeMS);
+            EndRecordingOnServerRpc(endRecordingTime.ToFileTime(), _state.recorderID);
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        private void EndRecordingOnServerRpc(long stopTime, int recorderId)
+        {
+            EndRecordingOnClientRpc(stopTime, recorderId);
+        }
+        
+        [ClientRpc]
+        private void EndRecordingOnClientRpc(long stopTime, int recorderId)
+        {
+            DateTime stopRecordingTime = DateTime.FromFileTime(stopTime);
+
+
+            if (recorderId != _state.recorderID)
+                return;
+            
+            _globalSynchronizationTime = NetworkUtils.GetSynchronizedTime();
+            if (_endRecordingCoroutine != null)
+            {
+                StopCoroutine(_endRecordingCoroutine);
+                _endRecordingCoroutine = null;
+            }
+
+            if (_globalSynchronizationTime > stopRecordingTime)
+            {
+                TimeSpan difference = _globalSynchronizationTime - stopRecordingTime;
+                ExtendedLogger.LogError(GetType().Name, "The recording should have stopped already! Time difference: " +
+                               difference.TotalMilliseconds +
+                               " ms.  Potential fix: increase the  maxSynchronizationTime!", this);
+                StopRecording();
+            }
+            else
+            {
+                _endRecordingCoroutine = StartCoroutine(StopRecordingWhenReady(stopRecordingTime));
+            }
+        }
+
+        private IEnumerator StopRecordingWhenReady(DateTime stopRecordingTime)
+        {
+            yield return WaitUntilSynchronizedTime(stopRecordingTime);
+            _endRecordingCoroutine = null;
+            StopRecording();
+        }
+
+        private void StopRecording()
+        {
+            if (_startRecordingCoroutine != null)
+            {
+                StopCoroutine(_startRecordingCoroutine);
+                _startRecordingCoroutine = null;
+            }
+
+            _controller.EndRecording();
+            
+            _allUsersFinishedLoading = false;
+        }
+        
+        #endregion
+
+        #region ReplayStart
+        public void StartReplayOnAllClientsEvent()
+        {
+            
+            if (_controller != null && _controller.debugLogs)
+                ExtendedLogger.LogInfo(GetType().Name, "Sending event to start replay on all clients.", this);
+
+            _startReplayEventSent = true;
+            _globalSynchronizationTime = NetworkUtils.GetSynchronizedTime();
+            DateTime startReplayTime = _globalSynchronizationTime.AddMilliseconds(maxSynchronizationTimeMS);
+            DebugDistributedReplayLog("StartReplayOnAllClientsEvent: now=" + _globalSynchronizationTime +
+                                      ", target=" + startReplayTime +
+                                      ", maxSynchronizationTimeMS=" + maxSynchronizationTimeMS +
+                                      ", recorderId=" + _state.recorderID +
+                                      ", selectedReplayFile=" + _state.selectedReplayFile +
+                                      ", recordingDirectory=" + _state.recordingDirectory +
+                                      ", selectedServer=" + _state.selectedServer);
+            DebugDistributedReplayStatusIfChanged("StartReplayOnAllClientsEvent");
+            StartReplayOnServerRpc(startReplayTime.ToFileTime(), _state.recorderID);
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        private void StartReplayOnServerRpc(long startTime, int recorderId)
+        {
+            DebugDistributedReplayLog("StartReplayOnServerRpc: recorderId=" + recorderId +
+                                      ", targetFileTime=" + startTime +
+                                      ", isServer=" + IsServer +
+                                      ", isClient=" + IsClient);
+            StartReplayOnClientRpc(startTime, recorderId);
+        }
+        
+        [ClientRpc]
+        private void StartReplayOnClientRpc(long startTime, int recorderId)
+        {
+            DateTime startReplayTime = DateTime.FromFileTime(startTime);
+
+            if (recorderId != _state.recorderID)
+            {
+                DebugDistributedReplayLog("StartReplayOnClientRpc ignored: incomingRecorderId=" + recorderId +
+                                          ", localRecorderId=" + _state.recorderID);
+                return;
+            }
+            
+            if (_controller != null && _controller.debugLogs)
+                ExtendedLogger.LogInfo(GetType().Name, "Start replay event received for recorder id: " + _state.recorderID, this);
+            
+            if (!_replayStarted)
+                if (_controller != null && _controller.debugLogs)
+                    ExtendedLogger.LogInfo(GetType().Name, "Replay not yet started.", this);
+
+            bool isDownloading = IsDownloading();
+            DebugDistributedReplayLog("StartReplayOnClientRpc: target=" + startReplayTime +
+                                      ", now=" + NetworkUtils.GetSynchronizedTime() +
+                                      ", state=" + _state.currentState +
+                                      ", isDownloading=" + isDownloading +
+                                      ", replayStarted=" + _replayStarted +
+                                      ", localDownloads=" + LocalDownloadStatusSummary());
+            DebugDistributedReplayStatusIfChanged("StartReplayOnClientRpc");
+
+            if (!isDownloading)
+                if (_controller != null && _controller.debugLogs)
+                    ExtendedLogger.LogInfo(GetType().Name, "Not downloading files.", this);
+
+            if (!_replayStarted && !isDownloading && _state.currentState == State.PreparingReplay)
+            {
+                _replayStarted = true;
+
+                _globalSynchronizationTime = NetworkUtils.GetSynchronizedTime();
+                if (_globalSynchronizationTime > startReplayTime)
+                {
+                    TimeSpan difference = _globalSynchronizationTime - startReplayTime;
+                    ExtendedLogger.LogError(GetType().Name, "The replay should have started already! Time difference: " +
+                                   difference.TotalMilliseconds +
+                                   " ms.  Potential fix: increase the  maxSynchronizationTime!", this);
+                    StartReplayIfStateAllows();
+                }
+                else
+                {
+                    if (_startReplayCoroutine != null)
+                    {
+                        DebugDistributedReplayLog("StartReplayOnClientRpc: stopping previous start replay coroutine before scheduling a new one.");
+                        StopCoroutine(_startReplayCoroutine);
+                    }
+
+                    DebugDistributedReplayLog("StartReplayOnClientRpc: scheduling StartReplayWhenReady for target=" + startReplayTime);
+                    _startReplayCoroutine = StartCoroutine(StartReplayWhenReady(startReplayTime));
+                }
+            }
+            else
+            {
+                DebugDistributedReplayLog("StartReplayOnClientRpc: replay start conditions not met. state=" +
+                                          _state.currentState +
+                                          ", isDownloading=" + isDownloading +
+                                          ", replayStarted=" + _replayStarted);
+            }
+        }
+        
+        private IEnumerator StartReplayWhenReady(DateTime startReplayTime)
+        {
+            DebugDistributedReplayLog("StartReplayWhenReady: waiting for target=" + startReplayTime);
+            yield return WaitUntilSynchronizedTime(startReplayTime);
+            _startReplayCoroutine = null;
+            DebugDistributedReplayLog("StartReplayWhenReady: target reached, evaluating start conditions.");
+            StartReplayIfStateAllows();
+        }
+
+        private void StartReplayIfStateAllows()
+        {
+            if (_state.currentState != State.PreparingReplay)
+            {
+                _replayStarted = false;
+                _startReplayEventSent = false;
+                DebugDistributedReplayStatusIfChanged("StartReplayIfStateAllows blocked by state");
+                ExtendedLogger.LogWarning(GetType().Name, "A request to start a replay was sent but the current state does not allow starting replay.", this);
+                return;
+            }
+
+            if (IsDownloading())
+            {
+                _replayStarted = false;
+                _startReplayEventSent = false;
+                DebugDistributedReplayStatusIfChanged("StartReplayIfStateAllows blocked by download");
+                ExtendedLogger.LogWarning(GetType().Name, "A request to start a replay was sent but downloads are still running.", this);
+                return;
+            }
+
+            if (_controller != null && _controller.debugLogs)
+                ExtendedLogger.LogInfo(GetType().Name, "Target time passed. Starting replay.", this);
+            DebugDistributedReplayLog("StartReplayIfStateAllows: calling RecorderController.StartReplay.");
+            _controller.StartReplay();
+            DebugDistributedReplayLog("StartReplayIfStateAllows: RecorderController.StartReplay returned. state=" +
+                                      _state.currentState);
+        }
+
+        public void EndReplayOnAllClientsEvent()
+        {
+            _globalSynchronizationTime = NetworkUtils.GetSynchronizedTime();
+            DateTime stopReplayTime = _globalSynchronizationTime.AddMilliseconds(maxSynchronizationTimeMS);
+            EndReplayOnServerRpc(stopReplayTime.ToFileTime(), _state.recorderID);
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        private void EndReplayOnServerRpc(long stopTime, int recorderId)
+        {
+            EndReplayOnClientRpc(stopTime, recorderId);
+        }
+
+        [ClientRpc]
+        private void EndReplayOnClientRpc(long stopTime, int recorderId)
+        {
+            DateTime stopReplayTime = DateTime.FromFileTime(stopTime);
+
+            if (recorderId != _state.recorderID)
+                return;
+            
+            _globalSynchronizationTime = NetworkUtils.GetSynchronizedTime();
+            if (_endReplayCoroutine != null)
+            {
+                StopCoroutine(_endReplayCoroutine);
+                _endReplayCoroutine = null;
+            }
+
+            if (_globalSynchronizationTime > stopReplayTime)
+            {
+                TimeSpan difference = _globalSynchronizationTime - stopReplayTime;
+                ExtendedLogger.LogError(GetType().Name, "The replay should have stopped already! Time difference: " +
+                                        difference.TotalMilliseconds +
+                                        " ms.  Potential fix: increase the  maxSynchronizationTime!", this);
+                StopReplay();
+            }
+            else
+            {
+                _endReplayCoroutine = StartCoroutine(StopReplayWhenReady(stopReplayTime));
+            }
+        }
+
+        private IEnumerator StopReplayWhenReady(DateTime stopReplayTime)
+        {
+            yield return WaitUntilSynchronizedTime(stopReplayTime);
+            _endReplayCoroutine = null;
+            StopReplay();
+        }
+
+        private void StopReplay()
+        {
+            if (_startReplayCoroutine != null)
+            {
+                StopCoroutine(_startReplayCoroutine);
+                _startReplayCoroutine = null;
+            }
+
+            _replayStarted = false;
+            _startReplayEventSent = false;
+            _controller.EndReplay();
+        }
+        #endregion
+
+        #region ReplayTimeControl
+        public void TogglePlayPauseReplayOnAllClients(bool paused)
+        {
+            TogglePlayPauseReplayServerRpc(paused, _state.recorderID);
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        private void TogglePlayPauseReplayServerRpc(bool isPaused, int recorderId)
+        {
+            //_state.replayPaused = isPaused;
+            TogglePlayPauseReplayClientRpc(isPaused, recorderId);
+        }
+
+        [ClientRpc]
+        private void TogglePlayPauseReplayClientRpc(bool isPaused, int recorderId)
+        {
+            if(recorderId != _state.recorderID)
+                return;
+            
+            _state.replayPaused = isPaused;
+        }
+
+        public void UpdateUserReplayTimeOnAllClientsEvent(float currentUserTime)
+        {
+            if(NetworkUser.LocalInstance != null)
+                UpdateUserReplayTimeServerRpc(currentUserTime, _state.recorderID, NetworkUser.LocalInstance.name);
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        private void UpdateUserReplayTimeServerRpc(float userReplayTime, int recorderId, string userName)
+        {
+            UpdateUserReplayTimeClientRpc(userReplayTime, recorderId, userName);
+        }
+
+        [ClientRpc]
+        private void UpdateUserReplayTimeClientRpc(float userReplayTime, int recorderId, string userName)
+        {
+            if(recorderId != _state.recorderID)
+                return;
+            
+            if (!_userReplayTimes.ContainsKey(userName))
+            {
+                _userReplayTimes.Add(userName, userReplayTime);
+                _userReplayTimesUpdateTime.Add(userName, Time.time);
+            }
+            else
+            {
+                _userReplayTimes[userName] = userReplayTime;
+                _userReplayTimesUpdateTime[userName] = Time.time;
+            }
+
+            // TODO: Fix this
+            /*
+            foreach (var key in _userReplayTimes.Keys.ToList())
+            {
+                if (!PhotonNetwork.CurrentRoom.Players.ContainsKey(key))
+                {
+                    _userReplayTimes.Remove(key);
+                    _userReplayTimesUpdateTime.Remove(key);
+                }
+            }*/
+        }
+        
+        /// <summary>
+        /// Called on the host each replay tick to broadcast the authoritative replay time to all
+        /// clients, which use it as the synchronization target in synchronized playback.
+        /// </summary>
+        public void PublishHostReplayTime(float replayTime)
+        {
+            if (!IsServer)
+                return;
+
+            HostReplayTime = replayTime;
+            PublishHostReplayTimeClientRpc(replayTime, _state.recorderID);
+        }
+
+        [ClientRpc]
+        private void PublishHostReplayTimeClientRpc(float replayTime, int recorderId)
+        {
+            if (recorderId != _state.recorderID)
+                return;
+
+            HostReplayTime = replayTime;
+        }
+        #endregion
+        
+        #region ReplayListManagement
+        public void UpdateReplayList()
+        {
+            // When using local replay files, populate the list from the local recording directory
+            // and do not query the server (which would otherwise log connection errors when offline).
+            if (_state.useLocalReplayFiles)
+            {
+                UpdateLocalReplayList();
+                return;
+            }
+
+            StartCoroutine(GetReplayList(_state.selectedServer, _state.projectName));
+        }
+
+        private void UpdateLocalReplayList()
+        {
+            string directory = string.IsNullOrEmpty(_state.recordingDirectory)
+                ? Application.persistentDataPath
+                : _state.recordingDirectory;
+
+            if (!Directory.Exists(directory))
+                return;
+
+            string[] filesWithPaths = Directory.GetFiles(directory, "*.recordmeta");
+            string[] replayNames = new string[filesWithPaths.Length];
+            for (int i = 0; i < filesWithPaths.Length; i++)
+                replayNames[i] = Path.GetFileNameWithoutExtension(filesWithPaths[i]);
+
+            if (_state.replayList == null || _state.replayList.replayNames == null ||
+                replayNames.Length != _state.replayList.replayNames.Length)
+            {
+                _state.replayList = new ReplayList { replayNames = replayNames };
+            }
+        }
+        
+        private IEnumerator GetReplayList(string serverAddress, string projectName)
+        {
+            string completeURL = serverAddress + "/all_recording_names/project/" + projectName;
+
+            using (var uwr = new UnityWebRequest(completeURL, UnityWebRequest.kHttpVerbGET))
+            {
+                DownloadHandlerBuffer dH = new DownloadHandlerBuffer();
+                uwr.downloadHandler = dH;
+
+                yield return uwr.SendWebRequest();
+                if (uwr.result != UnityWebRequest.Result.Success)
+                    ExtendedLogger.LogError(GetType().Name, uwr.error + ", url: " + completeURL, this);
+                else
+                {
+                    string response = uwr.downloadHandler.text;
+                    ReplayList newReplayList = JsonUtility.FromJson<ReplayList>(response);
+          
+                    if (_state.replayList == null || _state.replayList.replayNames == null || newReplayList.replayNames.Length != _state.replayList.replayNames.Length)
+                        _state.replayList = newReplayList;
+                }
+            }
+        }
+        #endregion
+        
+        #region  Helper
+        private IEnumerator KeepClockSynchronized()
+        {
+            while (true)
+            {
+                var syncTask = Task.Run(() => NetworkUtils.SynchronizeClock(true));
+                yield return new WaitUntil(() => syncTask.IsCompleted);
+                yield return new WaitForSeconds(30f);
+            }
+        }
+        
+        public void Upload(string projectName, string filePath, string fileName, string serverAddress)
+        {
+
+            StartCoroutine(NetworkUtils.UploadToServer(projectName, filePath, fileName, serverAddress));
+        }
+        
+        private void DebugDistributedReplayLog(string message)
+        {
+            if (_controller == null || !_controller.debugLogs)
+                return;
+
+            ExtendedLogger.LogInfo(GetType().Name, "[DistributedReplayDebug][frame=" + Time.frameCount +
+                                                   "][time=" + Time.realtimeSinceStartup.ToString("F3") + "] " + message, this);
+        }
+
+        private void DebugDistributedReplayStatusIfChanged(string context)
+        {
+            if (_controller == null || !_controller.debugLogs)
+                return;
+
+            string status = "state=" + _state.currentState +
+                            ", replayStarted=" + _replayStarted +
+                            ", startReplayEventSent=" + _startReplayEventSent +
+                            ", allUsersFinishedLoading=" + _allUsersFinishedLoading +
+                            ", localDownloads=" + LocalDownloadStatusSummary() +
+                            ", users=" + UserDownloadStatusSummary();
+
+            if (_lastDistributedReplayStatusLog == status)
+                return;
+
+            _lastDistributedReplayStatusLog = status;
+            DebugDistributedReplayLog(context + ": " + status);
+        }
+        #endregion
     }
 }

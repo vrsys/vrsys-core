@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using Unity.Netcode.Components;
 using UnityEngine;
 using VRSYS.Core.Logging;
 
@@ -97,6 +98,17 @@ namespace VRSYS.Recording
 
         private const float ReplayBoundaryPaddingSeconds = 0.001f;
         private float lastErrorLog = 0.0f;
+        private NetworkTransform _networkTransform;
+
+        public override void Start()
+        {
+            base.Start();
+            _networkTransform = GetComponent<NetworkTransform>();
+            isNetworkedRecorder = _networkTransform != null;
+        }
+
+        public override bool HasNetworkAuthority() =>
+            _networkTransform == null || !_networkTransform.IsSpawned || _networkTransform.CanCommitToTransform;
         
         public override bool Record(float recordTime)
         {
@@ -580,7 +592,7 @@ namespace VRSYS.Recording
                 return 0;
             return controller.recorderState.ResolveOriginalId(t.parent.gameObject);
         }
-
+        
         public List<RerecordSample> DrainRerecordSamples()
         {
             List<RerecordSample> drained = _rerecBuffer;

@@ -32,6 +32,7 @@ namespace VRSYS.Recording
         public bool registered = false;
         protected int id = 99999;
         protected int recorderId = 99999;
+        protected bool isNetworkedRecorder = false;
         public volatile bool inRerecordingMode = false;
         public bool preventAutoRegister = false;
 
@@ -144,5 +145,13 @@ namespace VRSYS.Recording
         {
             id = customId;
         }
+        
+        public bool IsNetworkedRecorder()
+        {
+            return isNetworkedRecorder;
+        }
+
+        // False while another peer sends this recorders data over the network (e.g. a client holding it).
+        public virtual bool HasNetworkAuthority() => true;
     }
 }

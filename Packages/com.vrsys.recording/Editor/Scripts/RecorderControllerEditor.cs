@@ -14,6 +14,7 @@ namespace VRSYS.Recording
         private bool synchronisedPlayback;
         private bool lateJoinPlayback;
         private bool endPlaybackOnDurationReached;
+        private bool endPlaybackOnReplayError;
         private bool indefinitePlayback;
         private bool recordMicro;
         private bool recordAudioListener;
@@ -21,6 +22,7 @@ namespace VRSYS.Recording
         private bool attachTransformRecorderToAll;
         private bool replayHierarchyChanges;
         private bool playbackTransform;
+        private bool replayTransformOnServerOnly;
         private bool instantiateMissingObjects;
         private bool replayAudio;
         private bool recordOnLocalTransformChangesOnly;
@@ -215,6 +217,9 @@ namespace VRSYS.Recording
                 playbackTransform = EditorGUILayout.Toggle(
                     new GUIContent("Playback transform", "Attach TransformRecorder components during replay so recorded transforms are applied."),
                     controller.playbackTransform);
+                replayTransformOnServerOnly = EditorGUILayout.Toggle(
+                    new GUIContent("Replay networked transforms on server only", "Objects with a NetworkTransform are only replayed on the server (or host); clients receive their poses through the NetworkTransform. Objects without a NetworkTransform are replayed on every peer."),
+                    controller.replayNetworkedTransformOnServerOnly);
                 instantiateMissingObjects = EditorGUILayout.Toggle(
                     new GUIContent("Instantiate missing objects", "When enabled, recorded objects that are not present in the scene are instantiated for playback (querying their mesh/prefab information). When disabled, only objects already present in the scene are played back."),
                     controller.instantiateMissingObjects);
@@ -224,6 +229,9 @@ namespace VRSYS.Recording
                 endPlaybackOnDurationReached = EditorGUILayout.Toggle(
                     new GUIContent("End Playback on Duration Reached", "Once playback time has reached the duration, the playback will be stopped."),
                     controller.endPlaybackOnDurationReached);
+                endPlaybackOnReplayError = EditorGUILayout.Toggle(
+                    new GUIContent("End Playback on Replay Error", "End the playback as soon as a transform, audio or generic recorder fails to replay a frame. When disabled, failing recorders are skipped and the playback continues."),
+                    controller.endPlaybackOnReplayError);
                 indefinitePlayback = EditorGUILayout.Toggle(
                     new GUIContent("Indefinite Playback", "Playback time will advance beyond the recording duration. Relevant for Rerecording."),
                     controller.indefinitePlayback);
@@ -247,10 +255,12 @@ namespace VRSYS.Recording
                 replayRoot = controller.replayRoot;
                 replayHierarchyChanges = controller.replayHierarchyChanges;
                 playbackTransform = controller.playbackTransform;
+                replayTransformOnServerOnly = controller.replayNetworkedTransformOnServerOnly;
                 instantiateMissingObjects = controller.instantiateMissingObjects;
                 replayAudio = controller.replayAudio;
                 synchronisedPlayback = controller.synchronizedPlayback;
                 endPlaybackOnDurationReached = controller.endPlaybackOnDurationReached;
+                endPlaybackOnReplayError = controller.endPlaybackOnReplayError;
                 indefinitePlayback = controller.indefinitePlayback;
                 lateJoinPlayback = controller.lateJoinPlayback;
                 if (networkController != null)
@@ -388,6 +398,7 @@ namespace VRSYS.Recording
                 controller.transformRecordingStepsPerSecond = transformRecordingStepsPerSecond;
                 controller.replayHierarchyChanges = replayHierarchyChanges;
                 controller.playbackTransform = playbackTransform;
+                controller.replayNetworkedTransformOnServerOnly = replayTransformOnServerOnly;
                 controller.instantiateMissingObjects = instantiateMissingObjects;
                 controller.replayAudio = replayAudio;
                 controller.recordOnLocalTransformChangesOnly = recordOnLocalTransformChangesOnly;
@@ -399,6 +410,7 @@ namespace VRSYS.Recording
                 Undo.RecordObject(target, "Changed Values");
                 PrefabUtility.RecordPrefabInstancePropertyModifications(target);
                 controller.endPlaybackOnDurationReached = endPlaybackOnDurationReached;
+                controller.endPlaybackOnReplayError = endPlaybackOnReplayError;
                 Undo.RecordObject(target, "Changed Values");
                 PrefabUtility.RecordPrefabInstancePropertyModifications(target);
                 controller.indefinitePlayback = indefinitePlayback;

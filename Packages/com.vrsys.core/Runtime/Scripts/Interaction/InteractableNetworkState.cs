@@ -36,6 +36,7 @@
 //   Date:           2025
 //-----------------------------------------------------------------
 
+using System.Collections;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -49,8 +50,19 @@ namespace VRSYS.Core.Interaction
         [HideInInspector] public NetworkVariable<bool> isGrabbed = new NetworkVariable<bool>(false,
             NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
+        [Header("Ownership Return")]
+        [Tooltip("After a release the owner keeps simulating the object and hands it back to the server once it has " +
+                 "stayed still for this many seconds.")]
+        [SerializeField] private float _settleTime = 0.3f;
+        [Tooltip("Movement per physics step (metres) below which the object counts as still.")]
+        [SerializeField] private float _settlePositionThreshold = 0.001f;
+        [Tooltip("Rotation per physics step (degrees) below which the object counts as still.")]
+        [SerializeField] private float _settleRotationThreshold = 0.5f;
+
         [Header("Debugging")]
         [SerializeField] private bool _getOwnership = false;
+
+        private Coroutine _returnOwnershipRoutine;
 
         #endregion
 
@@ -73,8 +85,54 @@ namespace VRSYS.Core.Interaction
         {
             if(!IsOwner)
                 SwitchOwnerRpc(NetworkManager.LocalClientId);
-            
+
+            StopReturnOwnership();
             UpdateIsGrabbedRpc(isGrabbed);
+
+            // The releasing owner keeps simulating the object (e.g. a throw) and hands it back to the server once it
+            // has come to rest, so the server drives it again (e.g. during a replay). NetworkTransform does not carry
+            // velocity, so returning it right away would make the server continue the object from rest.
+            if (!isGrabbed && !IsServer)
+                _returnOwnershipRoutine = StartCoroutine(ReturnOwnershipWhenSettled());
+        }
+
+        private void StopReturnOwnership()
+        {
+            if (_returnOwnershipRoutine == null)
+                return;
+
+            StopCoroutine(_returnOwnershipRoutine);
+            _returnOwnershipRoutine = null;
+        }
+
+        private IEnumerator ReturnOwnershipWhenSettled()
+        {
+            Transform t = transform;
+            Vector3 lastPosition = t.position;
+            Quaternion lastRotation = t.rotation;
+            float stillTime = 0f;
+
+            while (stillTime < _settleTime)
+            {
+                yield return new WaitForFixedUpdate();
+
+                // Someone else grabbed it meanwhile: it is no longer ours to return.
+                if (!IsSpawned || !IsOwner)
+                {
+                    _returnOwnershipRoutine = null;
+                    yield break;
+                }
+
+                bool still = (t.position - lastPosition).sqrMagnitude <=
+                             _settlePositionThreshold * _settlePositionThreshold &&
+                             Quaternion.Angle(t.rotation, lastRotation) <= _settleRotationThreshold;
+                stillTime = still ? stillTime + Time.fixedDeltaTime : 0f;
+                lastPosition = t.position;
+                lastRotation = t.rotation;
+            }
+
+            _returnOwnershipRoutine = null;
+            ReturnOwnershipRpc();
         }
 
         #endregion
@@ -85,6 +143,16 @@ namespace VRSYS.Core.Interaction
         private void UpdateIsGrabbedRpc(bool isGrabbed)
         {
             this.isGrabbed.Value = isGrabbed;
+        }
+
+        [Rpc(SendTo.Server)]
+        private void ReturnOwnershipRpc(RpcParams rpcParams = default)
+        {
+            // Ignore a late request: the object was grabbed again or changed hands meanwhile.
+            if (rpcParams.Receive.SenderClientId != OwnerClientId || isGrabbed.Value)
+                return;
+
+            NetworkObject.RemoveOwnership();
         }
         
         [Rpc(SendTo.Server)]

@@ -1081,6 +1081,11 @@ namespace VRSYS.Recording
 
             StartCoroutine(NetworkUtils.UploadToServer(projectName, filePath, fileName, serverAddress));
         }
+
+        public bool IsServerOrHost()
+        {
+            return IsHost || IsServer;
+        }
         
         private void DebugDistributedReplayLog(string message)
         {

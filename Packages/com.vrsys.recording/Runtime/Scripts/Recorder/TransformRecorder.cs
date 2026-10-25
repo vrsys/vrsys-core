@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using Unity.Netcode.Components;
 using UnityEngine;
+using VRSYS.Core.Interaction;
 using VRSYS.Core.Logging;
 
 namespace VRSYS.Recording
@@ -109,6 +110,47 @@ namespace VRSYS.Recording
 
         public override bool HasNetworkAuthority() =>
             _networkTransform == null || !_networkTransform.IsSpawned || _networkTransform.CanCommitToTransform;
+
+        // Physics must not move an object while the replay drives it: the replay sets its pose every frame but not
+        // its velocity, and a NetworkTransform sends the pose after the physics step. The rigidbody is kept kinematic
+        // while the replay applies poses and restored when the object is taken over or the replay ends.
+        private Rigidbody _rigidbody;
+        private InteractableNetworkState _grabState;
+        private bool _physicsComponentsLookedUp;
+        private bool _holdsRigidbody;
+        private bool _wasKinematic;
+
+        private void SetDrivenByReplay(bool driven)
+        {
+            if (!_physicsComponentsLookedUp)
+            {
+                _rigidbody = GetComponent<Rigidbody>();
+                _grabState = GetComponent<InteractableNetworkState>();
+                _physicsComponentsLookedUp = true;
+            }
+
+            // While a user holds the object, the XR Interaction Toolkit owns its physics state and restores it on release.
+            if (_rigidbody == null || (_grabState != null && _grabState.IsSpawned && _grabState.isGrabbed.Value))
+                return;
+
+            if (driven)
+            {
+                if (!_holdsRigidbody)
+                {
+                    _wasKinematic = _rigidbody.isKinematic;
+                    _holdsRigidbody = true;
+                }
+
+                // Re-applied every frame: NetworkRigidbody makes the body dynamic when this peer gains authority.
+                if (!_rigidbody.isKinematic)
+                    _rigidbody.isKinematic = true;
+            }
+            else if (_holdsRigidbody)
+            {
+                _rigidbody.isKinematic = _wasKinematic;
+                _holdsRigidbody = false;
+            }
+        }
         
         public override bool Record(float recordTime)
         {
@@ -253,12 +295,16 @@ namespace VRSYS.Recording
         unsafe public override bool Replay(float replayTime)
         {
             if (inRerecordingMode)
+            {
+                SetDrivenByReplay(false);
                 return true;
+            }
 
             replayTime = ClampReplayTimeForNativeBuffer(replayTime);
             
             if (Mathf.Abs(replayTime - _lastReplayTime) < 1.0f/playbackFramerate && _transform != null)
             {
+                SetDrivenByReplay(true);
                 _transform.localScale = _lastLocalSca;
                 _transform.localRotation = _lastLocalRot;
                 _transform.localPosition = _lastLocalPos; 
@@ -292,6 +338,8 @@ namespace VRSYS.Recording
 
             if (_presentInRecording == 0)
                 return true;
+
+            SetDrivenByReplay(true);
 
             if(id == 99999)
                 id = gameObject.GetInstanceID();
@@ -541,6 +589,10 @@ namespace VRSYS.Recording
         public override void OnDestroy()
         {
             base.OnDestroy();
+
+            // Hand physics back after the replay. Without network authority, NetworkRigidbody keeps the body kinematic.
+            if (_holdsRigidbody && _rigidbody != null && HasNetworkAuthority())
+                _rigidbody.isKinematic = _wasKinematic;
             if (_presentInRecording == 1 && tag != "InstantiatedForPlayback")
             {
                 // Restore the original parent first: playback may have reparented this object, and the

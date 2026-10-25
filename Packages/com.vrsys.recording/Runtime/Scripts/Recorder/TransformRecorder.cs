@@ -33,6 +33,7 @@ namespace VRSYS.Recording
         private List<RerecordSample> _rerecBuffer = new List<RerecordSample>();
         private float _rerecLastPushTime = -1.0f;
         private TransformCapture _rerecLastCapture;
+        private TransformCapture _rerecPreviousFrameCapture;
         private bool _rerecHasLastCapture = false;
 
         [DllImport("RecordingPlugin")]
@@ -98,6 +99,8 @@ namespace VRSYS.Recording
         private string anonymisedName;
 
         private const float ReplayBoundaryPaddingSeconds = 0.001f;
+        // Offset of a hold keyframe before a jump, gap or parent change (see Record and TickRerecordCapture).
+        private const float HoldKeyframeOffsetSeconds = 0.001f;
         private float lastErrorLog = 0.0f;
         private NetworkTransform _networkTransform;
 
@@ -231,8 +234,9 @@ namespace VRSYS.Recording
             }
             
             TransformCapture currentCapture = CaptureCurrentTransform(parentID);
+            TransformCapture lastCapture = LastRecordedCapture();
             bool changeInTransform;
-            bool objectChanged = HasObjectChanged(LastRecordedCapture(), currentCapture, firstSeen, controller.recordOnLocalTransformChangesOnly, out changeInTransform);
+            bool objectChanged = HasObjectChanged(lastCapture, currentCapture, firstSeen, controller.recordOnLocalTransformChangesOnly, out changeInTransform);
 
             if (objectChanged)
             {
@@ -258,12 +262,22 @@ namespace VRSYS.Recording
                             ExtendedLogger.LogInfo(GetType().Name, "Gap/teleport keyframe inserted. Pos Dif: " + posDif + ", Scale Dif: " + scaDif + ", Time Dif: " + timeDif + ", Time: " + recordTime + ", uuid: " + id, this);
                     }
                 }
+
+                // The local transform is stored relative to the parent. Across a parent change (e.g. XRGrabInteractable
+                // unparents on grab and reparents on release) two keyframes refer to different parents, and the replay
+                // would interpolate between unrelated poses. Hold the old pose under the old parent up to the change.
+                if (!firstSeen && !teleportation && lastCapture.parentId != currentCapture.parentId && recordTime > 0.001f)
+                {
+                    teleportation = true;
+                    if (controller.debugLogs)
+                        ExtendedLogger.LogInfo(GetType().Name, "Parent change keyframe inserted. Time: " + recordTime + ", uuid: " + id, this);
+                }
              
                 if (teleportation)
                 {
                     fillDTOLastData();
 
-                    float teleportTime = recordTime - (1.0f / 1000.0f);
+                    float teleportTime = recordTime - HoldKeyframeOffsetSeconds;
                     if (teleportTime > 0.0f)
                     {
                         result = RecordObjectAtTimestamp(controller.RecorderID, _name, _name.Length, id, _matrixDTO, teleportTime, _infoDTO);
@@ -391,16 +405,9 @@ namespace VRSYS.Recording
                         bool active = _infoDTO[0] > 0;
                         int newParentUUID = _infoDTO[1];
 
-                        if(!_transform.localScale.Equals(_lastLocalSca))
-                            _transform.localScale = _lastLocalSca;
-                        if(!_transform.localRotation.Equals(_lastLocalRot))
-                            _transform.localRotation = _lastLocalRot;
-                        if(!_transform.localPosition.Equals(_lastLocalPos))
-                            _transform.localPosition = _lastLocalPos;
-
-                        if (gameObject.activeSelf != active)
-                            gameObject.SetActive(active);
-                        
+                        // Apply a parent change before the local transform: the replayed values are relative to the new
+                        // parent. Setting them first and reparenting afterwards (keeping the world pose) showed the object
+                        // at a wrong pose for the frame of the change.
                         if (controller.replayHierarchyChanges)
                         {
                             if (newParentUUID != -99999 && _parent != newParentUUID)
@@ -410,7 +417,7 @@ namespace VRSYS.Recording
                                     Transform parentTransform = controller.recorderState.originalIdGameObjects[newParentUUID].transform;
                                     if (newParentUUID != 0 && parentTransform != null)
                                     {
-                                        _transform.SetParent(parentTransform);
+                                        _transform.SetParent(parentTransform, false);
                                         _parentTransform = parentTransform;
                                         _parent = newParentUUID;
                                     }
@@ -420,7 +427,7 @@ namespace VRSYS.Recording
                                         // during playback: the recording's root is the configured replayRoot
                                         // (cf. ScenePreparator, which parents top-level recorded objects under
                                         // it). SetParent(null) when no anchor is set preserves scene-root behaviour.
-                                        _transform.SetParent(controller.replayRoot);
+                                        _transform.SetParent(controller.replayRoot, false);
                                         _parentTransform = controller.replayRoot;
                                         _parent = 0;
                                     }
@@ -428,12 +435,22 @@ namespace VRSYS.Recording
 
                                 if (newParentUUID == 0)
                                 {
-                                    _transform.SetParent(controller.replayRoot);
+                                    _transform.SetParent(controller.replayRoot, false);
                                     _parentTransform = controller.replayRoot;
                                     _parent = 0;
                                 }
                             }
                         }
+
+                        if(!_transform.localScale.Equals(_lastLocalSca))
+                            _transform.localScale = _lastLocalSca;
+                        if(!_transform.localRotation.Equals(_lastLocalRot))
+                            _transform.localRotation = _lastLocalRot;
+                        if(!_transform.localPosition.Equals(_lastLocalPos))
+                            _transform.localPosition = _lastLocalPos;
+
+                        if (gameObject.activeSelf != active)
+                            gameObject.SetActive(active);
                     }
 
                     _lastReplayTime = replayTime;
@@ -614,28 +631,47 @@ namespace VRSYS.Recording
             _rerecBuffer.Clear();
             _rerecLastPushTime = -1.0f;
             _rerecLastCapture = CaptureCurrentTransform(GetRerecordParentId(transform));
+            _rerecPreviousFrameCapture = _rerecLastCapture;
             _rerecHasLastCapture = true;
         }
 
         public override void TickRerecordCapture(float currentReplayTime)
         {
             TransformCapture currentCapture = CaptureCurrentTransform(GetRerecordParentId(transform));
+            TransformCapture previousFrameCapture = _rerecPreviousFrameCapture;
+            _rerecPreviousFrameCapture = currentCapture;
+
             if (_rerecHasLastCapture &&
                 !HasObjectChanged(_rerecLastCapture, currentCapture, false, controller.recordOnLocalTransformChangesOnly))
                 return;
 
+            // As in Record: across a parent change the local transforms of two samples refer to different parents.
+            // Hold the pose of the previous frame under the old parent up to the change, and never skip the change.
+            bool parentChanged = _rerecHasLastCapture && previousFrameCapture.parentId != currentCapture.parentId;
+
             float minStep = 1.0f / Mathf.Max(1, controller.transformRecordingStepsPerSecond);
-            if (_rerecLastPushTime >= 0.0f && currentReplayTime - _rerecLastPushTime < minStep)
+            if (!parentChanged && _rerecLastPushTime >= 0.0f && currentReplayTime - _rerecLastPushTime < minStep)
                 return;
+
+            if (parentChanged)
+            {
+                float holdTime = currentReplayTime - HoldKeyframeOffsetSeconds;
+                if (holdTime > _rerecLastPushTime)
+                    AddRerecordSample(previousFrameCapture, holdTime);
+            }
+
+            AddRerecordSample(currentCapture, currentReplayTime);
             _rerecLastPushTime = currentReplayTime;
-
-            float[] matrix = new float[20];
-            int[] info = new int[2];
-            PackTransform(currentCapture, matrix, info);
-
-            _rerecBuffer.Add(new RerecordSample { time = currentReplayTime, matrix = matrix, info = info });
             _rerecLastCapture = currentCapture;
             _rerecHasLastCapture = true;
+        }
+
+        private void AddRerecordSample(TransformCapture capture, float time)
+        {
+            float[] matrix = new float[20];
+            int[] info = new int[2];
+            PackTransform(capture, matrix, info);
+            _rerecBuffer.Add(new RerecordSample { time = time, matrix = matrix, info = info });
         }
 
         private int GetRerecordParentId(Transform t)

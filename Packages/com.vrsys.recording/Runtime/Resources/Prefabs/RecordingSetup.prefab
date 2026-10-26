@@ -264,9 +264,10 @@ MonoBehaviour:
   projectName: 
   recordingDirectory: 
   recordingFile: 
+  fileNameDateSuffix: 1
   serverList:
   - 127.0.0.1:5000
-  fixedPlaybackRecordingName: Dev
+  fixedPlaybackRecordingName: Test
   recorderController: {fileID: 0}
   currentRecordingTime: -1
   currentReplayTime: -1
@@ -318,7 +319,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
   maxSynchronizationTimeMS: 500
-  _userNames: []
   currentLatency: 0
 --- !u!114 &3748566946502455273
 MonoBehaviour:
@@ -349,6 +349,8 @@ MonoBehaviour:
   attachTransformRecorderToAll: 1
   replayHierarchyChanges: 1
   recordOnLocalTransformChangesOnly: 1
+  replayLocalTransformChangesOnly: 1
+  replayNetworkedTransformOnServerOnly: 0
   replayAudio: 1
   playbackTransform: 1
   instantiateMissingObjects: 1
@@ -358,10 +360,12 @@ MonoBehaviour:
   replayRoot: {fileID: 0}
   createWAV: 0
   createCSV: 0
+  indefinitePlayback: 0
   endPlaybackOnDurationReached: 0
   synchronizedPlayback: 1
+  endPlaybackOnReplayError: 0
   lateJoinPlayback: 0
-  downloadFilesFromServer: 1
+  downloadFilesFromServer: 0
   recorderState: {fileID: 2889173778122889198}
   pluginSettings:
     recordingMaxBufferSize: 1000
@@ -372,7 +376,7 @@ MonoBehaviour:
     versionInfo: No information
     recordingDirectory: C:/Users/Anton-Lammert/AppData/LocalLow/DefaultCompany/TemporalCollaborativeImmersiveAnalysis/1
   localPlayback: 0
-  uploadFilesToServer: 1
+  uploadFilesToServer: 0
   debugLogs: 0
 --- !u!114 &8555302788377108125
 MonoBehaviour:

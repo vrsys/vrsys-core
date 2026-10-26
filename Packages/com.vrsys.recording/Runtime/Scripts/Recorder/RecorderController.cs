@@ -63,6 +63,7 @@ namespace VRSYS.Recording
         public bool attachTransformRecorderToAll = true;
         public bool replayHierarchyChanges = true;
         public bool recordOnLocalTransformChangesOnly = true;
+        public bool replayLocalTransformChangesOnly = true;
         public bool replayNetworkedTransformOnServerOnly = false;
         public bool replayAudio = true;
         public bool playbackTransform = true;

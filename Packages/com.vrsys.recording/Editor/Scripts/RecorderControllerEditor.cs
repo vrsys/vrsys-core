@@ -26,6 +26,7 @@ namespace VRSYS.Recording
         private bool instantiateMissingObjects;
         private bool replayAudio;
         private bool recordOnLocalTransformChangesOnly;
+        private bool replayLocalTransformChangesOnly;
         private int transformRecordingStepsPerSecond;
         private bool downloadFilesFromServer;
         private bool uploadFilesToServer;
@@ -214,6 +215,9 @@ namespace VRSYS.Recording
                 replayHierarchyChanges = EditorGUILayout.Toggle(
                     new GUIContent("Replay hierarchy changes", "Reapply recorded reparenting (hierarchy changes) during playback. Disable to keep objects under their initial parent."),
                     controller.replayHierarchyChanges);
+                replayLocalTransformChangesOnly = EditorGUILayout.Toggle(
+                    new GUIContent("Replay on local changes only", "When enabled, a replayed transform is applied from its recorded local position/rotation/scale. When disabled, the recorded global (world) transform is used instead."),
+                    controller.replayLocalTransformChangesOnly);
                 playbackTransform = EditorGUILayout.Toggle(
                     new GUIContent("Playback transform", "Attach TransformRecorder components during replay so recorded transforms are applied."),
                     controller.playbackTransform);
@@ -254,6 +258,7 @@ namespace VRSYS.Recording
             {
                 replayRoot = controller.replayRoot;
                 replayHierarchyChanges = controller.replayHierarchyChanges;
+                replayLocalTransformChangesOnly = controller.replayLocalTransformChangesOnly;
                 playbackTransform = controller.playbackTransform;
                 replayTransformOnServerOnly = controller.replayNetworkedTransformOnServerOnly;
                 instantiateMissingObjects = controller.instantiateMissingObjects;
@@ -402,6 +407,7 @@ namespace VRSYS.Recording
                 controller.instantiateMissingObjects = instantiateMissingObjects;
                 controller.replayAudio = replayAudio;
                 controller.recordOnLocalTransformChangesOnly = recordOnLocalTransformChangesOnly;
+                controller.replayLocalTransformChangesOnly = replayLocalTransformChangesOnly;
                 controller.createWAV = createWAV;
                 controller.createCSV = createCSV;
                 Undo.RecordObject(target, "Changed Values");

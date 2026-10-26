@@ -95,6 +95,9 @@ namespace VRSYS.Recording
             int uuid, float[] localMatrix, float timeStamp, int[] objectInformation);
 
         [DllImport("RecordingPlugin")]
+        private static extern float GetGameObjectFirstSeenTimeByID(int recorderId, int id);
+
+        [DllImport("RecordingPlugin")]
         private static extern bool GetTransformAndInformationAtTime(int recorderId, string objectName,
             int objectNameLength, int uuid, float currentTime, IntPtr data, IntPtr objectInformation);
 
@@ -135,6 +138,8 @@ namespace VRSYS.Recording
 
         private bool originalIdFound;
         private int originalId;
+        // Replay: recording time at which the object first appears (e.g. spawned during the recording).
+        private float _firstSeenTime = float.NegativeInfinity;
 
         private bool anonymiseName;
         private string trueName;
@@ -355,7 +360,16 @@ namespace VRSYS.Recording
             return _lastRecordedCapture.Value.parentId != currentCapture.parentId;
         }
 
-        unsafe public override bool Replay(float replayTime)
+        public override bool Replay(float replayTime) => Replay(replayTime, true);
+
+        /// <summary>
+        /// Replays only whether the object is active, not its pose. For networked objects on peers that receive their
+        /// pose through the network: they are only spawned and despawned during a recording, so every peer derives
+        /// their visibility from its own copy of the recording (first seen, destroyed).
+        /// </summary>
+        public void ReplayActiveState(float replayTime) => Replay(replayTime, false);
+
+        private unsafe bool Replay(float replayTime, bool replayPose)
         {
             if (inRerecordingMode)
             {
@@ -368,9 +382,10 @@ namespace VRSYS.Recording
             // The next playback step was not reached -> applying the most recent data to the transform
             if (Mathf.Abs(replayTime - _lastReplayTime) < 1.0f / playbackFramerate && _transform != null)
             {
-                SetDrivenByReplay(true);
+                if (replayPose)
+                    SetDrivenByReplay(true);
                 if (_lastReplayedCapture.HasValue)
-                    ApplyReplayCapture(_lastReplayedCapture.Value, transform);
+                    ApplyReplayCapture(_lastReplayedCapture.Value, transform, replayPose);
 
                 return true;
             }
@@ -402,7 +417,8 @@ namespace VRSYS.Recording
             if (_presentInRecording == 0)
                 return true;
 
-            SetDrivenByReplay(true);
+            if (replayPose)
+                SetDrivenByReplay(true);
 
             if (id == 99999)
                 id = gameObject.GetInstanceID();
@@ -450,10 +466,14 @@ namespace VRSYS.Recording
                             originalId = GetOriginalID(controller.RecorderID, _name, _name.Length, id);
                             originalIdFound = true;
                             controller.AddOriginalIdGameobject(originalId, id, gameObject);
+                            _firstSeenTime = GetGameObjectFirstSeenTimeByID(controller.RecorderID, originalId);
                         }
 
                         var replayCapture = new TransformCapture(_matrixDTO, _infoDTO, replayTime);
-                        ApplyReplayCapture(replayCapture, _transform);
+                        // Not in the recording yet at this time (e.g. spawned later): hidden until it appears.
+                        if (replayTime < _firstSeenTime)
+                            replayCapture.active = false;
+                        ApplyReplayCapture(replayCapture, _transform, replayPose);
                         _lastReplayedCapture = replayCapture;
                     }
 
@@ -463,8 +483,14 @@ namespace VRSYS.Recording
             }
         }
 
-        private void ApplyReplayCapture(TransformCapture capture, Transform tr)
+        private void ApplyReplayCapture(TransformCapture capture, Transform tr, bool replayPose = true)
         {
+            if (!replayPose)
+            {
+                SetReplayedActive(capture.active);
+                return;
+            }
+
             // Apply a parent change before the local transform: the replayed values are relative to the new
             // parent. Setting them first and reparenting afterwards (keeping the world pose) showed the object
             // at a wrong pose for the frame of the change.
@@ -515,8 +541,48 @@ namespace VRSYS.Recording
                 tr.position = capture.globalPosition;
             }
 
-            if (gameObject.activeSelf != capture.active)
-                gameObject.SetActive(capture.active);
+            SetReplayedActive(capture.active);
+        }
+
+        // Renderers this recorder switched off to hide a networked object (see SetReplayedActive).
+        private List<Renderer> _hiddenRenderers;
+
+        // Networked objects are only spawned and despawned during a recording. They stay active and are hidden by
+        // switching their renderers off: a deactivated NetworkTransform restarts its interpolation from an empty
+        // state on clients when it is activated again.
+        private void SetReplayedActive(bool active)
+        {
+            if (_networkTransform == null)
+                _networkTransform = GetComponent<NetworkTransform>();
+
+            if (_networkTransform == null)
+            {
+                if (gameObject.activeSelf != active)
+                    gameObject.SetActive(active);
+                return;
+            }
+
+            if (!active && _hiddenRenderers == null)
+            {
+                _hiddenRenderers = new List<Renderer>();
+                foreach (Renderer r in GetComponentsInChildren<Renderer>(true))
+                {
+                    if (!r.enabled)
+                        continue;
+                    r.enabled = false;
+                    _hiddenRenderers.Add(r);
+                }
+            }
+            else if (active && _hiddenRenderers != null)
+                ShowHiddenRenderers();
+        }
+
+        private void ShowHiddenRenderers()
+        {
+            foreach (Renderer r in _hiddenRenderers)
+                if (r != null)
+                    r.enabled = true;
+            _hiddenRenderers = null;
         }
 
         // Unity's lossyScale is the component-wise product of the local scales along the hierarchy, so the local scale
@@ -623,7 +689,11 @@ namespace VRSYS.Recording
 
         public override void OnDestroy()
         {
+            RecordDestruction();
             base.OnDestroy();
+
+            if (_hiddenRenderers != null)
+                ShowHiddenRenderers();
 
             // Hand physics back after the replay. Without network authority, NetworkRigidbody keeps the body kinematic.
             if (_holdsRigidbody && _rigidbody != null && HasNetworkAuthority())
@@ -641,6 +711,31 @@ namespace VRSYS.Recording
                 gameObject.transform.localRotation = _originalLocalRot;
                 gameObject.transform.localScale = _originalLocalSca;
             }
+        }
+
+        // An object destroyed (e.g. despawned) during the recording: keep its last pose up to now, then mark it inactive,
+        // so the replay hides it from this time on instead of showing its last pose until the end.
+        private void RecordDestruction()
+        {
+            if (!_lastRecordedCapture.HasValue || controller == null || controller.recorderState == null ||
+                controller.recorderState.currentState != State.Recording)
+                return;
+
+            float recordTime = controller.recorderState.currentRecordingTime;
+            TransformCapture last = _lastRecordedCapture.Value;
+
+            if (recordTime - HoldKeyframeOffsetSeconds > _lastRecordTime)
+            {
+                fillDTOData(last);
+                RecordObjectAtTimestamp(controller.RecorderID, _name, _name.Length, id, _matrixDTO,
+                    recordTime - HoldKeyframeOffsetSeconds, _infoDTO);
+            }
+
+            last.active = false;
+            fillDTOData(last);
+            if (!RecordObjectAtTimestamp(controller.RecorderID, _name, _name.Length, id, _matrixDTO,
+                    Mathf.Max(recordTime, _lastRecordTime + HoldKeyframeOffsetSeconds), _infoDTO) && controller.debugLogs)
+                ExtendedLogger.LogError(GetType().Name, "Recording the destruction of " + _name + ": Failed", this);
         }
 
         public override void BeginRerecordCapture()

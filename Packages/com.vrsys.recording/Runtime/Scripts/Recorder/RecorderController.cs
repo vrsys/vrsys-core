@@ -52,6 +52,7 @@ namespace VRSYS.Recording
 
         #region Serialized Fields & Runtime State
 
+        public UnityEvent onReplayIsPreparing = new UnityEvent();
         public UnityEvent onReplayHasStarted = new UnityEvent();
         public UnityEvent onReplayHasEnded = new UnityEvent();
         public UnityEvent onRecordingHasStarted = new UnityEvent();
@@ -65,6 +66,10 @@ namespace VRSYS.Recording
         public bool recordOnLocalTransformChangesOnly = true;
         public bool replayLocalTransformChangesOnly = true;
         public bool replayNetworkedTransformOnServerOnly = false;
+        // The server spawns missing networked prefabs for the replay instead of every peer creating a local copy.
+        public bool spawnNetworkedPrefabsForReplay = false;
+        // How long a client waits for those spawned copies before it starts the replay without them.
+        public float networkedSpawnTimeout = 5.0f;
         public bool replayAudio = true;
         public bool playbackTransform = true;
         public bool instantiateMissingObjects = true;
@@ -100,6 +105,7 @@ namespace VRSYS.Recording
 
         private float _lastReplayListRefresh;
         public bool localPlayback = false;
+        private Coroutine _replayStartupRoutine;
         public bool uploadFilesToServer = false;
         public bool debugLogs = true;
         private const float ReplayBoundaryPaddingSeconds = 0.1f;
@@ -523,6 +529,10 @@ namespace VRSYS.Recording
 
         public void StartReplay()
         {
+            // Already waiting for networked replay copies (StartReplay is polled while preparing).
+            if (_replayStartupRoutine != null)
+                return;
+
             DebugReplayStartupLog("StartReplay entered. state=" + recorderState.currentState +
                                   ", recorderId=" + recorderState.recorderID +
                                   ", selectedReplayFile=" + recorderState.selectedReplayFile +
@@ -570,9 +580,39 @@ namespace VRSYS.Recording
             if (debugLogs)
                 ExtendedLogger.LogInfo(GetType().Name, "Preparing scene for playback.", this);
             DebugReplayStartupLog("StartReplay before PrepareReplayScene.");
+            onReplayIsPreparing.Invoke();
             _scenePreparator.PrepareReplayScene();
             DebugReplayStartupLog("StartReplay after PrepareReplayScene.");
 
+            // Networked prefabs spawned by the server arrive on clients through the network. Attach the recorders only
+            // once they are all present, so they are matched like every other object.
+            if (_scenePreparator.IsWaitingForNetworkedCopies)
+            {
+                _replayStartupRoutine = StartCoroutine(FinishReplayStartWhenCopiesPresent());
+                return;
+            }
+
+            FinishReplayStart();
+        }
+
+        private IEnumerator FinishReplayStartWhenCopiesPresent()
+        {
+            DebugReplayStartupLog("StartReplay waiting for networked replay copies.");
+            float deadline = Time.realtimeSinceStartup + networkedSpawnTimeout;
+            while (_scenePreparator.IsWaitingForNetworkedCopies && Time.realtimeSinceStartup < deadline)
+                yield return null;
+
+            string missing = _scenePreparator.StopWaitingForNetworkedCopies();
+            if (missing.Length > 0)
+                ExtendedLogger.LogWarning(GetType().Name,
+                    "Networked replay objects did not arrive within " + networkedSpawnTimeout + " s, replaying without them: " + missing, this);
+
+            _replayStartupRoutine = null;
+            FinishReplayStart();
+        }
+
+        private void FinishReplayStart()
+        {
             DebugReplayStartupLog("StartReplay before AttachTransformRecorder. playbackTransform=" + playbackTransform);
             if (playbackTransform)
             {
@@ -617,6 +657,12 @@ namespace VRSYS.Recording
 
         public void EndReplay()
         {
+            if (_replayStartupRoutine != null)
+            {
+                StopCoroutine(_replayStartupRoutine);
+                _replayStartupRoutine = null;
+            }
+
             GetComponent<IRecordingEditor>()?.CompletePendingEdits();
             recorderState.currentState = State.Idle;
             if (debugLogs)
@@ -1330,7 +1376,13 @@ namespace VRSYS.Recording
                 // a prop a client holds is driven by that client and reaches everyone through the network.
                 if (replayNetworkedTransformOnServerOnly && v.IsNetworkedRecorder() &&
                     (!_networkController.IsServerOrHost() || !v.HasNetworkAuthority()))
+                {
+                    // Networked objects are only spawned and despawned during a recording, so every peer follows
+                    // their recorded visibility itself (Netcode does not sync whether an object is active).
+                    if (!_networkController.IsServerOrHost())
+                        (v as TransformRecorder)?.ReplayActiveState(recorderState.currentReplayTime);
                     continue;
+                }
                 
                 bool res = v.Replay(recorderState.currentReplayTime);
                 if (endPlaybackOnReplayError && !res)

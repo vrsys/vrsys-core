@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using TMPro;
 using Unity.XR.CoreUtils;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -64,6 +65,26 @@ namespace VRSYS.Recording
 
         private float dissolveTime = 2.0f;
 
+        // Networked prefabs the server spawns as replay copies (RecorderController.spawnNetworkedPrefabsForReplay).
+        private class ExpectedNetworkedCopy
+        {
+            public ReplayGameObjectInformation information;
+            public string parentName;
+        }
+
+        private readonly Dictionary<GameObject, ReplayPrefabHandler> _replayPrefabHandlers = new Dictionary<GameObject, ReplayPrefabHandler>();
+        // Handlers for NetworkObjects nested in those prefabs, by prefab hash.
+        private readonly List<uint> _nestedObjectHandlerHashes = new List<uint>();
+        // Client: replay copies received from the server, by recorded object id (to resolve their nested NetworkObjects).
+        private readonly Dictionary<int, GameObject> _networkedCopiesById = new Dictionary<int, GameObject>();
+        // Client: copies this replay waits for, by recorded object id.
+        private readonly Dictionary<int, ExpectedNetworkedCopy> _expectedNetworkedCopies = new Dictionary<int, ExpectedNetworkedCopy>();
+        // Client: copies that arrived before this peer prepared its scene.
+        private readonly Dictionary<int, GameObject> _arrivedNetworkedCopies = new Dictionary<int, GameObject>();
+
+        /// <summary>True while a client still waits for networked replay copies spawned by the server.</summary>
+        public bool IsWaitingForNetworkedCopies => _expectedNetworkedCopies.Count > 0;
+
         /// <summary>
         /// Raised while preparing an avatar playback object, with the instantiated GameObject and the
         /// recorded "Meta ID" node name. The optional Meta integration subscribes to this to wire up
@@ -71,9 +92,191 @@ namespace VRSYS.Recording
         /// </summary>
         public event System.Action<GameObject, string> AvatarPlaybackSetup;
 
+        private void Awake()
+        {
+            _controller = GetComponent<RecorderController>();
+            RegisterReplayPrefabHandlers();
+        }
+
         public void Start()
         {
             _controller = GetComponent<RecorderController>();
+        }
+
+        private void OnDestroy()
+        {
+            NetworkManager networkManager = NetworkManager.Singleton;
+            if (networkManager != null && networkManager.PrefabHandler != null)
+            {
+                foreach (GameObject prefab in _replayPrefabHandlers.Keys)
+                    networkManager.PrefabHandler.RemoveHandler(prefab);
+                foreach (uint hash in _nestedObjectHandlerHashes)
+                    networkManager.PrefabHandler.RemoveHandler(hash);
+            }
+            _replayPrefabHandlers.Clear();
+            _nestedObjectHandlerHashes.Clear();
+        }
+
+        // Registered on every peer before any replay, so a client builds a replay copy that arrives at any time (also
+        // while it joins late) through the handler. Prefabs the application already handles itself are left alone.
+        private void RegisterReplayPrefabHandlers()
+        {
+            NetworkManager networkManager = NetworkManager.Singleton;
+            if (_controller == null || !_controller.spawnNetworkedPrefabsForReplay || networkManager == null ||
+                networkManager.NetworkConfig?.Prefabs == null)
+                return;
+
+            foreach (NetworkPrefab networkPrefab in networkManager.NetworkConfig.Prefabs.Prefabs)
+            {
+                GameObject prefab = networkPrefab.Prefab;
+                if (prefab == null || prefab.GetComponent<NetworkObject>() == null ||
+                    prefab.GetComponent<NetworkUser>() != null || _replayPrefabHandlers.ContainsKey(prefab))
+                    continue;
+
+                var handler = new ReplayPrefabHandler(prefab, this);
+                if (!networkManager.PrefabHandler.AddHandler(prefab, handler))
+                    continue;
+                _replayPrefabHandlers.Add(prefab, handler);
+
+                foreach (NetworkObject nested in prefab.GetComponentsInChildren<NetworkObject>(true))
+                {
+                    if (nested.gameObject == prefab)
+                        continue;
+                    if (networkManager.PrefabHandler.AddHandler(nested.PrefabIdHash, new ReplayNestedObjectHandler(nested.PrefabIdHash, this)))
+                        _nestedObjectHandlerHashes.Add(nested.PrefabIdHash);
+                }
+            }
+        }
+
+        // Same decision on every peer: the server spawns the copy, clients wait for it instead of creating their own.
+        // Avatars (NetworkUser) stay local copies. Clients only receive the server's replay of the copy when networked
+        // transforms are replayed on the server only.
+        private bool ShouldSpawnNetworked(GameObject prefab)
+        {
+            NetworkManager networkManager = NetworkManager.Singleton;
+            return prefab != null && _replayPrefabHandlers.ContainsKey(prefab) && !_controller.localPlayback &&
+                   _controller.replayNetworkedTransformOnServerOnly && networkManager != null &&
+                   networkManager.IsListening;
+        }
+
+        private static GameObject LoadReplayPrefab(string prefabLocation) =>
+            prefabLocation.Contains("Resources/")
+                ? Resources.Load<GameObject>(prefabLocation.Split("Resources/").Last().Replace(".prefab", ""))
+                : null;
+
+        /// <summary>
+        /// Builds an inactive replay copy of a networked prefab. The server and every client use this, so the copies
+        /// keep the same NetworkBehaviours. The parent is set locally on each peer, not by Netcode.
+        /// </summary>
+        internal static GameObject CreateNetworkedCopy(GameObject prefab, Transform parent)
+        {
+            bool prefabWasActive = prefab.activeSelf;
+            prefab.SetActive(false);
+            GameObject copy = Instantiate(prefab, parent);
+            prefab.SetActive(prefabWasActive);
+            Utils.RemoveCustomComponents(copy.transform, keepNetworkComponents: true);
+            Utils.ModifyComponents(copy.transform);
+            foreach (NetworkObject networkObject in copy.GetComponentsInChildren<NetworkObject>(true))
+                networkObject.AutoObjectParentSync = false;
+            return copy;
+        }
+
+        private void SpawnOrExpectNetworkedCopy(ReplayGameObjectInformation information, GameObject prefab,
+            Transform parent, string parentName)
+        {
+            NetworkManager networkManager = NetworkManager.Singleton;
+            if (networkManager.IsServer)
+            {
+                GameObject copy = CreateNetworkedCopy(prefab, parent);
+                AttachNetworkedCopy(information, copy, parentName);
+                var spawnData = new ReplaySpawnData { isReplayCopy = true, recordedObjectId = information.id };
+                networkManager.PrefabHandler.SetInstantiationData(copy, spawnData);
+                copy.SetActive(true);
+                copy.GetComponent<NetworkObject>().Spawn(true);
+
+                // Netcode does not spawn NetworkObjects nested in a prefab with its root; clients resolve them through
+                // ReplayNestedObjectHandler from the copy they built for the root.
+                foreach (NetworkObject nested in copy.GetComponentsInChildren<NetworkObject>(true))
+                {
+                    if (nested.gameObject == copy)
+                        continue;
+                    networkManager.PrefabHandler.SetInstantiationData(nested, spawnData);
+                    nested.Spawn(true);
+                }
+                return;
+            }
+
+            if (_arrivedNetworkedCopies.TryGetValue(information.id, out GameObject arrived) && arrived != null)
+            {
+                _arrivedNetworkedCopies.Remove(information.id);
+                AttachNetworkedCopy(information, arrived, parentName);
+                return;
+            }
+
+            _expectedNetworkedCopies[information.id] = new ExpectedNetworkedCopy
+                { information = information, parentName = parentName };
+        }
+
+        // Names and parents a copy like the recorded object and matches it and its recorded children.
+        private void AttachNetworkedCopy(ReplayGameObjectInformation information, GameObject copy, string parentName)
+        {
+            copy.transform.SetParent(ResolveRecordedParent(parentName), true);
+            copy.name = information.gameObjectName;
+            information.foundObject = copy;
+            information.instantiated = true;
+            MarkAsPlaybackGO(copy);
+            // Only the server removes a spawned copy (despawning it on every peer); clients never destroy it themselves.
+            if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer)
+                TrackInstantiatedHierarchy(copy);
+            SceneGraphTraversalGameObjectExistenceCheck(copy, parentName);
+        }
+
+        private Transform ResolveRecordedParent(string parentName)
+        {
+            var parentInfo = replayGameObjectInformations.FirstOrDefault(i => i.hierarchyName == parentName);
+            if (parentInfo != null && parentInfo.foundObject != null)
+                return parentInfo.foundObject.transform;
+            return string.IsNullOrEmpty(parentName) ? _controller.replayRoot : null;
+        }
+
+        /// <summary>Client: a replay copy spawned by the server arrived through the ReplayPrefabHandler.</summary>
+        public void OnNetworkedCopyArrived(int recordedObjectId, GameObject copy)
+        {
+            _networkedCopiesById[recordedObjectId] = copy;
+            if (_expectedNetworkedCopies.TryGetValue(recordedObjectId, out ExpectedNetworkedCopy expected))
+            {
+                _expectedNetworkedCopies.Remove(recordedObjectId);
+                AttachNetworkedCopy(expected.information, copy, expected.parentName);
+                return;
+            }
+
+            // Arrived before this peer prepared its scene (or after it stopped waiting): matched when the scene is prepared.
+            _arrivedNetworkedCopies[recordedObjectId] = copy;
+        }
+
+        public void OnNetworkedCopyDestroyed(GameObject copy)
+        {
+            foreach (var entry in _arrivedNetworkedCopies.Where(e => e.Value == copy).ToList())
+                _arrivedNetworkedCopies.Remove(entry.Key);
+            foreach (var entry in _networkedCopiesById.Where(e => e.Value == copy).ToList())
+                _networkedCopiesById.Remove(entry.Key);
+        }
+
+        /// <summary>Client: the not yet spawned NetworkObject with the given prefab hash inside a received replay copy.</summary>
+        public NetworkObject FindNestedNetworkObject(int recordedObjectId, uint prefabIdHash)
+        {
+            if (!_networkedCopiesById.TryGetValue(recordedObjectId, out GameObject copy) || copy == null)
+                return null;
+            return copy.GetComponentsInChildren<NetworkObject>(true)
+                .FirstOrDefault(n => n.gameObject != copy && !n.IsSpawned && n.PrefabIdHash == prefabIdHash);
+        }
+
+        /// <summary>Stops waiting for networked replay copies and returns the names of those that are still missing.</summary>
+        public string StopWaitingForNetworkedCopies()
+        {
+            string missing = string.Join(", ", _expectedNetworkedCopies.Values.Select(e => e.information.hierarchyName));
+            _expectedNetworkedCopies.Clear();
+            return missing;
         }
 
         private void DebugScenePreparationLog(string message)
@@ -132,10 +335,19 @@ namespace VRSYS.Recording
             if (!_controller.instantiateMissingObjects)
                 return error;
 
+            // Recorded children of a prefab that the server spawns over the network arrive with that prefab.
+            List<string> networkedCopyRoots = replayGameObjectInformations
+                .Where(i => i.foundObject == null && i.prefabLocation.Length > 0 &&
+                            ShouldSpawnNetworked(LoadReplayPrefab(i.prefabLocation)))
+                .Select(i => i.hierarchyName + "/").ToList();
+
             foreach (var information in replayGameObjectInformations)
             {
                 if (!information.instantiated)
                 {
+                    if (networkedCopyRoots.Any(root => information.hierarchyName.StartsWith(root, StringComparison.Ordinal)))
+                        continue;
+
                     int lastSlash = information.hierarchyName.LastIndexOf('/');
                     string parentName = lastSlash >= 0 ? information.hierarchyName.Substring(0, lastSlash) : "";
                     Transform parent = null;
@@ -172,6 +384,11 @@ namespace VRSYS.Recording
 			}
 
             GameObject go = prefabName != "" ? Resources.Load<GameObject>(prefabName) : null;
+            if (go != null && ShouldSpawnNetworked(go))
+            {
+                SpawnOrExpectNetworkedCopy(information, go, parent, parentName);
+                return;
+            }
 
             if (go != null)
             {
@@ -369,6 +586,7 @@ namespace VRSYS.Recording
             PauseAllAudioSources();
             
             replayGameObjectInformations.Clear();
+            _expectedNetworkedCopies.Clear();
             DebugScenePreparationLog("PrepareReplayScene entered. recorderId=" + _controller.RecorderID +
                                      ", replayRoot=" +
                                      (_controller.replayRoot == null ? "<null>" : _controller.replayRoot.name));
@@ -519,6 +737,7 @@ namespace VRSYS.Recording
             // the list that is about to be destroyed (otherwise the next replay's objects get killed too).
             List<GameObject> toDelete = _instantiatedGameObjects;
             _instantiatedGameObjects = new List<GameObject>();
+            _expectedNetworkedCopies.Clear();
 
             foreach (var go in toDelete)
             {

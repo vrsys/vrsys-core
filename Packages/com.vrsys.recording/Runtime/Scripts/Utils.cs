@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using TMPro;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
@@ -828,17 +829,19 @@ namespace VRSYS.Recording
             targetRoot.localScale = originRoot.localScale;
         }
 
-        public static void RemoveCustomComponents(Transform root)
+        /// <param name="keepNetworkComponents">Keep NetworkObjects and NetworkBehaviours (and what they require), for
+        /// copies that are spawned over the network: Netcode needs the same NetworkBehaviours on every peer.</param>
+        public static void RemoveCustomComponents(Transform root, bool keepNetworkComponents = false)
         {
             //ExtendedLogger.LogInfo("Utils", $"Trying to remove custom components on {root.name}", root);
 
             foreach (Transform child in root.transform)
             {
-                RemoveCustomComponents(child);
+                RemoveCustomComponents(child, keepNetworkComponents);
             }
 
             Component[] components = root.gameObject.GetComponents<Component>();
-            HashSet<Component> preservedComponents = GetPreservedComponents(root.gameObject, components);
+            HashSet<Component> preservedComponents = GetPreservedComponents(root.gameObject, components, keepNetworkComponents);
 
             bool removedComponent = true;
             int iteration = 0;
@@ -873,14 +876,15 @@ namespace VRSYS.Recording
             //Debug.Log("Trying to remove custom finished.");
         }
 
-        private static HashSet<Component> GetPreservedComponents(GameObject go, Component[] components)
+        private static HashSet<Component> GetPreservedComponents(GameObject go, Component[] components, bool keepNetworkComponents)
         {
             HashSet<Component> preservedComponents = new HashSet<Component>();
             Queue<Component> componentsToScan = new Queue<Component>();
 
             foreach (Component comp in components)
             {
-                if (comp == null || !ShouldPreserveComponent(comp))
+                if (comp == null || !(ShouldPreserveComponent(comp) ||
+                                      keepNetworkComponents && (comp is NetworkObject || comp is NetworkBehaviour)))
                     continue;
 
                 preservedComponents.Add(comp);

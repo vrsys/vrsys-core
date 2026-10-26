@@ -23,6 +23,8 @@ namespace VRSYS.Recording
         private bool replayHierarchyChanges;
         private bool playbackTransform;
         private bool replayTransformOnServerOnly;
+        private bool spawnNetworkedPrefabsForReplay;
+        private float networkedSpawnTimeout;
         private bool instantiateMissingObjects;
         private bool replayAudio;
         private bool recordOnLocalTransformChangesOnly;
@@ -224,6 +226,14 @@ namespace VRSYS.Recording
                 replayTransformOnServerOnly = EditorGUILayout.Toggle(
                     new GUIContent("Replay networked transforms on server only", "Objects with a NetworkTransform are only replayed on the server (or host); clients receive their poses through the NetworkTransform. Objects without a NetworkTransform are replayed on every peer."),
                     controller.replayNetworkedTransformOnServerOnly);
+                EditorGUI.BeginDisabledGroup(!replayTransformOnServerOnly);
+                spawnNetworkedPrefabsForReplay = EditorGUILayout.Toggle(
+                    new GUIContent("Spawn networked prefabs for replay", "Missing objects whose prefab is a registered network prefab are spawned by the server (keeping their network components) instead of being created as local copies on every peer. The server replays them; clients receive their poses through the NetworkTransform. Requires 'Replay networked transforms on server only'. Avatars stay local copies."),
+                    controller.spawnNetworkedPrefabsForReplay);
+                networkedSpawnTimeout = EditorGUILayout.FloatField(
+                    new GUIContent("Networked spawn timeout (s)", "How long a client waits for the spawned copies before it starts the replay without them."),
+                    controller.networkedSpawnTimeout);
+                EditorGUI.EndDisabledGroup();
                 instantiateMissingObjects = EditorGUILayout.Toggle(
                     new GUIContent("Instantiate missing objects", "When enabled, recorded objects that are not present in the scene are instantiated for playback (querying their mesh/prefab information). When disabled, only objects already present in the scene are played back."),
                     controller.instantiateMissingObjects);
@@ -261,6 +271,8 @@ namespace VRSYS.Recording
                 replayLocalTransformChangesOnly = controller.replayLocalTransformChangesOnly;
                 playbackTransform = controller.playbackTransform;
                 replayTransformOnServerOnly = controller.replayNetworkedTransformOnServerOnly;
+                spawnNetworkedPrefabsForReplay = controller.spawnNetworkedPrefabsForReplay;
+                networkedSpawnTimeout = controller.networkedSpawnTimeout;
                 instantiateMissingObjects = controller.instantiateMissingObjects;
                 replayAudio = controller.replayAudio;
                 synchronisedPlayback = controller.synchronizedPlayback;
@@ -404,6 +416,8 @@ namespace VRSYS.Recording
                 controller.replayHierarchyChanges = replayHierarchyChanges;
                 controller.playbackTransform = playbackTransform;
                 controller.replayNetworkedTransformOnServerOnly = replayTransformOnServerOnly;
+                controller.spawnNetworkedPrefabsForReplay = spawnNetworkedPrefabsForReplay;
+                controller.networkedSpawnTimeout = Mathf.Max(0.0f, networkedSpawnTimeout);
                 controller.instantiateMissingObjects = instantiateMissingObjects;
                 controller.replayAudio = replayAudio;
                 controller.recordOnLocalTransformChangesOnly = recordOnLocalTransformChangesOnly;

@@ -1,0 +1,17 @@
+{
+    "name": "vrsys.recording.samples",
+    "rootNamespace": "VRSYS.Recording.Testing",
+    "references": [
+        "vrsys.recording",
+        "Unity.Netcode.Runtime"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

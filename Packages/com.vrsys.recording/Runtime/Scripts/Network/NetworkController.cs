@@ -944,8 +944,13 @@ namespace VRSYS.Recording
         {
             if(recorderId != _state.recorderID)
                 return;
-            
-            _state.replayPaused = isPaused;
+
+            if (_controller == null)
+                _state.replayPaused = isPaused;
+            else if (isPaused)
+                _controller.PlaybackPause();
+            else
+                _controller.PlaybackResume();
         }
 
         public void UpdateUserReplayTimeOnAllClientsEvent(float currentUserTime)

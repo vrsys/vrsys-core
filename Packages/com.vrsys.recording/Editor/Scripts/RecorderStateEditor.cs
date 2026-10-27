@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
@@ -7,9 +7,17 @@ using UnityEngine.UIElements;
 namespace VRSYS.Recording
 {
 #if UNITY_EDITOR
+    /// <summary>
+    /// When the RecorderState sits next to a RecorderController (the normal setup), its settings are edited in
+    /// the RecorderController inspector ("Files & Session" and "Server & Files"), so this inspector only shows a
+    /// one-line pointer there. The legacy IMGUI inspector below is still used if no RecorderController is found,
+    /// and can be opened from the pointer for debugging.
+    /// </summary>
     [CustomEditor(typeof(RecorderState))]
     public class RecorderStateEditor : Editor
     {
+        private const string StyleSheetPath = "Packages/com.vrsys.recording/Editor/UI/RecorderControllerEditor.uss";
+
         private string projectName;
         private int recorderID;
         private string recordingFile;
@@ -20,7 +28,43 @@ namespace VRSYS.Recording
         private string[] replayFileOptions; // Array of strings for the dropdown
         private bool useLocalReplayFiles = true; // Mirror of RecorderState.useLocalReplayFiles for the inspector
 
-        
+        public override VisualElement CreateInspectorGUI()
+        {
+            RecorderState state = (RecorderState)target;
+            RecorderController controller = state != null ? state.GetComponent<RecorderController>() : null;
+            if (controller == null)
+                return null; // fall back to the legacy IMGUI inspector (OnInspectorGUI)
+
+            VisualElement root = new VisualElement();
+            StyleSheet sheet = AssetDatabase.LoadAssetAtPath<StyleSheet>(StyleSheetPath);
+            if (sheet != null)
+                root.styleSheets.Add(sheet);
+
+            VisualElement row = new VisualElement();
+            row.AddToClassList("rs-pointer");
+            Label text = new Label("Edited in the Recorder Controller inspector (Files & Session, Server & Files).");
+            text.AddToClassList("rs-pointer-text");
+            row.Add(text);
+
+            Button open = new Button(() => OpenInRecorderController(controller)) { text = "Open", tooltip = "Show these settings in the Recorder Controller inspector" };
+            row.Add(open);
+            root.Add(row);
+
+            Foldout legacy = new Foldout { text = "Legacy inspector (debug)", value = false };
+            legacy.Add(new IMGUIContainer(OnInspectorGUI));
+            root.Add(legacy);
+
+            return root;
+        }
+
+        private void OpenInRecorderController(RecorderController controller)
+        {
+            SessionState.SetString(RecorderControllerEditor.PageSessionKey, RecorderControllerEditor.FilesPageId);
+            UnityEditorInternal.InternalEditorUtility.SetIsInspectorExpanded(controller, true);
+            UnityEditorInternal.InternalEditorUtility.SetIsInspectorExpanded(target, false);
+            ActiveEditorTracker.sharedTracker.ForceRebuild();
+        }
+
         public override void OnInspectorGUI()
         {
             RecorderState state = (RecorderState)target;

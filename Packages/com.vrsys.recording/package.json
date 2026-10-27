@@ -9,6 +9,11 @@
   },
   "samples": [
     {
+      "displayName": "Recording Tests",
+      "description": "Local and networked recording test scenes with shared sample scripts and recordable user prefabs. The networked scene requires VRSYS Core's Sample Scene Setups sample and TextMesh Pro Essential Resources.",
+      "path": "Samples~/Recording Tests"
+    },
+    {
       "displayName": "Recording Sample",
       "description": "Sample scene, input actions and prefabs showing how to set up recording and replay with VRSYS.",
       "path": "Samples~/Recording Sample"

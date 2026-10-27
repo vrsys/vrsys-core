@@ -3,12 +3,14 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using Unity.Netcode;
 using Unity.XR.CoreUtils;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
+using VRSYS.Core.Interaction;
 using VRSYS.Core.Logging;
 using VRSYS.Core.Networking;
 using Random = UnityEngine.Random;
@@ -42,11 +44,16 @@ namespace VRSYS.Recording
         private static extern bool CreateNewRecordingFile(int recorderId, string recordingDir,
             int recordingDirNameLength, string recordingName, int recordingNameLength);
 
+        // Export endpoints take the path of a recording data file (.transform / .generic / .sound) and write
+        // their output next to it. They return nothing, so success is checked via the output files.
         [DllImport("RecordingPlugin")]
-        private static extern bool CreateCSVFile(int recorderId, string recordingName, int recordingNameLength);
+        private static extern void ExportTransformDataToCSV(string transformFilePath, int transformFilePathLength);
 
         [DllImport("RecordingPlugin")]
-        private static extern bool CreateWAVFile(int recorderId, string recordingName, int recordingNameLength);
+        private static extern void ExportGenericDataToCSV(string genericFilePath, int genericFilePathLength);
+
+        [DllImport("RecordingPlugin")]
+        private static extern void ExportSoundDataToWAV(string soundFilePath, int soundFilePathLength);
 
         #endregion
 
@@ -647,7 +654,70 @@ namespace VRSYS.Recording
                                   ", currentReplayTime=" + recorderState.currentReplayTime +
                                   ", recordingDuration=" + recorderState.recordingDuration);
 
+            ReclaimReplayedNetworkObjects();
             onReplayHasStarted.Invoke();
+        }
+
+        // A client can still own a live networked prop when a replay starts (e.g. it never settled after a grab, so
+        // ownership was not returned). The server then has no authority and skips it in the replay loop, and clients
+        // never replay networked transforms, so nobody would move it. Take ownership back once, at replay start only,
+        // so a client grabbing a prop during the replay (rerecording takeover) still keeps it. Props a client is
+        // holding right now are left with that client.
+        private void ReclaimReplayedNetworkObjects()
+        {
+            if (!replayNetworkedTransformOnServerOnly || !_networkController.IsServerOrHost())
+                return;
+
+            foreach (var recorder in _transformRecorder.Values)
+            {
+                if (recorder == null || !recorder.IsNetworkedRecorder() || recorder.HasNetworkAuthority())
+                    continue;
+
+                InteractableNetworkState grabState = recorder.GetComponent<InteractableNetworkState>();
+                if (grabState != null && grabState.IsSpawned && grabState.isGrabbed.Value)
+                    continue;
+
+                NetworkObject networkObject = recorder.GetComponentInParent<NetworkObject>();
+                if (networkObject != null && networkObject.IsSpawned && !networkObject.IsOwnedByServer)
+                {
+                    DebugReplayStartupLog("Reclaiming ownership of " + networkObject.name + " from client " +
+                                          networkObject.OwnerClientId + " for replay.");
+                    networkObject.ChangeOwnership(NetworkManager.ServerClientId);
+                }
+            }
+        }
+
+        /// <summary>Pauses the replay on this peer only (not networked).</summary>
+        public void PlaybackPause()
+        {
+            if (recorderState != null)
+                recorderState.replayPaused = true;
+        }
+
+        /// <summary>Resumes the replay on this peer only (not networked).</summary>
+        public void PlaybackResume()
+        {
+            if (recorderState != null)
+                recorderState.replayPaused = false;
+        }
+
+        /// <summary>Pauses the replay on all peers. Each peer then calls <see cref="PlaybackPause"/>.</summary>
+        public void GlobalPlaybackPause()
+        {
+            GetNetworkController()?.TogglePlayPauseReplayOnAllClients(true);
+        }
+
+        /// <summary>Resumes the replay on all peers. Each peer then calls <see cref="PlaybackResume"/>.</summary>
+        public void GlobalPlaybackResume()
+        {
+            GetNetworkController()?.TogglePlayPauseReplayOnAllClients(false);
+        }
+
+        private NetworkController GetNetworkController()
+        {
+            if (_networkController == null)
+                _networkController = GetComponent<NetworkController>();
+            return _networkController;
         }
 
         public void SendEndReplayEvent()
@@ -961,8 +1031,10 @@ namespace VRSYS.Recording
             {
                 if (!localPlayback)
                 {
-                    if (downloadFilesFromServer)
-                        _networkController.UpdateDownloadStatusEvent();
+                    // Always report this peer's file status to the server, which waits for every peer before it
+                    // starts the distributed replay. Files that already exist locally are not downloaded, so this
+                    // also works without a file server when every peer has the recording on disk.
+                    _networkController.UpdateDownloadStatusEvent();
                 }
                 else
                 {
@@ -1425,33 +1497,51 @@ namespace VRSYS.Recording
 
         #region File Export Coroutines
 
+        private string RecordingDataFilePath(string extension)
+        {
+            return Path.Combine(recorderState.recordingDirectory, recorderState.recordingFile + extension);
+        }
+
         IEnumerator CreateAndUploadWAVFiles()
         {
-            bool finished = CreateWAVFile(recorderState.recorderID, recorderState.recordingFile,
-                recorderState.recordingFile.Length);
-
-            if (finished)
+            string soundFile = RecordingDataFilePath(".sound");
+            if (!File.Exists(soundFile))
             {
-                string date = DateTime.Now.ToString("g", CultureInfo.GetCultureInfo("es-ES")).Replace(" ", "_")
-                    .Replace(":", "_").Replace("/", "_");
-
-                for (int i = 0; i < 2; i++)
-                {
-                    string audioFile = recorderState.recordingDirectory + "/" + recorderState.recordingFile + "_" + i +
-                                       ".wav";
-                    if (debugLogs)
-                        ExtendedLogger.LogInfo(GetType().Name, "Trying to transmit audio file: " + audioFile, this);
-                    if (System.IO.File.Exists(audioFile))
-                    {
-                        _networkController.Upload(recorderState.projectName, audioFile,
-                            recorderState.recordingFile + "_" + date + "_" + i + ".wav",
-                            recorderState.selectedServer);
-                    }
-                }
+                ExtendedLogger.LogError(GetType().Name, "Could not create WAV files: no sound recording at " + soundFile, this);
+                yield break;
             }
-            else
+
+            DateTime exportStart = DateTime.Now.AddSeconds(-1);
+            ExportSoundDataToWAV(soundFile, soundFile.Length);
+
+            // The plugin writes one WAV file per recorded sound source: "<name>.sound_<sourceId>.wav".
+            string soundFileName = Path.GetFileName(soundFile);
+            string[] wavFiles = Directory.GetFiles(Path.GetDirectoryName(soundFile), soundFileName + "_*.wav")
+                .Where(f => File.GetLastWriteTime(f) >= exportStart)
+                .OrderBy(f => f)
+                .ToArray();
+
+            if (wavFiles.Length == 0)
             {
                 ExtendedLogger.LogError(GetType().Name, "Could not create WAV files!", this);
+                yield break;
+            }
+
+            if (debugLogs)
+                ExtendedLogger.LogInfo(GetType().Name, "Created " + wavFiles.Length + " WAV file(s) from " + soundFile, this);
+
+            string date = DateTime.Now.ToString("g", CultureInfo.GetCultureInfo("es-ES")).Replace(" ", "_")
+                .Replace(":", "_").Replace("/", "_");
+
+            foreach (string audioFile in wavFiles)
+            {
+                // "<name>.sound_<sourceId>.wav" -> "<sourceId>"
+                string sourceId = Path.GetFileNameWithoutExtension(audioFile).Substring(soundFileName.Length + 1);
+                if (debugLogs)
+                    ExtendedLogger.LogInfo(GetType().Name, "Trying to transmit audio file: " + audioFile, this);
+                _networkController.Upload(recorderState.projectName, audioFile,
+                    recorderState.recordingFile + "_" + date + "_" + sourceId + ".wav",
+                    recorderState.selectedServer);
             }
 
             yield return null;
@@ -1459,12 +1549,50 @@ namespace VRSYS.Recording
 
         IEnumerator CreateCSVFile()
         {
-            bool finished = CreateCSVFile(recorderState.recorderID, recorderState.recordingFile,
-                recorderState.recordingFile.Length);
+            // Both CSV exports write "<name>.csv" (and append to an existing file), so each result is
+            // renamed right away: "<name>_transform.csv" and "<name>_generic.csv".
+            bool anyCreated = false;
+            anyCreated |= ExportToCSV(".transform", "_transform.csv",
+                path => ExportTransformDataToCSV(path, path.Length));
+            anyCreated |= ExportToCSV(".generic", "_generic.csv",
+                path => ExportGenericDataToCSV(path, path.Length));
 
-            if (!finished)
+            if (!anyCreated)
                 ExtendedLogger.LogError(GetType().Name, "Could not create CSV file!", this);
             yield return null;
+        }
+
+        private bool ExportToCSV(string dataExtension, string targetSuffix, Action<string> export)
+        {
+            string dataFile = RecordingDataFilePath(dataExtension);
+            if (!File.Exists(dataFile))
+            {
+                if (debugLogs)
+                    ExtendedLogger.LogInfo(GetType().Name, "No " + dataExtension + " recording to export at " + dataFile, this);
+                return false;
+            }
+
+            string pluginOutput = RecordingDataFilePath(".csv");
+            string target = Path.Combine(recorderState.recordingDirectory, recorderState.recordingFile + targetSuffix);
+
+            if (File.Exists(pluginOutput))
+                File.Delete(pluginOutput); // the plugin appends, so start from an empty file
+
+            export(dataFile);
+
+            if (!File.Exists(pluginOutput))
+            {
+                ExtendedLogger.LogError(GetType().Name, "CSV export produced no file for " + dataFile, this);
+                return false;
+            }
+
+            if (File.Exists(target))
+                File.Delete(target);
+            File.Move(pluginOutput, target);
+
+            if (debugLogs)
+                ExtendedLogger.LogInfo(GetType().Name, "Created CSV file: " + target, this);
+            return true;
         }
 
         #endregion

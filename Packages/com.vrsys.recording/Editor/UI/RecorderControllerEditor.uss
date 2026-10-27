@@ -1,0 +1,640 @@
+/* Styles for RecorderControllerEditor (UI Toolkit inspector of VRSYS.Recording.RecorderController).
+   USS is Unity's CSS dialect: selectors, variables and flexbox work much like on the web. */
+
+/* ---------- Theme tokens ---------- */
+
+.rc-root {
+    --rc-surface: rgba(255, 255, 255, 0.045);
+    --rc-surface-hover: rgba(255, 255, 255, 0.09);
+    --rc-border: rgba(0, 0, 0, 0.35);
+    --rc-text-dim: rgba(255, 255, 255, 0.55);
+    --rc-text-strong: #E4E4E4;
+    --rc-button: rgba(255, 255, 255, 0.08);
+    --rc-button-hover: rgba(255, 255, 255, 0.14);
+    --rc-accent: #4F8EF7;
+    --rc-accent-soft: rgba(79, 142, 247, 0.22);
+    --rc-state-color: #7A7F87;
+    margin-top: 4px;
+}
+
+.rc-light {
+    --rc-surface: rgba(0, 0, 0, 0.04);
+    --rc-surface-hover: rgba(0, 0, 0, 0.08);
+    --rc-border: rgba(0, 0, 0, 0.18);
+    --rc-text-dim: rgba(0, 0, 0, 0.55);
+    --rc-text-strong: #202020;
+    --rc-button: rgba(255, 255, 255, 0.6);
+    --rc-button-hover: rgba(255, 255, 255, 0.9);
+}
+
+/* Section accents */
+.rc-accent-files     { --rc-accent: #A8C94A; --rc-accent-soft: rgba(168, 201, 74, 0.22); }
+.rc-accent-setup     { --rc-accent: #9B86D6; --rc-accent-soft: rgba(155, 134, 214, 0.22); }
+.rc-accent-transform { --rc-accent: #4F8EF7; --rc-accent-soft: rgba(79, 142, 247, 0.22); }
+.rc-accent-audio     { --rc-accent: #E0A030; --rc-accent-soft: rgba(224, 160, 48, 0.22); }
+.rc-accent-playback  { --rc-accent: #3DBE7A; --rc-accent-soft: rgba(61, 190, 122, 0.22); }
+.rc-accent-network   { --rc-accent: #33B5C9; --rc-accent-soft: rgba(51, 181, 201, 0.22); }
+.rc-accent-server    { --rc-accent: #7393C4; --rc-accent-soft: rgba(115, 147, 196, 0.22); }
+.rc-accent-output    { --rc-accent: #A0A4AB; --rc-accent-soft: rgba(160, 164, 171, 0.22); }
+.rc-accent-events    { --rc-accent: #E36C9A; --rc-accent-soft: rgba(227, 108, 154, 0.22); }
+.rc-accent-other     { --rc-accent: #888C93; --rc-accent-soft: rgba(136, 140, 147, 0.22); }
+
+/* Recorder state colours (set on the header) */
+.rc-state-idle             { --rc-state-color: #7A7F87; }
+.rc-state-recording        { --rc-state-color: #D9474B; }
+.rc-state-replaying        { --rc-state-color: #3DBE7A; }
+.rc-state-preparingreplay  { --rc-state-color: #E0A030; }
+.rc-state-preparerecording { --rc-state-color: #E0A030; }
+.rc-state-missing          { --rc-state-color: #D9474B; }
+
+/* ---------- Generic helpers ---------- */
+
+.rc-row {
+    flex-direction: row;
+    align-items: center;
+}
+
+.rc-spacer {
+    flex-grow: 1;
+}
+
+/* ---------- Header ---------- */
+
+.rc-header {
+    padding: 8px 10px 8px 10px;
+    margin-bottom: 6px;
+    border-radius: 6px;
+    background-color: var(--rc-surface);
+    border-width: 1px;
+    border-color: var(--rc-border);
+    border-left-width: 4px;
+    border-left-color: var(--rc-state-color);
+}
+
+/* Header with the banner image: white, light-theme text regardless of editor skin */
+.rc-header.rc-banner {
+    height: 112px;
+    justify-content: space-between;
+    padding: 10px 12px 9px 12px;
+    background-color: #FFFFFF;
+    border-color: rgba(0, 0, 0, 0.28);
+}
+
+.rc-banner .rc-title {
+    color: #1F232A;
+    font-size: 16px;
+}
+
+.rc-banner .rc-subtitle {
+    color: #6B7280;
+}
+
+.rc-banner .rc-time {
+    color: #1F232A;
+}
+
+.rc-banner .rc-timeline {
+    background-color: rgba(0, 0, 0, 0.08);
+}
+
+.rc-logo {
+    width: 38px;
+    height: 38px;
+    margin-right: 9px;
+    flex-shrink: 0;
+}
+
+.rc-header-titles {
+    flex-shrink: 1;
+}
+
+.rc-title {
+    font-size: 15px;
+    -unity-font-style: bold;
+    margin: 0;
+    padding: 0;
+}
+
+.rc-subtitle {
+    font-size: 10px;
+    color: var(--rc-text-dim);
+    margin: 1px 0 0 0;
+    padding: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.rc-pill {
+    padding: 2px 8px 2px 8px;
+    border-radius: 9px;
+    background-color: var(--rc-state-color);
+    color: #FFFFFF;
+    font-size: 10px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    flex-shrink: 0;
+}
+
+.rc-time {
+    margin: 6px 0 0 0;
+    padding: 0;
+    font-size: 11px;
+    -unity-font-style: bold;
+}
+
+.rc-timeline {
+    height: 4px;
+    margin-top: 4px;
+    border-radius: 2px;
+    background-color: rgba(127, 127, 127, 0.25);
+    overflow: hidden;
+}
+
+.rc-timeline-fill {
+    height: 100%;
+    width: 0%;
+    background-color: var(--rc-state-color);
+}
+
+/* ---------- Record / replay controls ---------- */
+
+.rc-controls {
+    margin-bottom: 6px;
+}
+
+.rc-action-row {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 2px;
+}
+
+.rc-action-caption {
+    width: 52px;
+    flex-shrink: 0;
+    font-size: 11px;
+    -unity-font-style: bold;
+    color: var(--rc-text-dim);
+    margin: 0 0 0 2px;
+    padding: 0;
+}
+
+Button.rc-action {
+    flex-grow: 1;
+    flex-basis: 0;
+    min-width: 0;
+    height: 26px;
+    margin: 1px 2px 1px 2px;
+    padding: 0 8px 0 8px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    border-radius: 5px;
+    border-width: 1px;
+    border-color: var(--rc-border);
+    background-color: var(--rc-button);
+    transition-duration: 0.12s;
+    transition-property: background-color, border-color;
+}
+
+Button.rc-action:hover  { background-color: var(--rc-button-hover); }
+Button.rc-action:active { background-color: var(--rc-surface); }
+Button.rc-action:disabled { opacity: 0.45; }
+
+/* Hover tint per action kind */
+Button.rc-action-record:hover { border-color: #E5484D; }
+Button.rc-action-replay:hover { border-color: #3DBE7A; }
+
+.rc-action-icons {
+    flex-direction: row;
+    align-items: center;
+    flex-shrink: 0;
+    margin-right: 6px;
+}
+
+.rc-action-label {
+    -unity-font-style: bold;
+    margin: 0;
+    padding: 0;
+    flex-shrink: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Vector icons (drawn in C#, coloured via `color`) */
+.rc-glyph {
+    width: 11px;
+    height: 11px;
+    margin: 0 2px 0 0;
+    color: var(--rc-text-strong);
+}
+
+.rc-glyph-record { color: #E5484D; }
+.rc-glyph-play   { color: #3DBE7A; }
+.rc-glyph-pause  { color: #3DBE7A; }
+.rc-glyph-stop   { color: var(--rc-text-strong); }
+
+.rc-glyph-person {
+    width: 9px;
+    height: 13px;
+    margin-left: 2px;
+}
+
+.rc-glyph-people {
+    width: 20px;
+    height: 13px;
+    margin-left: 2px;
+}
+
+.rc-hint {
+    font-size: 10px;
+    color: var(--rc-text-dim);
+    white-space: normal;
+    margin: 2px 2px 0 2px;
+}
+
+/* ---------- Toolbar ---------- */
+
+.rc-toolbar {
+    margin-bottom: 6px;
+    border-radius: 4px;
+}
+
+.rc-search {
+    flex-grow: 1;
+    flex-shrink: 1;
+    width: auto;
+    min-width: 80px;
+}
+
+.rc-toolbar-icon {
+    width: 26px;
+    align-items: center;
+    justify-content: center;
+}
+
+.rc-button-icon {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+/* ---------- Overview tiles ---------- */
+
+.rc-tiles {
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin: 0 -3px 0 -3px;
+}
+
+/* Tile width is set from C# (LayoutTiles) so every column has the same width. */
+Button.rc-tile {
+    flex-grow: 0;
+    flex-shrink: 0;
+    width: 160px;
+    height: 54px;
+    margin: 3px;
+    padding: 6px 8px 6px 8px;
+    flex-direction: row;
+    align-items: center;
+    border-radius: 6px;
+    border-width: 1px;
+    border-color: var(--rc-border);
+    border-left-width: 3px;
+    border-left-color: var(--rc-accent);
+    background-color: var(--rc-surface);
+    -unity-text-align: middle-left;
+    transition-duration: 0.12s;
+    transition-property: background-color;
+}
+
+Button.rc-tile:hover {
+    background-color: var(--rc-accent-soft);
+}
+
+/* Single-column layout in narrow inspectors: shorter tiles, smaller badge */
+.rc-tiles-compact Button.rc-tile {
+    height: 40px;
+    padding-top: 3px;
+    padding-bottom: 3px;
+}
+
+.rc-tiles-compact .rc-badge {
+    width: 24px;
+    height: 24px;
+}
+
+.rc-tiles-compact .rc-badge .rc-badge-icon {
+    width: 14px;
+    height: 14px;
+}
+
+.rc-tile-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.rc-tile-text {
+    flex-grow: 1;
+    flex-shrink: 1;
+    overflow: hidden;
+}
+
+.rc-tile-title {
+    -unity-font-style: bold;
+    font-size: 12px;
+    margin: 0;
+    padding: 0;
+}
+
+.rc-tile-status {
+    font-size: 10px;
+    color: var(--rc-text-dim);
+    margin: 2px 0 0 0;
+    padding: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ---------- Badges (section icons) ---------- */
+
+.rc-badge-base {
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    background-color: var(--rc-accent-soft);
+    border-width: 1px;
+    border-color: var(--rc-accent);
+    flex-shrink: 0;
+}
+
+.rc-badge {
+    width: 32px;
+    height: 32px;
+    margin-right: 8px;
+}
+
+.rc-badge .rc-badge-icon {
+    width: 18px;
+    height: 18px;
+}
+
+.rc-badge-small {
+    width: 22px;
+    height: 22px;
+    margin: 0 6px 0 2px;
+    border-radius: 4px;
+}
+
+.rc-badge-small .rc-badge-icon {
+    width: 14px;
+    height: 14px;
+}
+
+.rc-badge-letter {
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    color: var(--rc-accent);
+    margin: 0;
+    padding: 0;
+}
+
+/* ---------- Section page ---------- */
+
+.rc-page-header {
+    flex-direction: row;
+    align-items: center;
+    padding: 4px 6px 4px 4px;
+    margin-bottom: 4px;
+    border-radius: 6px;
+    background-color: var(--rc-surface);
+    border-left-width: 3px;
+    border-left-color: var(--rc-accent);
+}
+
+.rc-page-title {
+    -unity-font-style: bold;
+    font-size: 13px;
+}
+
+Button.rc-icon-button {
+    width: 22px;
+    height: 20px;
+    margin: 0 1px 0 1px;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+    border-width: 0;
+    border-radius: 4px;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+Button.rc-icon-button:hover {
+    background-color: var(--rc-surface-hover);
+}
+
+.rc-page-desc {
+    color: var(--rc-text-dim);
+    white-space: normal;
+    font-size: 11px;
+    margin: 0 4px 6px 4px;
+}
+
+.rc-page-body {
+    padding: 0 2px 4px 2px;
+}
+
+.rc-entry {
+    margin-bottom: 1px;
+}
+
+.rc-entry-spaced {
+    margin-bottom: 6px;
+}
+
+/* Settings that depend on the field above them */
+.rc-dependent {
+    margin-left: 12px;
+}
+
+.rc-hint.rc-dependent {
+    margin-left: 16px;
+    margin-bottom: 4px;
+}
+
+.rc-download-hint {
+    margin-left: 5px;
+}
+
+.rc-subheading {
+    -unity-font-style: bold;
+    font-size: 11px;
+    color: var(--rc-text-dim);
+    margin: 8px 3px 2px 3px;
+    padding-bottom: 2px;
+    border-bottom-width: 1px;
+    border-bottom-color: var(--rc-border);
+}
+
+.rc-highlight {
+    background-color: var(--rc-accent-soft);
+    border-radius: 4px;
+}
+
+Button.rc-inline-button {
+    height: 22px;
+    margin: 3px 3px 3px 3px;
+}
+
+.rc-block {
+    margin-top: 4px;
+}
+
+/* ---------- Search results ---------- */
+
+.rc-search-summary {
+    font-size: 10px;
+    color: var(--rc-text-dim);
+    margin: 0 4px 4px 4px;
+}
+
+.rc-result-group {
+    margin-bottom: 6px;
+    padding: 2px 4px 4px 4px;
+    border-radius: 6px;
+    background-color: var(--rc-surface);
+    border-left-width: 3px;
+    border-left-color: var(--rc-accent);
+}
+
+Button.rc-result-header {
+    flex-direction: row;
+    align-items: center;
+    height: 26px;
+    margin: 0 0 2px 0;
+    padding: 0 4px 0 0;
+    border-width: 0;
+    border-radius: 4px;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+Button.rc-result-header:hover {
+    background-color: var(--rc-accent-soft);
+}
+
+.rc-result-title {
+    -unity-font-style: bold;
+}
+
+.rc-result-open {
+    font-size: 10px;
+    color: var(--rc-accent);
+}
+
+.rc-empty {
+    color: var(--rc-text-dim);
+    -unity-text-align: middle-center;
+    white-space: normal;
+    padding: 14px;
+}
+
+/* ---------- Playback file picker ---------- */
+
+.rc-playback-file {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+.rc-playback-dropdown {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+    margin-right: 2px;
+}
+
+.rc-action-row .rc-playback-file {
+    margin-left: 2px;
+}
+
+.rc-action-row .rc-playback-dropdown {
+    margin-left: 0;
+}
+
+.rc-playback-hint {
+    margin-left: 4px;
+}
+
+/* ---------- RecorderState pointer (RecorderStateEditor) ---------- */
+
+.rs-pointer {
+    flex-direction: row;
+    align-items: center;
+    padding: 2px 0 2px 0;
+}
+
+.rs-pointer-text {
+    flex-grow: 1;
+    flex-shrink: 1;
+    white-space: normal;
+    color: rgba(127, 127, 127, 1);
+    font-size: 11px;
+}
+
+/* ---------- Interactive replay timeline (Slider in the header) ---------- */
+
+.rc-scrubber {
+    margin: 2px -2px 0 -2px;
+    height: 16px;
+}
+
+.rc-scrubber #unity-tracker {
+    height: 6px;
+    margin-top: -3px;
+    border-width: 0;
+    border-radius: 3px;
+    background-color: rgba(127, 127, 127, 0.25);
+    overflow: hidden;
+}
+
+.rc-banner .rc-scrubber #unity-tracker {
+    background-color: rgba(0, 0, 0, 0.09);
+}
+
+.rc-scrubber-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 0;
+    background-color: var(--rc-state-color);
+}
+
+.rc-scrubber #unity-dragger {
+    width: 14px;
+    height: 14px;
+    margin-top: -7px;
+    margin-left: -1px;
+    border-radius: 7px;
+    border-width: 2px;
+    border-color: #FFFFFF;
+    background-color: var(--rc-state-color);
+}
+
+.rc-scrubber #unity-dragger-border {
+    display: none;
+}
+
+.rc-scrubber:hover #unity-dragger {
+    width: 16px;
+    height: 16px;
+    margin-top: -8px;
+    border-radius: 8px;
+}
+
+.rc-controls-replay-file {
+    margin: 2px 0 0 0;
+}

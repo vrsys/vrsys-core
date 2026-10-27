@@ -68,16 +68,6 @@ namespace VRSYS.Recording
             _networkController.TogglePlayPauseReplayOnAllClients(!_state.replayPaused);
         }
         
-        public void GlobalPLaybackPause()
-        {
-            _networkController.TogglePlayPauseReplayOnAllClients(true);
-        }
-        
-        public void GlobalPLaybackResume()
-        {
-            _networkController.TogglePlayPauseReplayOnAllClients(false);
-        }
-        
         public void ToggleLocalPause()
         {
             _state.replayPaused = !_state.replayPaused;

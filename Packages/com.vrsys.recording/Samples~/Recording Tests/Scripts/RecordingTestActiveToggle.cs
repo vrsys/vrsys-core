@@ -32,9 +32,9 @@ namespace VRSYS.Recording.Testing
         private void Start()
         {
             if (target == gameObject)
-                Debug.LogWarning(name + ": RecordingTestActiveToggle must not toggle its own GameObject.", this);
+                RecordingLogger.LogWarning(nameof(RecordingTestActiveToggle), name + ": RecordingTestActiveToggle must not toggle its own GameObject.", this);
             else if (target != null && target.GetComponent<NetworkObject>() != null)
-                Debug.LogWarning(name + ": the active state of a NetworkObject is not synced by Netcode; " +
+                RecordingLogger.LogWarning(nameof(RecordingTestActiveToggle), name + ": the active state of a NetworkObject is not synced by Netcode; " +
                                  "use RecordingTestActiveToggle on local objects.", this);
         }
 

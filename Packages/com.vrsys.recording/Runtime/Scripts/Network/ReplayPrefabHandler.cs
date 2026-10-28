@@ -78,7 +78,7 @@ namespace VRSYS.Recording
                 ? _scenePreparator.FindNestedNetworkObject(instantiationData.recordedObjectId, _prefabIdHash)
                 : null;
             if (nested == null)
-                Debug.LogError("Replay: no nested NetworkObject " + _prefabIdHash + " found in the replay copy of recorded object " +
+                RecordingLogger.LogError(nameof(ReplayPrefabHandler), "Replay: no nested NetworkObject " + _prefabIdHash + " found in the replay copy of recorded object " +
                                instantiationData.recordedObjectId + ".");
             return nested;
         }

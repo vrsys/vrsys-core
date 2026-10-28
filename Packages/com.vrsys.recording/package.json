@@ -10,7 +10,7 @@
   "samples": [
     {
       "displayName": "Recording Tests",
-      "description": "Local and networked recording test scenes with shared sample scripts and recordable user prefabs. The networked scene requires VRSYS Core's Sample Scene Setups sample and TextMesh Pro Essential Resources.",
+      "description": "Local and networked recording test scenes covering transforms, active state, hierarchy changes, objects created and destroyed during a recording, audio and generic data (a spot light), with shared sample scripts and recordable user prefabs. The networked scene requires VRSYS Core's Sample Scene Setups sample and TextMesh Pro Essential Resources.",
       "path": "Samples~/Recording Tests"
     },
     {

@@ -33,7 +33,7 @@ namespace VRSYS.Recording
             OdinMicrophoneDataAccessor accessor = Object.FindFirstObjectByType<OdinMicrophoneDataAccessor>();
             if (accessor == null)
             {
-                Debug.LogWarning("MicrophoneRecorder.SetMicrophoneReader: no OdinMicrophoneDataAccessor " +
+                RecordingLogger.LogWarning(nameof(MicrophoneRecorderOdinExtensions), "MicrophoneRecorder.SetMicrophoneReader: no OdinMicrophoneDataAccessor " +
                                  "found in the scene; keeping the default microphone reader.");
                 return false;
             }

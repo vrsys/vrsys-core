@@ -103,7 +103,7 @@ namespace VRSYS.Recording
                 MetaAvatarReplayDataReader reader = entity.GetComponent<MetaAvatarReplayDataReader>();
                 if (reader == null)
                 {
-                    ExtendedLogger.LogWarning(GetType().Name,
+                    RecordingLogger.LogWarning(GetType().Name,
                         $"Real-user avatar '{root.name}' has no MetaAvatarReplayDataReader; it cannot be linked.",
                         entity);
                     continue;
@@ -113,7 +113,7 @@ namespace VRSYS.Recording
                 if (readerUserId == 0)
                 {
                     if (verbose)
-                        ExtendedLogger.LogInfo(GetType().Name,
+                        RecordingLogger.LogInfo(GetType().Name,
                             $"Skipping real-user reader on '{root.name}': user id is 0 (not yet assigned).", entity);
                     //continue;
                 }
@@ -132,7 +132,7 @@ namespace VRSYS.Recording
                 if (userId == 0)
                 {
                     if (verbose)
-                        ExtendedLogger.LogInfo(GetType().Name,
+                        RecordingLogger.LogInfo(GetType().Name,
                             $"Skipping playback writer '{playbackWriter.name}': user id is 0 (not yet assigned).",
                             playbackWriter);
                     //continue;
@@ -143,7 +143,7 @@ namespace VRSYS.Recording
                 {
                     unassignedWriters.Add(playbackWriter);
                     if (verbose)
-                        ExtendedLogger.LogInfo(GetType().Name,
+                        RecordingLogger.LogInfo(GetType().Name,
                             $"No real user found for playback user {userId}; deferring '{playbackWriter.name}' to fallback assignment.",
                             playbackWriter);
                     continue;
@@ -153,7 +153,7 @@ namespace VRSYS.Recording
                 linkedRealUsers.Add(realUserEntity.GetUserId());
 
                 if (verbose)
-                    ExtendedLogger.LogInfo(GetType().Name,
+                    RecordingLogger.LogInfo(GetType().Name,
                         $"Linked playback user {userId} to real user {realUserEntity.GetUserId()}.", this);
             }
 
@@ -169,19 +169,19 @@ namespace VRSYS.Recording
                 unassignedWriters.RemoveAt(0);
 
                 if (verbose)
-                    ExtendedLogger.LogInfo(GetType().Name,
+                    RecordingLogger.LogInfo(GetType().Name,
                         $"Fallback-linked playback user {playbackUserId} to real user {kv.Key}.", this);
             }
 
             // Surface unmatched writers unconditionally: such a writer will not play back any real user.
             if (unassignedWriters.Count > 0)
             {
-                ExtendedLogger.LogWarning(GetType().Name,
+                RecordingLogger.LogWarning(GetType().Name,
                     $"{unassignedWriters.Count} playback avatar(s) could not be matched to a real user: "
                     + string.Join(", ", unassignedWriters.Select(w => $"'{w.name}' (user {w.GetUserId()})")), this);
             }
 
-            ExtendedLogger.LogInfo(GetType().Name,
+            RecordingLogger.LogInfo(GetType().Name,
                 $"Built {_links.Count} playback->real user link(s) from {playbackEntityWriter.Count} "
                 + $"playback writer(s) and {realEntityReader.Count} real user(s).", this);
         }
@@ -220,7 +220,7 @@ namespace VRSYS.Recording
                 }
                 else
                 {
-                    ExtendedLogger.LogWarning(GetType().Name,
+                    RecordingLogger.LogWarning(GetType().Name,
                         $"Could not resolve networked link playback user {link.PlaybackUserId} -> real user "
                         + $"{link.RealUserId} to local objects.", this);
                 }
@@ -230,7 +230,7 @@ namespace VRSYS.Recording
             {
                 string mapping = string.Join("\n", _playbackToRealUser.Select(kv =>
                     $"    '{kv.Key.name}' (user {kv.Key.GetUserId()}) -> real user {kv.Value.GetUserId()}"));
-                ExtendedLogger.LogInfo(GetType().Name,
+                RecordingLogger.LogInfo(GetType().Name,
                     $"Applied {_playbackToRealUser.Count} of {_links.Count} networked link(s):\n" + mapping, this);
             }
         }

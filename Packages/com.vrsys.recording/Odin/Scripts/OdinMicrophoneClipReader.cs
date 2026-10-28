@@ -95,12 +95,12 @@ namespace VRSYS.Recording
 
             // Logged outside the lock so the (possibly audio-thread) ODIN callback releases it quickly.
             if (logFirst)
-                Debug.Log("[OdinMicrophoneClipReader] First ODIN audio buffer received: bufferLength=" +
+                RecordingLogger.LogInfo(nameof(OdinMicrophoneClipReader), "[OdinMicrophoneClipReader] First ODIN audio buffer received: bufferLength=" +
                           buffer.Length + ", samplingRate=" + SamplingRate + ", channels=" + Channels +
                           ", queuedSamples=" + queuedAfter + ", peakAmplitude=" + peak.ToString("F4") +
                           ". (peakAmplitude ~0 means ODIN is delivering silence to the recorder.)");
             else if (logPeriodic)
-                Debug.Log("[OdinMicrophoneClipReader] ODIN audio level: buffersReceived=" + _buffersReceived +
+                RecordingLogger.LogInfo(nameof(OdinMicrophoneClipReader), "[OdinMicrophoneClipReader] ODIN audio level: buffersReceived=" + _buffersReceived +
                           ", peakAmplitude=" + peak.ToString("F4") + ", queuedSamples=" + queuedAfter + ".");
         }
 
@@ -111,7 +111,7 @@ namespace VRSYS.Recording
                 if (!_loggedEmptyBufferWarning)
                 {
                     _loggedEmptyBufferWarning = true;
-                    Debug.LogWarning("[OdinMicrophoneClipReader] Read was called with a zero-length buffer. The " +
+                    RecordingLogger.LogWarning(nameof(OdinMicrophoneClipReader), "[OdinMicrophoneClipReader] Read was called with a zero-length buffer. The " +
                                      "MicrophoneRecorder initialized its sampling rate before ODIN reported one " +
                                      "(SamplingRate=0), so no microphone audio can be captured.");
                 }
@@ -125,7 +125,7 @@ namespace VRSYS.Recording
                     if (!_loggedStarvation)
                     {
                         _loggedStarvation = true;
-                        Debug.Log("[OdinMicrophoneClipReader] Recorder requested " + buffer.Length +
+                        RecordingLogger.LogInfo(nameof(OdinMicrophoneClipReader), "[OdinMicrophoneClipReader] Recorder requested " + buffer.Length +
                                   " samples but only " + _samples.Count + " are buffered; waiting for more ODIN " +
                                   "audio. (Logged once.)");
                     }
@@ -141,7 +141,7 @@ namespace VRSYS.Recording
                 if (!_loggedFirstServe)
                 {
                     _loggedFirstServe = true;
-                    Debug.Log("[OdinMicrophoneClipReader] First audio served to the recorder: requested=" +
+                    RecordingLogger.LogInfo(nameof(OdinMicrophoneClipReader), "[OdinMicrophoneClipReader] First audio served to the recorder: requested=" +
                               buffer.Length + ", bufferFullsAvailable=" + available.ToString("F2") + ".");
                 }
                 return available;

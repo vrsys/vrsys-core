@@ -107,7 +107,7 @@ namespace VRSYS.Recording
         {
             if (id == 99999)
             {
-                ExtendedLogger.LogError(GetType().Name, "Error! Id not correctly set!", this);
+                RecordingLogger.LogError(GetType().Name, "Error! Id not correctly set!", this);
             }
 
             controller.RegisterRecorder(id, this);

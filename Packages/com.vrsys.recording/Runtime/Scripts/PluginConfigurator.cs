@@ -28,6 +28,7 @@ namespace VRSYS.Recording
         public int replayBufferNumber = 3;
         public float replayBufferTimeInterval = 10.0f;
         public int recordingSoundMaxBufferSize = 100;
+        [Tooltip("Minimum log level for the native plugin and the managed recording package.")]
         public LogLevel logLevel = LogLevel.Info;
         public string versionInfo = "No information";
         [HideInInspector] public string recordingDirectory = "";
@@ -100,6 +101,7 @@ namespace VRSYS.Recording
             if (settings == null)
                 return;
 
+            ApplyLogLevel(settings.logLevel);
             RegisterLogging();
             SetRecordingMaxBufferSize(recorderId, settings.recordingMaxBufferSize);
             SetSoundRecordingMaxBufferSize(recorderId, settings.recordingSoundMaxBufferSize);
@@ -109,12 +111,11 @@ namespace VRSYS.Recording
             string version = GetVersionInfo();
             if (!string.IsNullOrEmpty(version))
                 settings.versionInfo = version;
-
-            ApplyLogLevel(settings.logLevel);
         }
 
         public static void ApplyLogLevel(LogLevel logLevel)
         {
+            RecordingLogger.Level = logLevel;
             SetLogLevel((int)logLevel);
         }
 
@@ -132,15 +133,15 @@ namespace VRSYS.Recording
             string debugString = Marshal.PtrToStringAnsi(request, size);
 
             if ((LogLevel)level == LogLevel.Debug)
-                ExtendedLogger.LogInfo("RecordingPlugin", debugString);
+                RecordingLogger.LogDebug("RecordingPlugin", debugString);
             else if ((LogLevel)level == LogLevel.Info)
-                ExtendedLogger.LogInfo("RecordingPlugin", debugString);
+                RecordingLogger.LogInfo("RecordingPlugin", debugString);
             else if ((LogLevel)level == LogLevel.Warning)
-                ExtendedLogger.LogWarning("RecordingPlugin", debugString);
+                RecordingLogger.LogWarning("RecordingPlugin", debugString);
             else if ((LogLevel)level == LogLevel.Error)
-                ExtendedLogger.LogError("RecordingPlugin", debugString);
+                RecordingLogger.LogError("RecordingPlugin", debugString);
             else
-                ExtendedLogger.LogError("RecordingPlugin", debugString);
+                RecordingLogger.LogError("RecordingPlugin", debugString);
         }
     }
 }

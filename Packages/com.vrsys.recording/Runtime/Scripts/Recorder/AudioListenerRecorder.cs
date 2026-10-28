@@ -8,7 +8,6 @@ namespace VRSYS.Recording
 {
     public class AudioListenerRecorder : AudioRecorder
     {
-        private long recordStartTime = -1;
 
         private void Awake()
         {
@@ -29,20 +28,7 @@ namespace VRSYS.Recording
         
         public override bool Record(float recordTime)
         {
-            if (RecordingTime < 0.0f)
-            {
-                RecordingTime = recordTime;
-                recordStartTime = DateTime.Now.Ticks;
-                FirstRecord = true;
-            }
-
-            if (Mathf.Abs(recordTime - RecordingTime) > 0.1f)
-            {
-                if(controller.debugLogs)
-                    ExtendedLogger.LogError(GetType().Name, "Error! Audio Listener time not aligned. Difference: " + (recordTime - RecordingTime), this);
-                RecordingTime = recordTime;
-            }
-
+            // Audio callbacks timestamp their own blocks using the controller's DSP clock.
             return true;
         }
 
@@ -68,30 +54,9 @@ namespace VRSYS.Recording
             if (RecordingSamplingRate <= 0 || RecordingChannelNum <= 0 || data == null || data.Length <= 0)
                 return;
 
-            if (FirstRecord)
-            {
-                RecordingTime += (float)(new TimeSpan(DateTime.Now.Ticks - recordStartTime)).TotalSeconds;
-                FirstRecord = false;
-            }
-
-            if (RecordingTime >= 0.0f)
-            {
-                float duration = (data.Length / RecordingChannelNum) / (float)RecordingSamplingRate;
-                if (duration <= 0.0f || float.IsNaN(duration) || float.IsInfinity(duration))
-                    return;
-
-                float recordingTimeOfChunk = RecordingTime - duration;
-                if (recordingTimeOfChunk < 0)
-                {
-                    if(controller.debugLogs)
-                        ExtendedLogger.LogError(GetType().Name, "Error! Sound recording time should not be negative!", this);
-                    recordingTimeOfChunk = 0.0f;
-                    RecordingTime = duration;
-                }
-
-                RecordSoundDataWithGOInfoAtTimestamp(controller.RecorderID, data, data.Length, RecordingSamplingRate, 0, RecordingChannelNum, _goIDDTO[0], recordingTimeOfChunk, id);
-                    RecordingTime += duration;
-            }
+            // dspTime identifies the current block; no shared sample counter or wall clock is needed.
+            float recordingTimeOfChunk = Mathf.Max(0.0f, controller.GetRecordingTime());
+            RecordSoundDataWithGOInfoAtTimestamp(controller.RecorderID, data, data.Length, RecordingSamplingRate, 0, RecordingChannelNum, _goIDDTO[0], recordingTimeOfChunk, id);
         }
 
         public override void TickRerecordCapture(float currentReplayTime)

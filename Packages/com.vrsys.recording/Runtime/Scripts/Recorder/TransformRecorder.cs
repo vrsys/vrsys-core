@@ -264,8 +264,8 @@ namespace VRSYS.Recording
                     foreach (var prefabInfo in information)
                     {
                         // TODO: For some reason the prefab path is empty for the local player. Why?
-                        if (controller.debugLogs)
-                            ExtendedLogger.LogInfo(GetType().Name,
+                        if (RecordingLogger.IsEnabled(LogLevel.Info))
+                            RecordingLogger.LogInfo(GetType().Name,
                                 "Prefab path: " + prefabInfo.correspondingPrefab.assetPath + ", for object: " +
                                 gameObject.name, this);
                         if (prefabInfo.correspondingPrefab != null &&
@@ -286,13 +286,13 @@ namespace VRSYS.Recording
             if (objectChanged)
             {
                 bool wasTeleported = CheckIfWasTeleported(currentCapture);
-                if (wasTeleported && controller.debugLogs)
-                    ExtendedLogger.LogInfo(GetType().Name,
+                if (wasTeleported && RecordingLogger.IsEnabled(LogLevel.Info))
+                    RecordingLogger.LogInfo(GetType().Name,
                         "Gap/teleport keyframe inserted. Time: " + recordTime + ", uuid: " + id, this);
 
                 bool parentChanged = CheckIfParentChanged(currentCapture);
-                if (parentChanged && controller.debugLogs)
-                    ExtendedLogger.LogInfo(GetType().Name,
+                if (parentChanged && RecordingLogger.IsEnabled(LogLevel.Info))
+                    RecordingLogger.LogInfo(GetType().Name,
                         "Parent change keyframe inserted. Time: " + recordTime + ", uuid: " + id, this);
 
                 if ((parentChanged || wasTeleported) && _lastRecordedCapture.HasValue)
@@ -305,8 +305,8 @@ namespace VRSYS.Recording
                         result = RecordObjectAtTimestamp(controller.RecorderID, _name, _name.Length, id, _matrixDTO,
                             insertedRecordingTime, _infoDTO);
 
-                        if (!result && controller.debugLogs)
-                            ExtendedLogger.LogError(GetType().Name,
+                        if (!result && RecordingLogger.IsEnabled(LogLevel.Error))
+                            RecordingLogger.LogError(GetType().Name,
                                 "Inserting prior teleport/parent change keyframe: Failed, " + gameObject.name, this);
                     }
                 }
@@ -316,9 +316,9 @@ namespace VRSYS.Recording
                 result = RecordObjectAtTimestamp(controller.RecorderID, _name, _name.Length, id, _matrixDTO, recordTime,
                     _infoDTO);
 
-                if (!result && controller.debugLogs)
+                if (!result && RecordingLogger.IsEnabled(LogLevel.Error))
                 {
-                    ExtendedLogger.LogError(GetType().Name, "Recording object: " + _name + " Failed", this);
+                    RecordingLogger.LogError(GetType().Name, "Recording object: " + _name + " Failed", this);
                 }
                 else
                 {
@@ -475,8 +475,8 @@ namespace VRSYS.Recording
                         if (Time.time - lastErrorLog > 10.0f)
                         {
                             lastErrorLog = Time.time;
-                            if (controller.debugLogs)
-                                ExtendedLogger.LogError(GetType().Name, "Could not get replay transform for: " + _name,
+                            if (RecordingLogger.IsEnabled(LogLevel.Error))
+                                RecordingLogger.LogError(GetType().Name, "Could not get replay transform for: " + _name,
                                     this);
                         }
                     }
@@ -744,8 +744,8 @@ namespace VRSYS.Recording
             last.active = false;
             fillDTOData(last);
             if (!RecordObjectAtTimestamp(controller.RecorderID, _name, _name.Length, id, _matrixDTO,
-                    Mathf.Max(recordTime, _lastRecordTime + HoldKeyframeOffsetSeconds), _infoDTO) && controller.debugLogs)
-                ExtendedLogger.LogError(GetType().Name, "Recording the destruction of " + _name + ": Failed", this);
+                    Mathf.Max(recordTime, _lastRecordTime + HoldKeyframeOffsetSeconds), _infoDTO) && RecordingLogger.IsEnabled(LogLevel.Error))
+                RecordingLogger.LogError(GetType().Name, "Recording the destruction of " + _name + ": Failed", this);
         }
 
         public override void BeginRerecordCapture()

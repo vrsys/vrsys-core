@@ -59,7 +59,7 @@ namespace VRSYS.Recording
             var package = UnityEditor.PackageManager.PackageInfo.FindForPackageName(CorePackage);
             if (package == null)
             {
-                Debug.LogError("VRSYS Recording: package " + CorePackage + " not found.");
+                RecordingLogger.LogError(nameof(RecordingSampleDependencies), "VRSYS Recording: package " + CorePackage + " not found.");
                 return false;
             }
 
@@ -67,7 +67,7 @@ namespace VRSYS.Recording
                 .FirstOrDefault(s => s.displayName == CoreSampleName);
             if (string.IsNullOrEmpty(sample.resolvedPath))
             {
-                Debug.LogError("VRSYS Recording: sample \"" + CoreSampleName + "\" not found in " + CorePackage + ".");
+                RecordingLogger.LogError(nameof(RecordingSampleDependencies), "VRSYS Recording: sample \"" + CoreSampleName + "\" not found in " + CorePackage + ".");
                 return false;
             }
 

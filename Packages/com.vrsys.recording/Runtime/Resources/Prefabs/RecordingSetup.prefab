@@ -89,7 +89,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 2074270980
+  GlobalObjectIdHash: 3229060149
   InScenePlacedSourceGlobalObjectIdHash: 0
   DeferredDespawnTick: 0
   Ownership: 1
@@ -174,7 +174,7 @@ MonoBehaviour:
     replayBufferNumber: 3
     replayBufferTimeInterval: 10
     recordingSoundMaxBufferSize: 100
-    logLevel: 1
+    logLevel: 3
     versionInfo: No information
     recordingDirectory: C:/Users/Anton-Lammert/AppData/LocalLow/DefaultCompany/TemporalCollaborativeImmersiveAnalysis/1
   localPlayback: 0

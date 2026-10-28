@@ -20,6 +20,18 @@ namespace VRSYS.Recording.Testing
     {
         private RecorderController _controller;
         private float _nextControllerLookup;
+        private bool _wasRunning = true;
+
+        protected RecordingTestObjectsController TestObjectsController { get; private set; }
+
+        internal void SetTestObjectsController(RecordingTestObjectsController controller)
+        {
+            TestObjectsController = controller;
+        }
+
+        protected virtual void OnTestBehaviourRunningChanged(bool running)
+        {
+        }
 
         /// <summary>The object this component changes. Decides whether the server drives it (networked).</summary>
         protected abstract GameObject Target { get; }
@@ -30,8 +42,30 @@ namespace VRSYS.Recording.Testing
         /// <summary>Restore the state captured in Awake (pose, parent, active state) and restart the animation.</summary>
         protected abstract void ResetToInitialState();
 
+        /// <summary>The scene's recorder, once found (looked up once per second until one exists).</summary>
+        protected RecorderController Controller => _controller;
+
+        /// <summary>Called once the recorder is found, e.g. to register a generic recorder provider.</summary>
+        protected virtual void OnControllerFound(RecorderController controller)
+        {
+        }
+
+        /// <summary>Called when this component is disabled while it knows a recorder.</summary>
+        protected virtual void OnControllerLost(RecorderController controller)
+        {
+        }
+
+        /// <summary>
+        /// Called on every peer right before a replay matches recorded objects to the scene, before the
+        /// authority resets the test objects. Use it for clean-up that every peer must do itself.
+        /// </summary>
+        protected virtual void OnReplayPreparing()
+        {
+        }
+
         protected virtual void OnEnable()
         {
+            TestObjectsController = GetComponentInParent<RecordingTestObjectsController>(true);
             FindController();
         }
 
@@ -39,8 +73,9 @@ namespace VRSYS.Recording.Testing
         {
             if (_controller != null)
             {
-                _controller.onReplayIsPreparing.RemoveListener(ResetIfAuthority);
-                _controller.onRecordingHasStarted.RemoveListener(ResetIfAuthority);
+                _controller.onReplayIsPreparing.RemoveListener(HandleReplayPreparing);
+                _controller.onRecordingHasStarted.RemoveListener(HandleRecordingStarted);
+                OnControllerLost(_controller);
             }
             _controller = null;
         }
@@ -53,7 +88,14 @@ namespace VRSYS.Recording.Testing
                 FindController();
             }
 
-            if (IsReplaying || !HasAuthority)
+            bool running = TestObjectsController == null || TestObjectsController.IsRunning;
+            if (running != _wasRunning)
+            {
+                _wasRunning = running;
+                OnTestBehaviourRunningChanged(running);
+            }
+
+            if (!running || IsReplaying || !HasAuthority)
                 return;
 
             Tick(Time.deltaTime);
@@ -106,13 +148,21 @@ namespace VRSYS.Recording.Testing
             _controller = FindFirstObjectByType<RecorderController>();
             if (_controller != null)
             {
-                _controller.onReplayIsPreparing.AddListener(ResetIfAuthority);
-                _controller.onRecordingHasStarted.AddListener(ResetIfAuthority);
+                _controller.onReplayIsPreparing.AddListener(HandleReplayPreparing);
+                _controller.onRecordingHasStarted.AddListener(HandleRecordingStarted);
+                OnControllerFound(_controller);
             }
         }
 
-        private void ResetIfAuthority()
+        private void HandleRecordingStarted()
         {
+            if (HasAuthority)
+                ResetToInitialState();
+        }
+
+        private void HandleReplayPreparing()
+        {
+            OnReplayPreparing();
             if (HasAuthority)
                 ResetToInitialState();
         }

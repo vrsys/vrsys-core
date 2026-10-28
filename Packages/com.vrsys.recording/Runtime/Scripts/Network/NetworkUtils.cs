@@ -89,7 +89,7 @@ namespace VRSYS.Recording
                         // socket would block") rather than a clean timeout. Poll avoids that noise.
                         if (!socket.Poll(NtpTimeoutMs * 1000, SelectMode.SelectRead))
                         {
-                            ExtendedLogger.LogWarning(nameof(NetworkUtils), "NTP server '" + ntpServer + "' did not respond within " +
+                            RecordingLogger.LogWarning(nameof(NetworkUtils), "NTP server '" + ntpServer + "' did not respond within " +
                                              NtpTimeoutMs + " ms. Trying next server.");
                             continue;
                         }
@@ -122,11 +122,11 @@ namespace VRSYS.Recording
                 }
                 catch (Exception exception)
                 {
-                    ExtendedLogger.LogWarning(nameof(NetworkUtils), "Could not synchronize time via '" + ntpServer + "': " + exception.Message);
+                    RecordingLogger.LogWarning(nameof(NetworkUtils), "Could not synchronize time via '" + ntpServer + "': " + exception.Message);
                 }
             }
 
-            ExtendedLogger.LogError(nameof(NetworkUtils), "Could not synchronize time via any NTP server. Falling back to the local system clock.");
+            RecordingLogger.LogError(nameof(NetworkUtils), "Could not synchronize time via any NTP server. Falling back to the local system clock.");
             return false;
         }
 
@@ -144,19 +144,19 @@ namespace VRSYS.Recording
 
             while (!File.Exists(filePath))
             {
-                ExtendedLogger.LogError(nameof(NetworkUtils), "The file: " + filePath + " does not exist.");
+                RecordingLogger.LogError(nameof(NetworkUtils), "The file: " + filePath + " does not exist.");
                 yield return new WaitForSeconds(0.01f);
             }
 
             string url = serverAddress + "/upload/" +  projectName + "/" + fileName;
-            ExtendedLogger.LogInfo(nameof(NetworkUtils), "Upload file to: " + url);
+            RecordingLogger.LogInfo(nameof(NetworkUtils), "Upload file to: " + url);
 
             using (var uwr = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPUT))
             {
                 uwr.uploadHandler = new UploadHandlerFile(filePath);
                 yield return uwr.SendWebRequest();
                 if (uwr.result != UnityWebRequest.Result.Success)
-                    ExtendedLogger.LogError(nameof(NetworkUtils), uwr.error);
+                    RecordingLogger.LogError(nameof(NetworkUtils), uwr.error);
                 else
                 {
                     // file data successfully sent
@@ -169,7 +169,7 @@ namespace VRSYS.Recording
             string url = serverAddress + "/delete_recording/" +
                          UnityWebRequest.EscapeURL(projectName) + "/" +
                          UnityWebRequest.EscapeURL(recordingName);
-            ExtendedLogger.LogInfo(nameof(NetworkUtils), "Delete recording: " + url);
+            RecordingLogger.LogInfo(nameof(NetworkUtils), "Delete recording: " + url);
 
             using (var uwr = new UnityWebRequest(url, UnityWebRequest.kHttpVerbDELETE))
             {
@@ -182,9 +182,9 @@ namespace VRSYS.Recording
                 string message = success ? uwr.downloadHandler.text : uwr.error;
 
                 if (!success)
-                    ExtendedLogger.LogError(nameof(NetworkUtils), "Delete failed (" + uwr.responseCode + "): " + message);
+                    RecordingLogger.LogError(nameof(NetworkUtils), "Delete failed (" + uwr.responseCode + "): " + message);
                 else
-                    ExtendedLogger.LogInfo(nameof(NetworkUtils), "Delete succeeded: " + message);
+                    RecordingLogger.LogInfo(nameof(NetworkUtils), "Delete succeeded: " + message);
 
                 onComplete?.Invoke(success, message);
             }
@@ -193,7 +193,7 @@ namespace VRSYS.Recording
         public static IEnumerator DownloadProjectZip(string projectName, string serverAddress, string password, string savePath, Action<bool, string> onComplete = null)
         {
             string url = serverAddress + "/download_zip/" + UnityWebRequest.EscapeURL(projectName);
-            ExtendedLogger.LogInfo(nameof(NetworkUtils), "Download project zip: " + url);
+            RecordingLogger.LogInfo(nameof(NetworkUtils), "Download project zip: " + url);
 
             string parentDir = Path.GetDirectoryName(savePath);
             if (!string.IsNullOrEmpty(parentDir) && !Directory.Exists(parentDir))
@@ -211,7 +211,7 @@ namespace VRSYS.Recording
 
                 if (!success)
                 {
-                    ExtendedLogger.LogError(nameof(NetworkUtils), "Download failed (" + uwr.responseCode + "): " + uwr.error);
+                    RecordingLogger.LogError(nameof(NetworkUtils), "Download failed (" + uwr.responseCode + "): " + uwr.error);
                     if (File.Exists(savePath))
                     {
                         try { File.Delete(savePath); }
@@ -220,7 +220,7 @@ namespace VRSYS.Recording
                 }
                 else
                 {
-                    ExtendedLogger.LogInfo(nameof(NetworkUtils), "Download succeeded: " + savePath);
+                    RecordingLogger.LogInfo(nameof(NetworkUtils), "Download succeeded: " + savePath);
                 }
 
                 onComplete?.Invoke(success, message);

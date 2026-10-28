@@ -289,9 +289,8 @@ namespace VRSYS.Recording
             if (overrideRenderQueue || material.renderQueue < minRenderQueue || material.renderQueue > maxRenderQueue)
             {
                 if (!overrideRenderQueue)
-                    Debug.LogFormat(LogType.Log, LogOption.NoStacktrace, null,
-                        "Render queue value outside of the allowed range ({0} - {1}) for selected Blend mode, resetting render queue to default",
-                        minRenderQueue, maxRenderQueue);
+                    RecordingLogger.LogInfo(nameof(Utils),
+                        $"Render queue value outside of the allowed range ({minRenderQueue} - {maxRenderQueue}) for selected Blend mode, resetting render queue to default");
                 material.renderQueue = defaultRenderQueue;
             }
         }
@@ -833,7 +832,7 @@ namespace VRSYS.Recording
         /// copies that are spawned over the network: Netcode needs the same NetworkBehaviours on every peer.</param>
         public static void RemoveCustomComponents(Transform root, bool keepNetworkComponents = false)
         {
-            //ExtendedLogger.LogInfo("Utils", $"Trying to remove custom components on {root.name}", root);
+            //RecordingLogger.LogInfo("Utils", $"Trying to remove custom components on {root.name}", root);
 
             foreach (Transform child in root.transform)
             {
@@ -871,7 +870,7 @@ namespace VRSYS.Recording
                 if (comp == null || preservedComponents.Contains(comp))
                     continue;
 
-                ExtendedLogger.LogWarning("Utils", $"Could not remove component {comp.GetType().Name} from {root.name} without breaking component dependencies.", root);
+                RecordingLogger.LogWarning("Utils", $"Could not remove component {comp.GetType().Name} from {root.name} without breaking component dependencies.", root);
             }
             //Debug.Log("Trying to remove custom finished.");
         }

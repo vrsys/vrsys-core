@@ -3,7 +3,8 @@
     "rootNamespace": "VRSYS.Recording.Testing",
     "references": [
         "vrsys.recording",
-        "Unity.Netcode.Runtime"
+        "Unity.Netcode.Runtime",
+        "Unity.Collections"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

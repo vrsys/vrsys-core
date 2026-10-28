@@ -9,7 +9,7 @@ namespace VRSYS.Recording
 #if UNITY_EDITOR
     /// <summary>
     /// When the RecorderState sits next to a RecorderController (the normal setup), its settings are edited in
-    /// the RecorderController inspector ("Files & Session" and "Server & Files"), so this inspector only shows a
+    /// the RecorderController inspector ("Recordings", "Scene Setup" and "Server Transfer"), so this inspector only shows a
     /// one-line pointer there. The legacy IMGUI inspector below is still used if no RecorderController is found,
     /// and can be opened from the pointer for debugging.
     /// </summary>
@@ -42,7 +42,7 @@ namespace VRSYS.Recording
 
             VisualElement row = new VisualElement();
             row.AddToClassList("rs-pointer");
-            Label text = new Label("Edited in the Recorder Controller inspector (Files & Session, Server & Files).");
+            Label text = new Label("Edited in the Recorder Controller inspector (Recordings, Scene Setup, Server Transfer).");
             text.AddToClassList("rs-pointer-text");
             row.Add(text);
 
@@ -151,7 +151,7 @@ namespace VRSYS.Recording
         {
             if (!Directory.Exists(directory))
             {
-                Debug.LogError("Directory does not exist: " + directory);
+                RecordingLogger.LogError(nameof(RecorderStateEditor), "Directory does not exist: " + directory);
                 return;
             }
 

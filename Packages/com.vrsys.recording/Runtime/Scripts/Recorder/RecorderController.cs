@@ -107,6 +107,13 @@ namespace VRSYS.Recording
         private NetworkController _networkController;
 
         private float _lastTransformRecordTime;
+        private double _recordingDspStartTime;
+
+        // Use the audio clock for all recording tracks, including after a main-thread stall.
+        internal float GetRecordingTime()
+        {
+            return (float)(AudioSettings.dspTime - _recordingDspStartTime);
+        }
         private Dictionary<int, Recorder> _transformRecorder = new Dictionary<int, Recorder>();
         private Dictionary<int, Recorder> _audioRecorder = new Dictionary<int, Recorder>();
         private Dictionary<int, Recorder> _genericRecorder = new Dictionary<int, Recorder>();
@@ -115,7 +122,8 @@ namespace VRSYS.Recording
         public bool localPlayback = false;
         private Coroutine _replayStartupRoutine;
         public bool uploadFilesToServer = false;
-        public bool debugLogs = true;
+        // Kept for existing scene/prefab serialization; pluginSettings.logLevel controls all recording logs.
+        [HideInInspector] public bool debugLogs = true;
         private const float ReplayBoundaryPaddingSeconds = 0.1f;
         private LogLevel _lastAppliedPluginLogLevel;
         private FramePerformance _recordingPerformance;
@@ -156,10 +164,10 @@ namespace VRSYS.Recording
 
         private void DebugReplayStartupLog(string message)
         {
-            if (!debugLogs)
+            if (!RecordingLogger.IsEnabled(LogLevel.Debug))
                 return;
 
-            ExtendedLogger.LogInfo(GetType().Name, "[ReplayStartupDebug][frame=" + Time.frameCount +
+            RecordingLogger.LogDebug(GetType().Name, "[ReplayStartupDebug][frame=" + Time.frameCount +
                                                    "][time=" + Time.realtimeSinceStartup.ToString("F3") + "] " +
                                                    message, this);
         }
@@ -287,8 +295,8 @@ namespace VRSYS.Recording
         {
             if (recorderState.currentState == State.Recording || recorderState.currentState == State.PrepareRecording)
             {
-                if (debugLogs)
-                    ExtendedLogger.LogInfo(GetType().Name, "AttachSoundRecorder: recordMicro=" + recordMicro +
+                if (RecordingLogger.IsEnabled(LogLevel.Info))
+                    RecordingLogger.LogInfo(GetType().Name, "AttachSoundRecorder: recordMicro=" + recordMicro +
                                                            ", recordAudioListener=" + recordAudioListener +
                                                            ", recordAllSoundSources=" +
                                                            recordAllSoundSources + ", Microphone.devices=" +
@@ -303,8 +311,8 @@ namespace VRSYS.Recording
                         // Use the default Unity microphone device. Applications that capture audio through a
                         // specific voice SDK can inject their own clip via MicrophoneRecorder.SetMicrophoneReader.
                         string microphone = Microphone.devices[0];
-                        if (debugLogs)
-                            ExtendedLogger.LogInfo(GetType().Name, "Default microphone: " + microphone, this);
+                        if (RecordingLogger.IsEnabled(LogLevel.Info))
+                            RecordingLogger.LogInfo(GetType().Name, "Default microphone: " + microphone, this);
 
                         GameObject newGo = new GameObject();
                         newGo.name = "SoundSource:0";
@@ -329,8 +337,8 @@ namespace VRSYS.Recording
                         }
                         else
                         {
-                            if (debugLogs)
-                                ExtendedLogger.LogInfo(GetType().Name,
+                            if (RecordingLogger.IsEnabled(LogLevel.Info))
+                                RecordingLogger.LogInfo(GetType().Name,
                                     "Microphone '" + microphone + "' is already recording (e.g. in use by a voice " +
                                     "SDK like ODIN); skipping Microphone.Start and leaving the reader for an override.",
                                     this);
@@ -339,8 +347,8 @@ namespace VRSYS.Recording
                         if (NetworkUser.LocalInstance != null)
                             microphoneRecorder.SetUserTransform(NetworkUser.LocalInstance.head);
 
-                        if (debugLogs)
-                            ExtendedLogger.LogInfo(GetType().Name,
+                        if (RecordingLogger.IsEnabled(LogLevel.Info))
+                            RecordingLogger.LogInfo(GetType().Name,
                                 "Created MicrophoneRecorder (id=0) on '" + newGo.name +
                                 "'. Microphone.IsRecording(\"" + microphone + "\")=" +
                                 Microphone.IsRecording(microphone) + ". If a voice SDK (ODIN) holds the mic, " +
@@ -390,8 +398,8 @@ namespace VRSYS.Recording
 
         private void AttachTransformRecorder()
         {
-            if (debugLogs)
-                ExtendedLogger.LogInfo(GetType().Name,
+            if (RecordingLogger.IsEnabled(LogLevel.Info))
+                RecordingLogger.LogInfo(GetType().Name,
                     "Attaching transform recorder scripts to gameobjects in the scene", this);
 
             // During replay with a configured replay root, only objects beneath that root are animated.
@@ -401,8 +409,8 @@ namespace VRSYS.Recording
             if (recorderState.currentState == State.PreparingReplay && replayRoot != null)
             {
                 AttachTransformRecorderRecursively(replayRoot.gameObject);
-                if (debugLogs)
-                    ExtendedLogger.LogInfo(GetType().Name,
+                if (RecordingLogger.IsEnabled(LogLevel.Info))
+                    RecordingLogger.LogInfo(GetType().Name,
                         "Attaching transform recorder scripts to gameobjects in the scene finished", this);
                 return;
             }
@@ -435,8 +443,8 @@ namespace VRSYS.Recording
                 }
             }
 
-            if (debugLogs)
-                ExtendedLogger.LogInfo(GetType().Name,
+            if (RecordingLogger.IsEnabled(LogLevel.Info))
+                RecordingLogger.LogInfo(GetType().Name,
                     "Attaching transform recorder scripts to gameobjects in the scene finished", this);
         }
 
@@ -506,7 +514,7 @@ namespace VRSYS.Recording
                 bool result = StopReplay(recorderState.recorderID);
                 OnReplayEnd();
                 if (!result)
-                    ExtendedLogger.LogError(GetType().Name, "Could not stop the replay!", this);
+                    RecordingLogger.LogError(GetType().Name, "Could not stop the replay!", this);
                 else
                     recorderState.currentState = State.Idle;
             }
@@ -563,8 +571,8 @@ namespace VRSYS.Recording
 
         public void PrepareLocalReplay()
         {
-            if (debugLogs)
-                ExtendedLogger.LogInfo(GetType().Name, "Preparing local replay.", this);
+            if (RecordingLogger.IsEnabled(LogLevel.Info))
+                RecordingLogger.LogInfo(GetType().Name, "Preparing local replay.", this);
             recorderState.currentState = State.PreparingReplay;
             localPlayback = true;
             if (downloadFilesFromServer)
@@ -585,8 +593,8 @@ namespace VRSYS.Recording
                                   ", localPlayback=" + localPlayback +
                                   ", replayRoot=" + (replayRoot == null ? "<null>" : replayRoot.name));
             recorderState.currentState = State.PreparingReplay;
-            if (debugLogs)
-                ExtendedLogger.LogInfo(GetType().Name,
+            if (RecordingLogger.IsEnabled(LogLevel.Info))
+                RecordingLogger.LogInfo(GetType().Name,
                     "Starting replay for recorder with id: " + recorderState.recorderID, this);
 
             bool openForEditing = GetComponent<IRecordingEditor>() != null;
@@ -604,13 +612,13 @@ namespace VRSYS.Recording
 
             if (!result)
             {
-                ExtendedLogger.LogError(GetType().Name, "Playback file existence check: Failed " + Time.time, this);
+                RecordingLogger.LogError(GetType().Name, "Playback file existence check: Failed " + Time.time, this);
                 return;
             }
             else
             {
-                if (debugLogs)
-                    ExtendedLogger.LogInfo(GetType().Name, "Playback file existence check: Successful " + Time.time,
+                if (RecordingLogger.IsEnabled(LogLevel.Info))
+                    RecordingLogger.LogInfo(GetType().Name, "Playback file existence check: Successful " + Time.time,
                         this);
             }
 
@@ -621,8 +629,8 @@ namespace VRSYS.Recording
             recorderState.currentMinSliderValue = 0.0f;
             recorderState.currentMaxSliderValue = recorderState.recordingDuration;
 
-            if (debugLogs)
-                ExtendedLogger.LogInfo(GetType().Name, "Preparing scene for playback.", this);
+            if (RecordingLogger.IsEnabled(LogLevel.Info))
+                RecordingLogger.LogInfo(GetType().Name, "Preparing scene for playback.", this);
             DebugReplayStartupLog("StartReplay before PrepareReplayScene.");
             onReplayIsPreparing.Invoke();
             _scenePreparator.PrepareReplayScene();
@@ -648,7 +656,7 @@ namespace VRSYS.Recording
 
             string missing = _scenePreparator.StopWaitingForNetworkedCopies();
             if (missing.Length > 0)
-                ExtendedLogger.LogWarning(GetType().Name,
+                RecordingLogger.LogWarning(GetType().Name,
                     "Networked replay objects did not arrive within " + networkedSpawnTimeout + " s, replaying without them: " + missing, this);
 
             _replayStartupRoutine = null;
@@ -773,18 +781,18 @@ namespace VRSYS.Recording
 
             GetComponent<IRecordingEditor>()?.CompletePendingEdits();
             recorderState.currentState = State.Idle;
-            if (debugLogs)
-                ExtendedLogger.LogInfo(GetType().Name,
+            if (RecordingLogger.IsEnabled(LogLevel.Info))
+                RecordingLogger.LogInfo(GetType().Name,
                     "Stopping replay for recorder with id: " + recorderState.recorderID, this);
             bool result = StopReplay(recorderState.recorderID);
 
             if (result)
             {
-                if (debugLogs)
-                    ExtendedLogger.LogInfo(GetType().Name, "Playback stopped successful! " + Time.time, this);
+                if (RecordingLogger.IsEnabled(LogLevel.Info))
+                    RecordingLogger.LogInfo(GetType().Name, "Playback stopped successful! " + Time.time, this);
             }
             else
-                ExtendedLogger.LogError(GetType().Name, "Playback not stopped successful! " + Time.time, this);
+                RecordingLogger.LogError(GetType().Name, "Playback not stopped successful! " + Time.time, this);
 
             recorderState.ResetAfterReplay();
             OnReplayEnd();
@@ -804,13 +812,14 @@ namespace VRSYS.Recording
         public void StartRecording()
         {
             _recordingPerformance = default;
+            _recordingDspStartTime = AudioSettings.dspTime;
             recorderState.currentState = State.Recording;
             recorderState.currentReplayTime = -1.0f;
             recorderState.currentRecordingTime = 0.0f;
 
             OnRecordingStart();
-            if (debugLogs)
-                ExtendedLogger.LogInfo(GetType().Name,
+            if (RecordingLogger.IsEnabled(LogLevel.Info))
+                RecordingLogger.LogInfo(GetType().Name,
                     "Starting recording for recorder with id: " + recorderState.recorderID, this);
 
             onRecordingHasStarted.Invoke();
@@ -818,8 +827,8 @@ namespace VRSYS.Recording
 
         public void PrepareRecording()
         {
-            if (debugLogs)
-                ExtendedLogger.LogInfo(GetType().Name,
+            if (RecordingLogger.IsEnabled(LogLevel.Info))
+                RecordingLogger.LogInfo(GetType().Name,
                     "Preparing recording for recorder with id: " + recorderState.recorderID, this);
             recorderState.currentState = State.PrepareRecording;
 
@@ -831,10 +840,10 @@ namespace VRSYS.Recording
                 recorderState.recordingDirectory.Length, recorderState.recordingFile,
                 recorderState.recordingFile.Length);
             if (!result)
-                ExtendedLogger.LogError(GetType().Name,
+                RecordingLogger.LogError(GetType().Name,
                     "Recording file creation: Failed for recorder with id: " + recorderState.recorderID, this);
-            else if (debugLogs)
-                ExtendedLogger.LogInfo(GetType().Name,
+            else if (RecordingLogger.IsEnabled(LogLevel.Info))
+                RecordingLogger.LogInfo(GetType().Name,
                     "Recording file creation: Successful for recorder with id: " + recorderState.recorderID, this);
         }
 
@@ -847,35 +856,35 @@ namespace VRSYS.Recording
         {
             recorderState.currentState = State.Idle;
             recorderState.localRecording = false;
-            if (debugLogs)
-                ExtendedLogger.LogInfo(GetType().Name,
+            if (RecordingLogger.IsEnabled(LogLevel.Info))
+                RecordingLogger.LogInfo(GetType().Name,
                     "Stopping recording for recorder with id: " + recorderState.recorderID, this);
 
             bool result = StopRecording(recorderState.recorderID);
 
             if (!result)
             {
-                ExtendedLogger.LogError(GetType().Name, "Recording stopped: Failed", this);
+                RecordingLogger.LogError(GetType().Name, "Recording stopped: Failed", this);
                 return;
             }
 
-            if (debugLogs)
-                ExtendedLogger.LogInfo(GetType().Name, "Recording stopped: Successful", this);
+            if (RecordingLogger.IsEnabled(LogLevel.Info))
+                RecordingLogger.LogInfo(GetType().Name, "Recording stopped: Successful", this);
 
             if (uploadFilesToServer)
                 UploadFilesToServer();
 
             if (createWAV)
             {
-                if (debugLogs)
-                    ExtendedLogger.LogInfo(GetType().Name, "Started WAV file creation coroutine.", this);
+                if (RecordingLogger.IsEnabled(LogLevel.Info))
+                    RecordingLogger.LogInfo(GetType().Name, "Started WAV file creation coroutine.", this);
                 Invoke(nameof(WAVCreationCoroutine), 5.0f);
             }
 
             if (createCSV)
             {
-                if (debugLogs)
-                    ExtendedLogger.LogInfo(GetType().Name, "Started CSV file creation coroutine.", this);
+                if (RecordingLogger.IsEnabled(LogLevel.Info))
+                    RecordingLogger.LogInfo(GetType().Name, "Started CSV file creation coroutine.", this);
                 Invoke(nameof(CSVCreationCoroutine), 5.0f);
             }
 
@@ -903,40 +912,40 @@ namespace VRSYS.Recording
 
             string fileName = GenerateFileName();
 
-            if (debugLogs)
-                ExtendedLogger.LogInfo(GetType().Name, "Trying to transmit transform file: " + transformFile, this);
+            if (RecordingLogger.IsEnabled(LogLevel.Info))
+                RecordingLogger.LogInfo(GetType().Name, "Trying to transmit transform file: " + transformFile, this);
             if (File.Exists(transformFile))
             {
                 _networkController.Upload(recorderState.projectName, transformFile, fileName + ".transform",
                     recorderState.selectedServer);
             }
 
-            if (debugLogs)
-                ExtendedLogger.LogInfo(GetType().Name, "Trying to transmit sound file: " + soundFile, this);
+            if (RecordingLogger.IsEnabled(LogLevel.Info))
+                RecordingLogger.LogInfo(GetType().Name, "Trying to transmit sound file: " + soundFile, this);
             if (File.Exists(soundFile))
             {
                 _networkController.Upload(recorderState.projectName, soundFile, fileName + ".sound",
                     recorderState.selectedServer);
             }
 
-            if (debugLogs)
-                ExtendedLogger.LogInfo(GetType().Name, "Trying to transmit meta file: " + metaFile, this);
+            if (RecordingLogger.IsEnabled(LogLevel.Info))
+                RecordingLogger.LogInfo(GetType().Name, "Trying to transmit meta file: " + metaFile, this);
             if (File.Exists(metaFile))
             {
                 _networkController.Upload(recorderState.projectName, metaFile, fileName + ".recordmeta",
                     recorderState.selectedServer);
             }
 
-            if (debugLogs)
-                ExtendedLogger.LogInfo(GetType().Name, "Trying to transmit arbitrary file: " + arbFile, this);
+            if (RecordingLogger.IsEnabled(LogLevel.Info))
+                RecordingLogger.LogInfo(GetType().Name, "Trying to transmit arbitrary file: " + arbFile, this);
             if (File.Exists(arbFile))
             {
                 _networkController.Upload(recorderState.projectName, arbFile, fileName + ".generic",
                     recorderState.selectedServer);
             }
 
-            if (debugLogs)
-                ExtendedLogger.LogInfo(GetType().Name, "Finished transmitting all files.", this);
+            if (RecordingLogger.IsEnabled(LogLevel.Info))
+                RecordingLogger.LogInfo(GetType().Name, "Finished transmitting all files.", this);
         }
 
         private string GenerateFileName()
@@ -1095,8 +1104,8 @@ namespace VRSYS.Recording
 
         private void LateJoinLocalPlaybackStart()
         {
-            if (debugLogs)
-                ExtendedLogger.LogInfo(GetType().Name, "Trying to late join recording playback.", this);
+            if (RecordingLogger.IsEnabled(LogLevel.Info))
+                RecordingLogger.LogInfo(GetType().Name, "Trying to late join recording playback.", this);
 
             // make sure playback is started for late joining users
             if (recorderState.currentState == State.Idle && _networkController._userReplayTimes.Count > 0 &&
@@ -1106,8 +1115,8 @@ namespace VRSYS.Recording
             if (recorderState.currentState == State.PreparingReplay && !localPlayback &&
                 !_networkController.IsDownloading())
             {
-                if (debugLogs)
-                    ExtendedLogger.LogInfo(GetType().Name,
+                if (RecordingLogger.IsEnabled(LogLevel.Info))
+                    RecordingLogger.LogInfo(GetType().Name,
                         "Late join local playback start. Downloads should be finished.", this);
                 StartReplay();
             }
@@ -1146,8 +1155,8 @@ namespace VRSYS.Recording
 
         private void OnRecordingEnd()
         {
-            if (debugLogs)
-                ExtendedLogger.LogInfo(GetType().Name, "OnRecordingEnd called!", this);
+            if (RecordingLogger.IsEnabled(LogLevel.Info))
+                RecordingLogger.LogInfo(GetType().Name, "OnRecordingEnd called!", this);
             foreach (var kv in _transformRecorder)
             {
                 if (kv.Value != null)
@@ -1172,14 +1181,14 @@ namespace VRSYS.Recording
                 }
             }
 
-            if (debugLogs)
-                ExtendedLogger.LogInfo(GetType().Name, "OnRecordingEnd finished!", this);
+            if (RecordingLogger.IsEnabled(LogLevel.Info))
+                RecordingLogger.LogInfo(GetType().Name, "OnRecordingEnd finished!", this);
         }
 
         private void OnReplayStart()
         {
-            if (debugLogs)
-                ExtendedLogger.LogInfo(GetType().Name, "OnReplayStart called!", this);
+            if (RecordingLogger.IsEnabled(LogLevel.Info))
+                RecordingLogger.LogInfo(GetType().Name, "OnReplayStart called!", this);
             foreach (var kv in _transformRecorder)
             {
                 if (kv.Value != null)
@@ -1204,8 +1213,8 @@ namespace VRSYS.Recording
                 }
             }
 
-            if (debugLogs)
-                ExtendedLogger.LogInfo(GetType().Name, "OnReplayStart finished!", this);
+            if (RecordingLogger.IsEnabled(LogLevel.Info))
+                RecordingLogger.LogInfo(GetType().Name, "OnReplayStart finished!", this);
         }
 
         private void OnReplayEnd()
@@ -1260,8 +1269,8 @@ namespace VRSYS.Recording
                     while (Mathf.Abs(serverPlaybackTime - recorderState.currentReplayTime) > timeAdvance & i < it)
                     {
                         i++;
-                        if (debugLogs)
-                            ExtendedLogger.LogInfo(GetType().Name,
+                        if (RecordingLogger.IsEnabled(LogLevel.Info))
+                            RecordingLogger.LogInfo(GetType().Name,
                                 "Current playback time: " + recorderState.currentReplayTime + ", target time: " +
                                 serverPlaybackTime, this);
 
@@ -1274,8 +1283,8 @@ namespace VRSYS.Recording
                             {
                                 bool playback = kv.Value.Replay(recorderState.currentReplayTime);
 
-                                if (debugLogs)
-                                    ExtendedLogger.LogInfo(GetType().Name, "Playback state: " + playback, this);
+                                if (RecordingLogger.IsEnabled(LogLevel.Info))
+                                    RecordingLogger.LogInfo(GetType().Name, "Playback state: " + playback, this);
 
                                 if (recorderState.currentReplayTime + timeAdvance <
                                     recorderState.recordingDuration &&
@@ -1311,8 +1320,8 @@ namespace VRSYS.Recording
                         }
                     }
 
-                    if (debugLogs)
-                        ExtendedLogger.LogInfo(GetType().Name,
+                    if (RecordingLogger.IsEnabled(LogLevel.Info))
+                        RecordingLogger.LogInfo(GetType().Name,
                             "Adjusting playback time from: " + recorderState.currentReplayTime + " to: " +
                             serverPlaybackTime, this);
                     recorderState.currentReplayTime = serverPlaybackTime;
@@ -1429,6 +1438,7 @@ namespace VRSYS.Recording
 
         private void Recording()
         {
+            recorderState.currentRecordingTime = GetRecordingTime();
             if (Time.time - _lastTransformRecordTime > 1.0f / (float)transformRecordingStepsPerSecond)
             {
                 try
@@ -1447,7 +1457,7 @@ namespace VRSYS.Recording
                 }
                 catch (Exception e)
                 {
-                    ExtendedLogger.LogError(GetType().Name, "Error while recording transforms: " + e, this);
+                    RecordingLogger.LogError(GetType().Name, "Error while recording transforms: " + e, this);
                 }
 
                 try
@@ -1466,7 +1476,7 @@ namespace VRSYS.Recording
                 }
                 catch (Exception e)
                 {
-                    ExtendedLogger.LogError(GetType().Name, "Error while recording audio: " + e, this);
+                    RecordingLogger.LogError(GetType().Name, "Error while recording audio: " + e, this);
                 }
 
                 try
@@ -1485,13 +1495,12 @@ namespace VRSYS.Recording
                 }
                 catch (Exception e)
                 {
-                    ExtendedLogger.LogError(GetType().Name, "Error while recording arbitrary data: " + e, this);
+                    RecordingLogger.LogError(GetType().Name, "Error while recording arbitrary data: " + e, this);
                 }
 
                 _lastTransformRecordTime = Time.time;
             }
 
-            recorderState.currentRecordingTime += Time.deltaTime;
         }
 
         private void Replay()
@@ -1516,7 +1525,7 @@ namespace VRSYS.Recording
                 bool res = v.Replay(recorderState.currentReplayTime);
                 if (endPlaybackOnReplayError && !res)
                 {
-                    Debug.Log("Could not replay transform for object: " + v.gameObject.name);
+                    RecordingLogger.LogInfo(nameof(RecorderController), "Could not replay transform for object: " + v.gameObject.name);
                     SendEndReplayEvent();
                     return;
                 }
@@ -1564,7 +1573,7 @@ namespace VRSYS.Recording
             string soundFile = RecordingDataFilePath(".sound");
             if (!File.Exists(soundFile))
             {
-                ExtendedLogger.LogError(GetType().Name, "Could not create WAV files: no sound recording at " + soundFile, this);
+                RecordingLogger.LogError(GetType().Name, "Could not create WAV files: no sound recording at " + soundFile, this);
                 yield break;
             }
 
@@ -1580,12 +1589,12 @@ namespace VRSYS.Recording
 
             if (wavFiles.Length == 0)
             {
-                ExtendedLogger.LogError(GetType().Name, "Could not create WAV files!", this);
+                RecordingLogger.LogError(GetType().Name, "Could not create WAV files!", this);
                 yield break;
             }
 
-            if (debugLogs)
-                ExtendedLogger.LogInfo(GetType().Name, "Created " + wavFiles.Length + " WAV file(s) from " + soundFile, this);
+            if (RecordingLogger.IsEnabled(LogLevel.Info))
+                RecordingLogger.LogInfo(GetType().Name, "Created " + wavFiles.Length + " WAV file(s) from " + soundFile, this);
 
             string date = DateTime.Now.ToString("g", CultureInfo.GetCultureInfo("es-ES")).Replace(" ", "_")
                 .Replace(":", "_").Replace("/", "_");
@@ -1594,8 +1603,8 @@ namespace VRSYS.Recording
             {
                 // "<name>.sound_<sourceId>.wav" -> "<sourceId>"
                 string sourceId = Path.GetFileNameWithoutExtension(audioFile).Substring(soundFileName.Length + 1);
-                if (debugLogs)
-                    ExtendedLogger.LogInfo(GetType().Name, "Trying to transmit audio file: " + audioFile, this);
+                if (RecordingLogger.IsEnabled(LogLevel.Info))
+                    RecordingLogger.LogInfo(GetType().Name, "Trying to transmit audio file: " + audioFile, this);
                 _networkController.Upload(recorderState.projectName, audioFile,
                     recorderState.recordingFile + "_" + date + "_" + sourceId + ".wav",
                     recorderState.selectedServer);
@@ -1615,7 +1624,7 @@ namespace VRSYS.Recording
                 path => ExportGenericDataToCSV(path, path.Length));
 
             if (!anyCreated)
-                ExtendedLogger.LogError(GetType().Name, "Could not create CSV file!", this);
+                RecordingLogger.LogError(GetType().Name, "Could not create CSV file!", this);
             yield return null;
         }
 
@@ -1624,8 +1633,8 @@ namespace VRSYS.Recording
             string dataFile = RecordingDataFilePath(dataExtension);
             if (!File.Exists(dataFile))
             {
-                if (debugLogs)
-                    ExtendedLogger.LogInfo(GetType().Name, "No " + dataExtension + " recording to export at " + dataFile, this);
+                if (RecordingLogger.IsEnabled(LogLevel.Info))
+                    RecordingLogger.LogInfo(GetType().Name, "No " + dataExtension + " recording to export at " + dataFile, this);
                 return false;
             }
 
@@ -1639,7 +1648,7 @@ namespace VRSYS.Recording
 
             if (!File.Exists(pluginOutput))
             {
-                ExtendedLogger.LogError(GetType().Name, "CSV export produced no file for " + dataFile, this);
+                RecordingLogger.LogError(GetType().Name, "CSV export produced no file for " + dataFile, this);
                 return false;
             }
 
@@ -1647,8 +1656,8 @@ namespace VRSYS.Recording
                 File.Delete(target);
             File.Move(pluginOutput, target);
 
-            if (debugLogs)
-                ExtendedLogger.LogInfo(GetType().Name, "Created CSV file: " + target, this);
+            if (RecordingLogger.IsEnabled(LogLevel.Info))
+                RecordingLogger.LogInfo(GetType().Name, "Created CSV file: " + target, this);
             return true;
         }
 

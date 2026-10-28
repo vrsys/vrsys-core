@@ -73,7 +73,7 @@
 
 /* Header with the banner image: white, light-theme text regardless of editor skin */
 .rc-header.rc-banner {
-    height: 144px;
+    min-height: 144px;
     justify-content: space-between;
     padding: 10px 12px 9px 12px;
     background-color: #FFFFFF;
@@ -112,7 +112,7 @@
     margin: 0 8px 0 0;
 }
 
-.rc-plugin-version,
+.rc-plugin-info,
 .rc-performance {
     flex-shrink: 0;
     margin: 0;
@@ -126,11 +126,104 @@
     -unity-text-align: middle-right;
 }
 
-.rc-banner .rc-plugin-version,
+.rc-banner .rc-plugin-info,
 .rc-banner .rc-performance {
     background-color: rgba(255, 255, 255, 0.95);
     border-color: rgba(0, 0, 0, 0.18);
     color: #1F232A;
+}
+
+.rc-plugin-version {
+    margin: 0;
+    padding: 1px 5px;
+    border-radius: 4px;
+    background-color: var(--rc-surface);
+    font-size: 10px;
+    -unity-font-style: bold;
+}
+
+.rc-plugin-info {
+    padding: 6px 9px;
+    border-radius: 9px;
+}
+
+.rc-banner .rc-plugin-info {
+    background-color: rgba(248, 250, 253, 0.97);
+    border-color: rgba(83, 103, 130, 0.22);
+}
+
+.rc-plugin-heading {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 4px;
+    margin-bottom: 5px;
+    border-bottom-width: 1px;
+    border-bottom-color: var(--rc-border);
+}
+
+.rc-plugin-caption {
+    margin: 0 8px 0 0;
+    padding: 0;
+    font-size: 9px;
+    color: var(--rc-text-dim);
+}
+
+.rc-banner .rc-plugin-heading {
+    border-bottom-color: rgba(83, 103, 130, 0.12);
+}
+
+.rc-banner .rc-plugin-caption {
+    color: #67758B;
+}
+
+.rc-banner .rc-plugin-version {
+    background-color: #E7EEF8;
+    color: #395C88;
+}
+
+.rc-plugin-log-level {
+    min-width: 134px;
+    margin: 0;
+    font-size: 10px;
+}
+
+.rc-plugin-log-level > .unity-base-field__label {
+    min-width: 0;
+    width: 44px;
+    margin-right: 6px;
+    -unity-text-align: middle-left;
+}
+
+.rc-plugin-log-level > .unity-base-field__input {
+    height: 22px;
+    padding-left: 7px;
+    padding-right: 5px;
+    border-radius: 5px;
+    border-width: 1px;
+}
+
+.rc-banner .rc-plugin-log-level > .unity-base-field__input {
+    background-color: #FFFFFF;
+    border-color: #CBD5E2;
+}
+
+.rc-banner .rc-plugin-log-level > .unity-base-field__input:hover {
+    background-color: #EFF4FB;
+    border-color: #8BA6CB;
+}
+
+.rc-banner .rc-plugin-log-level:focus > .unity-base-field__input {
+    border-color: #678DBF;
+}
+
+.rc-banner .rc-plugin-log-level .unity-base-field__label,
+.rc-banner .rc-plugin-log-level .unity-enum-field__text {
+    color: #1F232A;
+}
+
+.rc-banner .rc-plugin-log-level .unity-enum-field__arrow {
+    -unity-background-image-tint-color: #60718B;
 }
 
 .rc-header-status {
@@ -543,6 +636,34 @@ Button.rc-icon-button:hover {
 Button.rc-inline-button {
     height: 22px;
     margin: 3px 3px 3px 3px;
+}
+
+.rc-recording-folder {
+    margin: 2px 3px 6px 3px;
+    padding: 7px;
+    border-radius: 5px;
+    border-width: 1px;
+    border-color: var(--rc-border);
+    background-color: var(--rc-surface);
+}
+
+.rc-folder-caption {
+    margin: 0 0 4px 0;
+    font-size: 11px;
+    -unity-font-style: bold;
+}
+
+.rc-folder-path {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+    margin: 0;
+    font-size: 10px;
+}
+
+Button.rc-folder-open {
+    flex-shrink: 0;
+    margin: 0 0 0 6px;
 }
 
 .rc-block {

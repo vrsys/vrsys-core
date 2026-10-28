@@ -134,12 +134,12 @@ namespace VRSYS.Recording
             if (_state.selectedReplayFile == "")
             {
                 DebugDistributedReplayLog("StartDownloadOnAllClientsEvent aborted: no replay file selected.");
-                ExtendedLogger.LogError(GetType().Name, "No replay file selected!", this);
+                RecordingLogger.LogError(GetType().Name, "No replay file selected!", this);
                 return;
             }
 
-            if (_controller != null && _controller.debugLogs)
-                ExtendedLogger.LogInfo(GetType().Name, "Started download on all clients", this);
+            if (_controller != null && RecordingLogger.IsEnabled(LogLevel.Info))
+                RecordingLogger.LogInfo(GetType().Name, "Started download on all clients", this);
             DebugDistributedReplayLog("StartDownloadOnAllClientsEvent: replayFile=" + _state.selectedReplayFile +
                                       ", recorderId=" + _state.recorderID +
                                       ", state=" + _state.currentState +
@@ -191,10 +191,10 @@ namespace VRSYS.Recording
                     return;
                 }
                 
-                if (_controller != null && _controller.debugLogs)
-                    ExtendedLogger.LogInfo(GetType().Name, "Download started for recorder id: " + _state.recorderID, this);
-                if (_controller != null && _controller.debugLogs)
-                    ExtendedLogger.LogInfo(GetType().Name, "Selected replay file: " + _state.selectedReplayFile, this);
+                if (_controller != null && RecordingLogger.IsEnabled(LogLevel.Info))
+                    RecordingLogger.LogInfo(GetType().Name, "Download started for recorder id: " + _state.recorderID, this);
+                if (_controller != null && RecordingLogger.IsEnabled(LogLevel.Info))
+                    RecordingLogger.LogInfo(GetType().Name, "Selected replay file: " + _state.selectedReplayFile, this);
 
                 _soundsDownloaded = false;
                 _transformsDownloaded = false;
@@ -226,10 +226,10 @@ namespace VRSYS.Recording
         {
             if (_state.currentState == State.PreparingReplay)
             {
-                if (_controller != null && _controller.debugLogs)
-                    ExtendedLogger.LogInfo(GetType().Name, "Local download started", this);
-                if (_controller != null && _controller.debugLogs)
-                    ExtendedLogger.LogInfo(GetType().Name, "Selected replay file: " + _state.selectedReplayFile, this);
+                if (_controller != null && RecordingLogger.IsEnabled(LogLevel.Info))
+                    RecordingLogger.LogInfo(GetType().Name, "Local download started", this);
+                if (_controller != null && RecordingLogger.IsEnabled(LogLevel.Info))
+                    RecordingLogger.LogInfo(GetType().Name, "Selected replay file: " + _state.selectedReplayFile, this);
                 DebugDistributedReplayLog("StartDownloads: local download path. replayFile=" +
                                           _state.selectedReplayFile +
                                           ", recordingDirectory=" + _state.recordingDirectory +
@@ -268,8 +268,8 @@ namespace VRSYS.Recording
             {
                 if (!downloadState)
                 {
-                    if (_controller != null && _controller.debugLogs)
-                        ExtendedLogger.LogInfo(GetType().Name, "Download of files finished. Starting local playback.", this);
+                    if (_controller != null && RecordingLogger.IsEnabled(LogLevel.Info))
+                        RecordingLogger.LogInfo(GetType().Name, "Download of files finished. Starting local playback.", this);
                     _controller.StartReplay();
                 }
                 return;
@@ -386,8 +386,8 @@ namespace VRSYS.Recording
         private IEnumerator DownloadFileFromServer(string projectName, string directory, string url, string fileName)
         {
             string completeURL = _state.selectedServer + "/" + url + "/" + projectName + "/"+ fileName;
-            if (_controller != null && _controller.debugLogs)
-                ExtendedLogger.LogInfo(GetType().Name, "Started download of file from: " + completeURL, this);
+            if (_controller != null && RecordingLogger.IsEnabled(LogLevel.Info))
+                RecordingLogger.LogInfo(GetType().Name, "Started download of file from: " + completeURL, this);
 
             string fileType = ".None";
             
@@ -440,7 +440,7 @@ namespace VRSYS.Recording
 
                     if (uwr.result != UnityWebRequest.Result.Success)
                     {
-                        ExtendedLogger.LogError(GetType().Name, uwr.error + ", url: " + completeURL, this);
+                        RecordingLogger.LogError(GetType().Name, uwr.error + ", url: " + completeURL, this);
                         DebugDistributedReplayLog("DownloadFileFromServer failed: fileType=" + fileType +
                                                   ", error=" + uwr.error +
                                                   ", responseCode=" + uwr.responseCode);
@@ -488,8 +488,8 @@ namespace VRSYS.Recording
                 }
                 else
                 {
-                    if (_controller != null && _controller.debugLogs)
-                        ExtendedLogger.LogInfo(GetType().Name, "File already exists: " + file + ". Skipping download.", this);
+                    if (_controller != null && RecordingLogger.IsEnabled(LogLevel.Info))
+                        RecordingLogger.LogInfo(GetType().Name, "File already exists: " + file + ". Skipping download.", this);
                     DebugDistributedReplayLog("DownloadFileFromServer skipped existing file: fileType=" + fileType +
                                               ", targetFile=" + file);
                     if (url.Contains("get_meta_recording"))
@@ -543,8 +543,8 @@ namespace VRSYS.Recording
             if(_state.recorderID != recorderId)
                 return;
             
-            if (_controller != null && _controller.debugLogs)
-                ExtendedLogger.LogInfo(GetType().Name, "Switch selected server event received. Recorder id: " + _state.recorderID, this);
+            if (_controller != null && RecordingLogger.IsEnabled(LogLevel.Info))
+                RecordingLogger.LogInfo(GetType().Name, "Switch selected server event received. Recorder id: " + _state.recorderID, this);
 
             _selectedServerId = selectedServerId;
             _state.selectedServer = _state.serverList[_selectedServerId];
@@ -579,8 +579,8 @@ namespace VRSYS.Recording
             if(_state.recorderID != recorderId)
                 return;
             
-            if (_controller != null && _controller.debugLogs)
-                ExtendedLogger.LogInfo(GetType().Name, "Preparing for recording. Recorder id: " + _state.recorderID, this);
+            if (_controller != null && RecordingLogger.IsEnabled(LogLevel.Info))
+                RecordingLogger.LogInfo(GetType().Name, "Preparing for recording. Recorder id: " + _state.recorderID, this);
             
             _controller.PrepareRecording();
         }
@@ -588,11 +588,11 @@ namespace VRSYS.Recording
         public void StartRecordingOnAllClientsEvent()
         {
             _globalSynchronizationTime = NetworkUtils.GetSynchronizedTime();
-            if (_controller != null && _controller.debugLogs)
-                ExtendedLogger.LogInfo(GetType().Name, "Global time before offset: " + _globalSynchronizationTime, this);
+            if (_controller != null && RecordingLogger.IsEnabled(LogLevel.Info))
+                RecordingLogger.LogInfo(GetType().Name, "Global time before offset: " + _globalSynchronizationTime, this);
             DateTime startRecordingTime = _globalSynchronizationTime.AddMilliseconds(maxSynchronizationTimeMS);
-            if (_controller != null && _controller.debugLogs)
-                ExtendedLogger.LogInfo(GetType().Name, "Start recording time: " + _globalSynchronizationTime, this);
+            if (_controller != null && RecordingLogger.IsEnabled(LogLevel.Info))
+                RecordingLogger.LogInfo(GetType().Name, "Start recording time: " + _globalSynchronizationTime, this);
             StartRecordingOnServerRpc(startRecordingTime.ToFileTime(), _state.recorderID);
         }
 
@@ -610,8 +610,8 @@ namespace VRSYS.Recording
             if (_state.recorderID != recorderId)
                 return;
             
-            if (_controller != null && _controller.debugLogs)
-                ExtendedLogger.LogInfo(GetType().Name, "Received start recording time: " + startRecordingTime + ". Recorder id: " + _state.recorderID, this);
+            if (_controller != null && RecordingLogger.IsEnabled(LogLevel.Info))
+                RecordingLogger.LogInfo(GetType().Name, "Received start recording time: " + startRecordingTime + ". Recorder id: " + _state.recorderID, this);
 
             _globalSynchronizationTime = NetworkUtils.GetSynchronizedTime();
             if (_startRecordingCoroutine != null)
@@ -623,7 +623,7 @@ namespace VRSYS.Recording
             if (_globalSynchronizationTime > startRecordingTime)
             {
                 TimeSpan difference = _globalSynchronizationTime - startRecordingTime;
-                ExtendedLogger.LogError(GetType().Name, "The recording should have started already! Time difference: " + difference.TotalMilliseconds + " ms.  Potential fix: increase the  maxSynchronizationTime!", this);
+                RecordingLogger.LogError(GetType().Name, "The recording should have started already! Time difference: " + difference.TotalMilliseconds + " ms.  Potential fix: increase the  maxSynchronizationTime!", this);
                 StartRecordingIfStateAllows(startRecordingTime);
             }
             else
@@ -650,7 +650,7 @@ namespace VRSYS.Recording
             }
             else
             {
-                ExtendedLogger.LogWarning(GetType().Name, "A request to start a recording was sent but the current state does not allow starting new recording.", this);
+                RecordingLogger.LogWarning(GetType().Name, "A request to start a recording was sent but the current state does not allow starting new recording.", this);
             }
         }
         #endregion
@@ -668,8 +668,8 @@ namespace VRSYS.Recording
                 _globalSynchronizationTime = NetworkUtils.GetSynchronizedTime();
             }
 
-            if (_controller != null && _controller.debugLogs)
-                ExtendedLogger.LogInfo(GetType().Name, "Target time passed.", this);
+            if (_controller != null && RecordingLogger.IsEnabled(LogLevel.Info))
+                RecordingLogger.LogInfo(GetType().Name, "Target time passed.", this);
         }
 
         public void EndRecordingOnAllClientsEvent()
@@ -704,7 +704,7 @@ namespace VRSYS.Recording
             if (_globalSynchronizationTime > stopRecordingTime)
             {
                 TimeSpan difference = _globalSynchronizationTime - stopRecordingTime;
-                ExtendedLogger.LogError(GetType().Name, "The recording should have stopped already! Time difference: " +
+                RecordingLogger.LogError(GetType().Name, "The recording should have stopped already! Time difference: " +
                                difference.TotalMilliseconds +
                                " ms.  Potential fix: increase the  maxSynchronizationTime!", this);
                 StopRecording();
@@ -741,12 +741,12 @@ namespace VRSYS.Recording
         {
             if (!IsServer)
             {
-                ExtendedLogger.LogWarning(GetType().Name, "Only the server can start a synchronized replay.", this);
+                RecordingLogger.LogWarning(GetType().Name, "Only the server can start a synchronized replay.", this);
                 return;
             }
 
-            if (_controller != null && _controller.debugLogs)
-                ExtendedLogger.LogInfo(GetType().Name, "Sending event to start replay on all clients.", this);
+            if (_controller != null && RecordingLogger.IsEnabled(LogLevel.Info))
+                RecordingLogger.LogInfo(GetType().Name, "Sending event to start replay on all clients.", this);
 
             _globalSynchronizationTime = NetworkUtils.GetSynchronizedTime();
             DateTime startReplayTime = _globalSynchronizationTime.AddMilliseconds(maxSynchronizationTimeMS);
@@ -773,12 +773,12 @@ namespace VRSYS.Recording
                 return;
             }
             
-            if (_controller != null && _controller.debugLogs)
-                ExtendedLogger.LogInfo(GetType().Name, "Start replay event received for recorder id: " + _state.recorderID, this);
+            if (_controller != null && RecordingLogger.IsEnabled(LogLevel.Info))
+                RecordingLogger.LogInfo(GetType().Name, "Start replay event received for recorder id: " + _state.recorderID, this);
             
             if (!_replayStarted)
-                if (_controller != null && _controller.debugLogs)
-                    ExtendedLogger.LogInfo(GetType().Name, "Replay not yet started.", this);
+                if (_controller != null && RecordingLogger.IsEnabled(LogLevel.Info))
+                    RecordingLogger.LogInfo(GetType().Name, "Replay not yet started.", this);
 
             bool isDownloading = IsDownloading();
             DebugDistributedReplayLog("StartReplayRpc: target=" + startReplayTime +
@@ -790,8 +790,8 @@ namespace VRSYS.Recording
             DebugDistributedReplayStatusIfChanged("StartReplayRpc");
 
             if (!isDownloading)
-                if (_controller != null && _controller.debugLogs)
-                    ExtendedLogger.LogInfo(GetType().Name, "Not downloading files.", this);
+                if (_controller != null && RecordingLogger.IsEnabled(LogLevel.Info))
+                    RecordingLogger.LogInfo(GetType().Name, "Not downloading files.", this);
 
             if (!_replayStarted && !isDownloading && _state.currentState == State.PreparingReplay)
             {
@@ -801,7 +801,7 @@ namespace VRSYS.Recording
                 if (_globalSynchronizationTime > startReplayTime)
                 {
                     TimeSpan difference = _globalSynchronizationTime - startReplayTime;
-                    ExtendedLogger.LogError(GetType().Name, "The replay should have started already! Time difference: " +
+                    RecordingLogger.LogError(GetType().Name, "The replay should have started already! Time difference: " +
                                    difference.TotalMilliseconds +
                                    " ms.  Potential fix: increase the  maxSynchronizationTime!", this);
                     StartReplayIfStateAllows();
@@ -842,7 +842,7 @@ namespace VRSYS.Recording
             {
                 _replayStarted = false;
                 DebugDistributedReplayStatusIfChanged("StartReplayIfStateAllows blocked by state");
-                ExtendedLogger.LogWarning(GetType().Name, "A request to start a replay was sent but the current state does not allow starting replay.", this);
+                RecordingLogger.LogWarning(GetType().Name, "A request to start a replay was sent but the current state does not allow starting replay.", this);
                 return;
             }
 
@@ -850,12 +850,12 @@ namespace VRSYS.Recording
             {
                 _replayStarted = false;
                 DebugDistributedReplayStatusIfChanged("StartReplayIfStateAllows blocked by download");
-                ExtendedLogger.LogWarning(GetType().Name, "A request to start a replay was sent but downloads are still running.", this);
+                RecordingLogger.LogWarning(GetType().Name, "A request to start a replay was sent but downloads are still running.", this);
                 return;
             }
 
-            if (_controller != null && _controller.debugLogs)
-                ExtendedLogger.LogInfo(GetType().Name, "Target time passed. Starting replay.", this);
+            if (_controller != null && RecordingLogger.IsEnabled(LogLevel.Info))
+                RecordingLogger.LogInfo(GetType().Name, "Target time passed. Starting replay.", this);
             DebugDistributedReplayLog("StartReplayIfStateAllows: calling RecorderController.StartReplay.");
             _controller.StartReplay();
             DebugDistributedReplayLog("StartReplayIfStateAllows: RecorderController.StartReplay returned. state=" +
@@ -895,7 +895,7 @@ namespace VRSYS.Recording
             if (_globalSynchronizationTime > stopReplayTime)
             {
                 TimeSpan difference = _globalSynchronizationTime - stopReplayTime;
-                ExtendedLogger.LogError(GetType().Name, "The replay should have stopped already! Time difference: " +
+                RecordingLogger.LogError(GetType().Name, "The replay should have stopped already! Time difference: " +
                                         difference.TotalMilliseconds +
                                         " ms.  Potential fix: increase the  maxSynchronizationTime!", this);
                 StopReplay();
@@ -1057,7 +1057,7 @@ namespace VRSYS.Recording
 
                 yield return uwr.SendWebRequest();
                 if (uwr.result != UnityWebRequest.Result.Success)
-                    ExtendedLogger.LogError(GetType().Name, uwr.error + ", url: " + completeURL, this);
+                    RecordingLogger.LogError(GetType().Name, uwr.error + ", url: " + completeURL, this);
                 else
                 {
                     string response = uwr.downloadHandler.text;
@@ -1094,16 +1094,16 @@ namespace VRSYS.Recording
         
         private void DebugDistributedReplayLog(string message)
         {
-            if (_controller == null || !_controller.debugLogs)
+            if (_controller == null || !RecordingLogger.IsEnabled(LogLevel.Debug))
                 return;
 
-            ExtendedLogger.LogInfo(GetType().Name, "[DistributedReplayDebug][frame=" + Time.frameCount +
+            RecordingLogger.LogDebug(GetType().Name, "[DistributedReplayDebug][frame=" + Time.frameCount +
                                                    "][time=" + Time.realtimeSinceStartup.ToString("F3") + "] " + message, this);
         }
 
         private void DebugDistributedReplayStatusIfChanged(string context)
         {
-            if (_controller == null || !_controller.debugLogs)
+            if (_controller == null || !RecordingLogger.IsEnabled(LogLevel.Debug))
                 return;
 
             string status = "state=" + _state.currentState +

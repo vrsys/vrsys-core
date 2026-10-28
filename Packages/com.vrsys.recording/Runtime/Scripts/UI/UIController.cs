@@ -115,12 +115,12 @@ namespace VRSYS.Recording
         public void NavigateToTime(Slider userSliderComponent)
         {
             if (verbose)
-                ExtendedLogger.LogInfo(GetType().Name, "Listener called", this);
+                RecordingLogger.LogInfo(GetType().Name, "Listener called", this);
 
             if(_state.currentState == State.Replaying && 0 <= userSliderComponent.value && userSliderComponent.value <= _state.recordingDuration)
                 _state.currentReplayTime = userSliderComponent.value;
             else
-                ExtendedLogger.LogWarning(GetType().Name, "Cannot navigate to target ime. Incorrect state or target time.", this);
+                RecordingLogger.LogWarning(GetType().Name, "Cannot navigate to target ime. Incorrect state or target time.", this);
         }
         
         private void TimeLineCollaborators()
@@ -187,7 +187,7 @@ namespace VRSYS.Recording
                                 timeSliderButton.onClick.AddListener(() => NavigateToTime(userSliderComponent));
                                 userSliderComponent.interactable = true;
                                 if (verbose)
-                                    ExtendedLogger.LogInfo(GetType().Name, "Listener set", this);
+                                    RecordingLogger.LogInfo(GetType().Name, "Listener set", this);
                             }
 
                             ColorBlock colors = new ColorBlock();
@@ -200,7 +200,7 @@ namespace VRSYS.Recording
                             endT.SetActive(false);
                             timeLines.SetActive(false);
                             if (verbose)
-                                ExtendedLogger.LogInfo(GetType().Name, "New slider created for user: " + key, this);
+                                RecordingLogger.LogInfo(GetType().Name, "New slider created for user: " + key, this);
                         }
 
                         Slider userSlider = tSlider.GetComponent<Slider>();

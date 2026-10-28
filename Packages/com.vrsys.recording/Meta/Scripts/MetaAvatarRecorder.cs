@@ -76,14 +76,14 @@ namespace VRSYS.Recording
         
         public override void OnRecordingStart()
         {
-            ExtendedLogger.LogInfo(GetType().Name, "Meta Avatar Recorder On Recording Start Called", this);
+            RecordingLogger.LogInfo(GetType().Name, "Meta Avatar Recorder On Recording Start Called", this);
             base.OnRecordingStart();
             if(_avatarDataReader == null)
                 _avatarDataReader = GetComponent<MetaAvatarReplayDataReader>();
             _avatarDataReader.OnAvatarDataRead.AddListener(RecordAvatarData);
             _recordedDataIndex = 0;
             id = (int) _avatarDataReader.GetUserId();
-            Debug.Log("Avatar users id: " + _avatarDataReader.GetUserId());
+            RecordingLogger.LogInfo(nameof(MetaAvatarRecorder), "Avatar users id: " + _avatarDataReader.GetUserId());
             // Resolve before StartReadingData, whose coroutine can emit immediately.
             NetworkObject userNetworkObject = GetComponentInParent<NetworkObject>();
             var micRecorder = _correspondingAudioRecorder = userNetworkObject != null
@@ -103,15 +103,15 @@ namespace VRSYS.Recording
             RegisterDescription(BuildGenericDescription(_avatarDataReader.GetUserId()));
             bool startedReadingData = _avatarDataReader.StartReadingData();
             if(!startedReadingData)
-                ExtendedLogger.LogError(GetType().Name, "Meta Avatar Data Reader did not start reading data!", this);
+                RecordingLogger.LogError(GetType().Name, "Meta Avatar Data Reader did not start reading data!", this);
             else 
-                ExtendedLogger.LogInfo(GetType().Name, "Meta Avatar Data Reader did start reading data!", this);
+                RecordingLogger.LogInfo(GetType().Name, "Meta Avatar Data Reader did start reading data!", this);
             
         }
         
         public override void OnRecordingEnd()
         {
-            ExtendedLogger.LogInfo(GetType().Name, "Meta Avatar Recorder On Recording End Called", this);
+            RecordingLogger.LogInfo(GetType().Name, "Meta Avatar Recorder On Recording End Called", this);
             base.OnRecordingEnd();
             _avatarDataReader.OnAvatarDataRead.RemoveListener(RecordAvatarData);
             _avatarDataReader.StopReadingData();
@@ -119,7 +119,7 @@ namespace VRSYS.Recording
 
         public override void OnReplayStart()
         {
-            ExtendedLogger.LogInfo(GetType().Name, "Meta Avatar Recorder On Replay Start Called", this);
+            RecordingLogger.LogInfo(GetType().Name, "Meta Avatar Recorder On Replay Start Called", this);
             base.OnReplayStart();
             if(_avatarDataWriter == null)
                 _avatarDataWriter = GetComponent<MetaAvatarReplayDataWriter>();
@@ -129,13 +129,13 @@ namespace VRSYS.Recording
             bool intializeReplayDataWriter = _avatarDataWriter.Initialize();
             id = (int) _avatarDataWriter.GetUserId();
             if (!intializeReplayDataWriter)
-                ExtendedLogger.LogError(GetType().Name, "Meta Avatar Data Writer not initialized!", this);
+                RecordingLogger.LogError(GetType().Name, "Meta Avatar Data Writer not initialized!", this);
             _avatarDataWriter.StartReplay();
         }
         
         public override void OnReplayEnd()
         {
-            ExtendedLogger.LogInfo(GetType().Name, "Meta Avatar Recorder On Replay End Called", this);
+            RecordingLogger.LogInfo(GetType().Name, "Meta Avatar Recorder On Replay End Called", this);
             base.OnReplayEnd();
             if(_avatarDataWriter == null)
                 _avatarDataWriter = GetComponent<MetaAvatarReplayDataWriter>();
@@ -185,7 +185,7 @@ namespace VRSYS.Recording
             
             if (avatarData.Data.Length > _recCharDTO.Length)
             {
-                Debug.LogWarning("Warning! Cannot record avatar data, as the data size is exceeding the array size.");    
+                RecordingLogger.LogWarning(nameof(MetaAvatarRecorder), "Warning! Cannot record avatar data, as the data size is exceeding the array size.");
                 return;
             }
             
@@ -193,8 +193,8 @@ namespace VRSYS.Recording
 
             bool result = RecordGenericAtTimestamp(controller.RecorderID, controller.recorderState.currentRecordingTime, id, _recIntDTO, _recFloatDTO, _recCharDTO);
 
-            if (!result && controller.debugLogs)
-                Debug.Log("Could not record arbitrary data with id: " + id);
+            if (!result && RecordingLogger.IsEnabled(LogLevel.Info))
+                RecordingLogger.LogInfo(nameof(MetaAvatarRecorder), "Could not record arbitrary data with id: " + id);
             _recordedDataIndex += 1;
         }
         
@@ -255,7 +255,7 @@ namespace VRSYS.Recording
                 return;
             if (avatarData.Data.Length > _recCharDTO.Length)
             {
-                Debug.LogWarning("ReRecord: avatar data exceeds char DTO size; skipping");
+                RecordingLogger.LogWarning(nameof(MetaAvatarRecorder), "ReRecord: avatar data exceeds char DTO size; skipping");
                 return;
             }
 
@@ -358,14 +358,14 @@ namespace VRSYS.Recording
                 bool success = _avatarDataWriter.ApplyData(data);
                 if (!success)
                 {
-                    ExtendedLogger.LogError(GetType().Name, "Applying avatar replay data failed!", this);
+                    RecordingLogger.LogError(GetType().Name, "Applying avatar replay data failed!", this);
                     data = new byte[dataLength];
                     _avatarDataWriter.ApplyData(data);
                 }
                 else
                 {
                     if(verbose)
-                        Debug.Log("Applying recorded avatar data for user: " + userID + ", at time: " + replayTime);
+                        RecordingLogger.LogInfo(nameof(MetaAvatarRecorder), "Applying recorded avatar data for user: " + userID + ", at time: " + replayTime);
                 }
 
                 _recordedDataIndex = recordedDataIndex;

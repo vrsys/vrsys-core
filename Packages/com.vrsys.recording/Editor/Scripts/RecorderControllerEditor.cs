@@ -28,7 +28,7 @@ namespace VRSYS.Recording
         private const string StyleSheetPath = "Packages/com.vrsys.recording/Editor/UI/RecorderControllerEditor.uss";
         private const string BannerImagePath = "Packages/com.vrsys.recording/Editor/UI/Images/recorder-banner.png";
         private const string LogoImagePath = "Packages/com.vrsys.recording/Editor/UI/Images/vr-logo.png";
-        // internal: RecorderStateEditor uses these to open the "Files & Session" section.
+        // internal: RecorderStateEditor uses these to open the "Recordings" section.
         internal const string PageSessionKey = "VRSYS.Recording.RecorderControllerEditor.Page";
         internal const string FilesPageId = "files";
         private const string DocumentationUrl = "https://vrsys.gitbook.io/vrsys";
@@ -128,27 +128,23 @@ namespace VRSYS.Recording
             _networkController = _controller.GetComponent<NetworkController>();
             _networkSerializedObject = _networkController != null ? new SerializedObject(_networkController) : null;
 
-            // The RecorderState settings are edited here; its own inspector only shows a pointer to this one.
+            // Supporting component settings are edited through this inspector.
             RecorderState recorderState = _controller.recorderState != null
                 ? _controller.recorderState
                 : _controller.GetComponent<RecorderState>();
             _stateSerializedObject = recorderState != null ? new SerializedObject(recorderState) : null;
-            CollapseRecorderStateOnce(recorderState);
+            HideSupportingComponents(recorderState, _controller.GetComponent<ScenePreparator>(), _networkController);
 
             BuildCategories();
         }
 
-        // Fold the RecorderState component in the Inspector the first time per editor session, since
-        // everything it offers is shown here. The user can still expand it; we don't fight that.
-        private static void CollapseRecorderStateOnce(RecorderState state)
+        private static void HideSupportingComponents(params Component[] components)
         {
-            if (state == null)
-                return;
-            string key = "VRSYS.Recording.RecorderStateCollapsed." + state.GetInstanceID();
-            if (SessionState.GetBool(key, false))
-                return;
-            SessionState.SetBool(key, true);
-            UnityEditorInternal.InternalEditorUtility.SetIsInspectorExpanded(state, false);
+            foreach (Component component in components)
+            {
+                if (component != null && (component.hideFlags & HideFlags.HideInInspector) == 0)
+                    component.hideFlags |= HideFlags.HideInInspector;
+            }
         }
 
         public override VisualElement CreateInspectorGUI()
@@ -208,20 +204,22 @@ namespace VRSYS.Recording
         {
             _categories.Clear();
 
-            // --- Files & Session (stored on the RecorderState) ---
-            Category files = AddCategory(FilesPageId, "Files & Session",
-                "Which file is recorded and which recording is played back. Stored on the RecorderState component.",
+            // --- Recordings ---
+            Category files = AddCategory(FilesPageId, "Recordings",
+                "Local recording folder, recording names, playback selection and WAV/CSV exports.",
                 "rc-accent-files", FilesStatus, "TextAsset Icon", "Folder Icon");
+            ActionEntry(files, "Recording folder",
+                "The local recording directory. Open it in the file browser or copy its path.",
+                "open recording directory local folder explorer finder path files storage",
+                BuildRecordingFolderField);
+            Heading(files, "New recordings");
             StateProp(files, "recordingFile", "Recording name",
                 "Name of the recording file that will be created when recording.",
                 "recording file name output record");
             StateProp(files, "fileNameDateSuffix", "File name date suffix",
                 "None: no date information added to the file name. Date: date added to the file name. DateTime: date and timestamp added to the file name.",
                 "date time timestamp suffix file name");
-            StateProp(files, "recorderID", "Recorder ID",
-                "The ID of a recorder needs to be unique.",
-                "id identifier recorder unique");
-            Heading(files, "Playback");
+            Heading(files, "Playback selection");
             StateProp(files, "useLocalReplayFiles", "Use local replay files",
                 "If enabled, the playback list shows recordings found in the local recording directory and the server is not queried for the replay list. If disabled, it lists recordings retrieved from the server.",
                 "local server replay list playback source files");
@@ -229,15 +227,27 @@ namespace VRSYS.Recording
                 "The recording that is played back by the Replay buttons (RecorderState.fixedPlaybackRecordingName).",
                 "playback replay file recording select choose selected fixedPlaybackRecordingName",
                 () => BuildPlaybackFileField("Selected Replay File"));
+            Heading(files, "Export on stop");
+            Prop(files, "createWAV", "Export audio as WAV",
+                "Export recorded audio to .wav files alongside the recording when recording stops.",
+                "wav export audio file output");
+            Prop(files, "createCSV", "Export data as CSV",
+                "Export recorded data to .csv files alongside the recording when recording stops.",
+                "csv export data file output");
 
             // --- Scene Setup ---
             Category setup = AddCategory("setup", "Scene Setup",
-                "One-time setup: adds the prefab information that playback needs to re-instantiate recorded objects.",
+                "Recorder identity and prefab setup required to re-instantiate recorded objects during playback.",
                 "rc-accent-setup", SetupStatus, "Prefab Icon");
+            Heading(setup, "Recorder identity");
+            StateProp(setup, "recorderID", "Recorder ID",
+                "The ID of a recorder needs to be unique.",
+                "id identifier recorder unique session");
             Prop(setup, "recorderState", "Recorder State",
                 "The RecorderState on this GameObject. It stores the recording file, server and replay information. Assigned automatically.",
                 "state file replay information",
                 f => f.SetEnabled(false));
+            Heading(setup, "Prefab setup");
             ActionEntry(setup, "Set up networked prefabs",
                 "Adds or updates RecordingPrefabInformation on every prefab in all NetworkPrefabsLists, so playback can instantiate them.",
                 "prefab information network NetworkPrefabsList addressable setup instantiate requirements",
@@ -350,46 +360,43 @@ namespace VRSYS.Recording
                 "delay latency schedule network time ms NetworkController",
                 BuildMaxSyncTimeField);
 
-            // --- Server & Files ---
-            Category server = AddCategory("server", "Server & Files",
-                "Uploading and downloading recording files and opening the local recording folder.",
+            // --- Server Transfer ---
+            Category server = AddCategory("server", "Server Transfer",
+                "Server connection, automatic uploads/downloads and project archive downloads.",
                 "rc-accent-server", ServerStatus, "CloudConnect", "Folder Icon");
+            Heading(server, "Connection");
             StateProp(server, "projectName", "Project name",
                 "Name of the project for which recordings are created. Used for upload and download.",
                 "project name upload download zip");
-            StateProp(server, "selectedServer", "Selected server",
+            StateProp(server, "selectedServer", "Server URL",
                 "URL of the server to which files are uploaded and from which files are downloaded.",
                 "server url address host upload download");
+            Heading(server, "Automatic transfers");
             Prop(server, "uploadFilesToServer", "Upload to server",
                 "Upload the produced recording files to the configured server.",
                 "upload server transfer recording files");
             Prop(server, "downloadFilesFromServer", "Download from server",
                 "Download recording files from the configured server before playback.",
                 "download server transfer recording files");
-            ActionEntry(server, "Open recording directory",
-                "Opens the recording directory (or the persistent data path if none is set) in the file browser.",
-                "folder directory explorer finder path files",
-                () => InlineButton("Open recording directory",
-                    "Opens the recording directory in the file browser.", OpenRecordingDirectoryFromState));
+            Heading(server, "Project archive");
             ActionEntry(server, "Download project zip",
                 "Downloads all recordings of the project from the selected server as a zip file.",
                 "download zip project server password",
                 BuildDownloadZipBlock);
 
-            // --- Output & Debug ---
-            Category output = AddCategory("output", "Output & Debug",
-                "Extra export files, logging and native plugin buffers.",
-                "rc-accent-output", OutputStatus, "console.infoicon", "UnityEditor.ConsoleWindow");
-            Prop(output, "createWAV", "Create WAV",
-                "Export recorded audio to a .wav file alongside the recording.",
-                "wav export audio file");
-            Prop(output, "createCSV", "Create CSV",
-                "Export recorded data to a .csv file alongside the recording.",
-                "csv export data file");
-            Prop(output, "debugLogs", "Print debug logs",
-                "Print verbose recording/playback debug logs to the console.",
-                "log debug verbose console");
-            Heading(output, "Native plugin");
+            // --- Plugin & Logging ---
+            Category output = AddCategory("output", "Plugin & Logging",
+                "Recording log level, plugin version and native recording/replay buffer settings.",
+                "rc-accent-output", PluginStatus, "console.infoicon", "UnityEditor.ConsoleWindow");
+            Heading(output, "Logging and version");
+            Prop(output, "pluginSettings.logLevel", "Recording log level",
+                "Minimum log level for the native plugin and all managed recording package logs.",
+                "log level native plugin managed verbosity debug info warning error none");
+            Prop(output, "pluginSettings.versionInfo", "Plugin version",
+                "Version reported by the native recording plugin.",
+                "version native plugin",
+                f => f.SetEnabled(false));
+            Heading(output, "Native buffers");
             Prop(output, "pluginSettings.recordingMaxBufferSize", "Recording max buffer size",
                 "Maximum native buffer size for transform recording data.",
                 "buffer memory native plugin");
@@ -402,13 +409,6 @@ namespace VRSYS.Recording
             Prop(output, "pluginSettings.recordingSoundMaxBufferSize", "Sound max buffer size",
                 "Maximum native buffer size for recorded sound data.",
                 "buffer audio sound native plugin");
-            Prop(output, "pluginSettings.logLevel", "Plugin log level",
-                "Minimum native recording plugin log level forwarded to Unity.",
-                "log level native plugin verbosity");
-            Prop(output, "pluginSettings.versionInfo", "Plugin version",
-                "Version reported by the native recording plugin.",
-                "version native plugin",
-                f => f.SetEnabled(false));
 
             // --- Events ---
             Category events = AddCategory("events", "Events",
@@ -578,7 +578,7 @@ namespace VRSYS.Recording
 
         private string SetupStatus()
         {
-            return _controller.recorderState != null ? "RecorderState linked" : "RecorderState missing";
+            return _controller.recorderState != null ? "Recorder ID " + _controller.recorderState.recorderID : "RecorderState missing";
         }
 
         private string TransformStatus()
@@ -621,13 +621,12 @@ namespace VRSYS.Recording
                 "Download " + OnOff(_controller.downloadFilesFromServer));
         }
 
-        private string OutputStatus()
+        private string PluginStatus()
         {
-            string exports = Join(_controller.createWAV ? "WAV" : null, _controller.createCSV ? "CSV" : null);
-            return Join(
-                string.IsNullOrEmpty(exports) ? "No exports" : exports,
-                _controller.debugLogs ? "debug logs" : null,
-                _controller.pluginSettings != null ? "log " + _controller.pluginSettings.logLevel : null);
+            RecordingPluginSettings settings = _controller.pluginSettings;
+            return settings != null
+                ? Join("Log " + settings.logLevel, settings.replayBufferNumber + " replay buffers")
+                : "No plugin settings";
         }
 
         private string EventsStatus()
@@ -658,15 +657,23 @@ namespace VRSYS.Recording
             _header.AddToClassList("rc-header");
 
             // Banner image (sphere moving along a dotted trajectory) behind the title, like COZY's banner.
-            // Cropped to fill the header and anchored right, so the trajectory stays visible in narrow inspectors.
+            // Scale with the inspector width and preserve the complete artwork's proportions.
             Texture2D banner = LoadEditorImage(BannerImagePath, "recorder-banner");
             if (banner != null)
             {
                 _header.AddToClassList("rc-banner");
                 _header.style.backgroundImage = banner;
-                _header.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Cover);
+                _header.style.backgroundSize = new BackgroundSize(new Length(100f, LengthUnit.Percent), Length.Auto());
                 _header.style.backgroundPositionX = new BackgroundPosition(BackgroundPositionKeyword.Right);
-                _header.style.backgroundPositionY = new BackgroundPosition(BackgroundPositionKeyword.Center);
+                _header.style.backgroundPositionY = new BackgroundPosition(BackgroundPositionKeyword.Top);
+                float aspectRatio = (float)banner.width / banner.height;
+                _header.RegisterCallback<GeometryChangedEvent>(evt =>
+                {
+                    VisualElement header = (VisualElement)evt.currentTarget;
+                    float height = Mathf.Max(144f, evt.newRect.width / aspectRatio);
+                    if (Mathf.Abs(header.resolvedStyle.height - height) > 0.5f)
+                        header.style.height = height;
+                });
             }
 
             VisualElement row = new VisualElement();
@@ -743,24 +750,62 @@ namespace VRSYS.Recording
             }
             footer.Add(_scrubber);
 
+            VisualElement pluginInfo = new VisualElement();
+            pluginInfo.AddToClassList("rc-plugin-info");
+            VisualElement pluginHeading = new VisualElement();
+            pluginHeading.AddToClassList("rc-plugin-heading");
+            Label pluginCaption = new Label("Recording plugin");
+            pluginCaption.AddToClassList("rc-plugin-caption");
+            pluginHeading.Add(pluginCaption);
             Label pluginVersion = new Label { name = "pluginVersion" };
             pluginVersion.AddToClassList("rc-plugin-version");
             try
             {
                 string version = RecordingPluginConfigurator.GetVersionInfo();
-                pluginVersion.text = string.IsNullOrEmpty(version) ? "Plugin version unavailable" : "Plugin " + version;
+                pluginVersion.text = string.IsNullOrEmpty(version) ? "Unavailable" : version.Replace("version: ", "v");
                 pluginVersion.tooltip = "Version reported by the loaded native recording plugin.";
             }
             catch (Exception exception) when (exception is DllNotFoundException ||
                                               exception is EntryPointNotFoundException ||
                                               exception is BadImageFormatException)
             {
-                pluginVersion.text = "Plugin version unavailable";
+                pluginVersion.text = "Unavailable";
                 pluginVersion.tooltip = exception.Message;
             }
-            footer.Add(pluginVersion);
+            pluginHeading.Add(pluginVersion);
+            pluginInfo.Add(pluginHeading);
+
+            SerializedProperty logLevelProperty = serializedObject.FindProperty("pluginSettings.logLevel");
+            if (logLevelProperty != null)
+            {
+                EnumField logLevel = new EnumField("Log Lvl", (LogLevel)logLevelProperty.intValue)
+                {
+                    name = "pluginLogLevel"
+                };
+                logLevel.AddToClassList("rc-plugin-log-level");
+                logLevel.RegisterValueChangedCallback(evt => ApplyPluginLogLevel(logLevel, (LogLevel)evt.newValue));
+                logLevel.BindProperty(logLevelProperty);
+                ApplyPluginLogLevel(logLevel, (LogLevel)logLevelProperty.intValue);
+                pluginInfo.Add(logLevel);
+            }
+            footer.Add(pluginInfo);
 
             return _header;
+        }
+
+        private static void ApplyPluginLogLevel(EnumField field, LogLevel level)
+        {
+            field.tooltip = "Minimum log level for the native plugin and managed recording package. Changes apply immediately.";
+            try
+            {
+                RecordingPluginConfigurator.ApplyLogLevel(level);
+            }
+            catch (Exception exception) when (exception is DllNotFoundException ||
+                                              exception is EntryPointNotFoundException ||
+                                              exception is BadImageFormatException)
+            {
+                field.tooltip += " Could not apply to the loaded plugin: " + exception.Message;
+            }
         }
 
         private VisualElement BuildToolbar()
@@ -1481,6 +1526,54 @@ namespace VRSYS.Recording
 
         #region Custom entry builders
 
+        private string GetRecordingDirectory()
+        {
+            RecorderState state = _controller.recorderState;
+            return state != null && !string.IsNullOrEmpty(state.recordingDirectory)
+                ? state.recordingDirectory
+                : Application.persistentDataPath;
+        }
+
+        private VisualElement BuildRecordingFolderField()
+        {
+            VisualElement container = new VisualElement { name = "recordingFolder" };
+            container.AddToClassList("rc-recording-folder");
+            Label caption = new Label("Recording folder");
+            caption.AddToClassList("rc-folder-caption");
+            container.Add(caption);
+
+            VisualElement row = new VisualElement();
+            row.AddToClassList("rc-row");
+            TextField path = new TextField { name = "recordingDirectory", isReadOnly = true };
+            path.AddToClassList("rc-folder-path");
+            row.Add(path);
+            Button open = InlineButton("Open folder", "Open the local recording folder in the file browser.",
+                OpenRecordingDirectoryFromState);
+            open.name = "openRecordingFolder";
+            open.AddToClassList("rc-folder-open");
+            row.Add(open);
+            container.Add(row);
+            Label hint = new Label("Folder not found.");
+            hint.AddToClassList("rc-hint");
+            container.Add(hint);
+
+            void RefreshDirectory()
+            {
+                string directory = GetRecordingDirectory();
+                path.SetValueWithoutNotify(directory);
+                path.tooltip = directory;
+                bool exists = Directory.Exists(directory);
+                open.SetEnabled(exists);
+                hint.style.display = exists ? DisplayStyle.None : DisplayStyle.Flex;
+            }
+
+            RefreshDirectory();
+            SerializedProperty directoryProperty = _stateSerializedObject?.FindProperty("recordingDirectory");
+            if (directoryProperty != null)
+                container.TrackPropertyValue(directoryProperty, _ => RefreshDirectory());
+            return container;
+        }
+
         // Dropdown for RecorderState.fixedPlaybackRecordingName, listing local .recordmeta files or the
         // server's replay list (RecorderState.useLocalReplayFiles), with a refresh button and a hint line.
         private VisualElement BuildPlaybackFileField(string label)
@@ -1594,9 +1687,7 @@ namespace VRSYS.Recording
 
             if (state.useLocalReplayFiles)
             {
-                string directory = !string.IsNullOrEmpty(state.recordingDirectory) && Directory.Exists(state.recordingDirectory)
-                    ? state.recordingDirectory
-                    : Application.persistentDataPath;
+                string directory = GetRecordingDirectory();
                 source = "in " + directory;
                 if (!Directory.Exists(directory))
                     return new List<string>();
@@ -1779,11 +1870,7 @@ namespace VRSYS.Recording
 
         private void OpenRecordingDirectoryFromState()
         {
-            RecorderState state = _controller.recorderState;
-            if (state == null || string.IsNullOrEmpty(state.recordingDirectory))
-                OpenRecordingDirectory(Application.persistentDataPath);
-            else
-                OpenRecordingDirectory(state.recordingDirectory);
+            OpenRecordingDirectory(GetRecordingDirectory());
         }
 
         private void DownloadProjectZip()
@@ -1806,8 +1893,8 @@ namespace VRSYS.Recording
                 savePath,
                 (ok, msg) =>
                 {
-                    if (ok) Debug.Log("Download saved to: " + msg);
-                    else Debug.LogError("Download failed: " + msg);
+                    if (ok) RecordingLogger.LogInfo(nameof(RecorderControllerEditor), "Download saved to: " + msg);
+                    else RecordingLogger.LogError(nameof(RecorderControllerEditor), "Download failed: " + msg);
                 }));
         }
 
@@ -1821,12 +1908,12 @@ namespace VRSYS.Recording
                 }
                 else
                 {
-                    Debug.LogError("The specified recording directory does not exist: " + path);
+                    RecordingLogger.LogError(nameof(RecorderControllerEditor), "The specified recording directory does not exist: " + path);
                 }
             }
             else
             {
-                Debug.LogError("No recording directory is specified.");
+                RecordingLogger.LogError(nameof(RecorderControllerEditor), "No recording directory is specified.");
             }
         }
 
@@ -1851,7 +1938,7 @@ namespace VRSYS.Recording
                     string assetPath = AssetDatabase.GetAssetPath(go);
                     if (IsInReadOnlyPackage(assetPath))
                     {
-                        Debug.LogWarning("Skipped '" + assetPath + "': prefabs in an installed package are read-only, " +
+                        RecordingLogger.LogWarning(nameof(RecorderControllerEditor), "Skipped '" + assetPath + "': prefabs in an installed package are read-only, " +
                                          "so RecordingPrefabInformation cannot be added. Create a prefab variant in a " +
                                          "Resources folder under Assets, use the variant instead (spawner and " +
                                          "NetworkPrefabsList), and run this again.", go);
@@ -1886,7 +1973,7 @@ namespace VRSYS.Recording
             // "t:GameObject" also matches imported models (e.g. .fbx), which are read-only and cannot
             // take components, so filter by the .prefab extension.
             string[] assetGUIDs = AssetDatabase.FindAssets("t:GameObject", new[] { "Assets" });
-            Debug.Log("searching in " + assetGUIDs.Length + " gameobjects...");
+            RecordingLogger.LogInfo(nameof(RecorderControllerEditor), "searching in " + assetGUIDs.Length + " gameobjects...");
 
             foreach (var guid in assetGUIDs)
             {

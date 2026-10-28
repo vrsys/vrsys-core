@@ -76,7 +76,7 @@ namespace VRSYS.Recording
 
             if (pluginInt != intDTOSize || pluginFloat != floatDTOSize || pluginChar != byteDTOSize)
             {
-                ExtendedLogger.LogWarning(nameof(GenericRecorder),
+                RecordingLogger.LogWarning(nameof(GenericRecorder),
                     $"Generic DTO size mismatch with plugin! C# (int/float/char): {intDTOSize}/{floatDTOSize}/{byteDTOSize}, " +
                     $"plugin: {pluginInt}/{pluginFloat}/{pluginChar}. Recorded/replayed generic data may be corrupted.");
             }
@@ -103,7 +103,7 @@ namespace VRSYS.Recording
                 if (!_descriptionEndpointMissingLogged)
                 {
                     _descriptionEndpointMissingLogged = true;
-                    ExtendedLogger.LogWarning(nameof(GenericRecorder),
+                    RecordingLogger.LogWarning(nameof(GenericRecorder),
                         "RecordingPlugin has no RegisterGenericDescription endpoint; rebuild the plugin to store generic data descriptions.");
                 }
                 return false;
@@ -135,8 +135,8 @@ namespace VRSYS.Recording
                 result = RecordGenericAtTimestamp(controller.RecorderID, recordTime, id, _recIntDTO, _recFloatDTO,
                     _recCharDTO);
 
-                if (!result && controller.debugLogs)
-                    ExtendedLogger.LogInfo(GetType().Name, "Could not record arbitrary data with id: " + id, this);
+                if (!result && RecordingLogger.IsEnabled(LogLevel.Info))
+                    RecordingLogger.LogInfo(GetType().Name, "Could not record arbitrary data with id: " + id, this);
 
                 if(result)
                     ClearGenericData();
@@ -168,8 +168,8 @@ namespace VRSYS.Recording
 
                         if (!result)
                         {
-                            if (controller.debugLogs)
-                                ExtendedLogger.LogInfo(GetType().Name, "Could not replay arbitrary data with id: " + id + " for object with name: " + gameObject.name, this);
+                            if (RecordingLogger.IsEnabled(LogLevel.Info))
+                                RecordingLogger.LogInfo(GetType().Name, "Could not replay arbitrary data with id: " + id + " for object with name: " + gameObject.name, this);
                             return false;
                         }
 

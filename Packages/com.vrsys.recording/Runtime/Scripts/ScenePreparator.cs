@@ -101,6 +101,9 @@ namespace VRSYS.Recording
         public void Start()
         {
             _controller = GetComponent<RecorderController>();
+            // Again in Start: in Awake, NetworkManager.Singleton may not be set yet (Awake order between objects is
+            // undefined), and then no handler is registered. Prefabs that already have one are skipped.
+            RegisterReplayPrefabHandlers();
         }
 
         private void OnDestroy()
@@ -324,11 +327,16 @@ namespace VRSYS.Recording
                     error = true;
             }
 
-            // this might not be necessary, only in cases where gameobjects changed their parents before the recording was started
-            replayGameObjectInformations.Sort((s1, s2) => s1.firstSeenTime.CompareTo(s2.firstSeenTime));
-            // this is important, as we first want to instantiate all elements that have prefabs before creating empty objects for the rest.
-            replayGameObjectInformations.Sort((a, b) =>
-                (b.prefabLocation.Length > 0).CompareTo(a.prefabLocation.Length > 0));
+            // Create parents before their children: a missing object is placed under its recorded parent only if that
+            // parent already exists, otherwise it ends up at the scene root and its replay name no longer matches the
+            // recording. Within a depth, prefabs come first, so their recorded children are found in the instance
+            // instead of being created as empty objects. OrderBy is stable; List.Sort is not, and for more than 16
+            // entries it shuffles entries with equal keys (most objects are first seen at the same time).
+            replayGameObjectInformations = replayGameObjectInformations
+                .OrderBy(i => HierarchyDepth(i.hierarchyName))
+                .ThenByDescending(i => i.prefabLocation.Length > 0)
+                .ThenBy(i => i.firstSeenTime)
+                .ToList();
 
             // Only instantiate objects that are missing from the scene when explicitly enabled. When
             // disabled, objects already matched above still play back; missing ones are simply skipped.
@@ -369,6 +377,15 @@ namespace VRSYS.Recording
             }
 
             return error;
+        }
+
+        private static int HierarchyDepth(string hierarchyName)
+        {
+            int depth = 0;
+            foreach (char c in hierarchyName)
+                if (c == '/')
+                    depth++;
+            return depth;
         }
 
         private void TryInstantiatePrefab(ReplayGameObjectInformation information, Transform parent, string parentName)

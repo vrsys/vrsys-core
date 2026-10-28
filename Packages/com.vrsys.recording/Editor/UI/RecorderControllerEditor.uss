@@ -73,7 +73,7 @@
 
 /* Header with the banner image: white, light-theme text regardless of editor skin */
 .rc-header.rc-banner {
-    height: 112px;
+    height: 144px;
     justify-content: space-between;
     padding: 10px 12px 9px 12px;
     background-color: #FFFFFF;
@@ -97,6 +97,58 @@
     background-color: rgba(0, 0, 0, 0.08);
 }
 
+.rc-header-footer {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    flex-shrink: 0;
+    min-height: 22px;
+}
+
+.rc-header-footer > .rc-timeline,
+.rc-header-footer > .rc-scrubber {
+    flex-grow: 1;
+    min-width: 0;
+    margin: 0 8px 0 0;
+}
+
+.rc-plugin-version,
+.rc-performance {
+    flex-shrink: 0;
+    margin: 0;
+    padding: 2px 7px;
+    border-radius: 5px;
+    border-width: 1px;
+    border-color: var(--rc-border);
+    background-color: var(--rc-button);
+    font-size: 10px;
+    color: var(--rc-text-strong);
+    -unity-text-align: middle-right;
+}
+
+.rc-banner .rc-plugin-version,
+.rc-banner .rc-performance {
+    background-color: rgba(255, 255, 255, 0.95);
+    border-color: rgba(0, 0, 0, 0.18);
+    color: #1F232A;
+}
+
+.rc-header-status {
+    align-items: flex-end;
+    flex-shrink: 0;
+    margin-left: 8px;
+}
+
+.rc-performance {
+    display: none;
+    margin-bottom: 4px;
+    white-space: normal;
+}
+
+.rc-performance-active {
+    display: flex;
+}
+
 .rc-logo {
     width: 38px;
     height: 38px;
@@ -106,6 +158,7 @@
 
 .rc-header-titles {
     flex-shrink: 1;
+    min-width: 0;
 }
 
 .rc-title {
@@ -113,6 +166,9 @@
     -unity-font-style: bold;
     margin: 0;
     padding: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .rc-subtitle {

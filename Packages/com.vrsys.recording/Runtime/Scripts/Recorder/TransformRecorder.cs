@@ -442,6 +442,27 @@ namespace VRSYS.Recording
                     _parent = 0;
             }
 
+            if (!originalIdFound)
+            {
+                originalId = GetOriginalID(controller.RecorderID, _name, _name.Length, id);
+                if (originalId != -1)
+                {
+                    originalIdFound = true;
+                    controller.AddOriginalIdGameobject(originalId, id, gameObject);
+                    _firstSeenTime = GetGameObjectFirstSeenTimeByID(controller.RecorderID, originalId);
+                }
+            }
+
+            // Not in the recording yet at this time (e.g. spawned later): keep it hidden and don't query a
+            // transform, the recording has none before the object was first seen.
+            if (replayTime < _firstSeenTime)
+            {
+                SetReplayedActive(false);
+                _lastReplayedCapture = null;
+                _lastReplayTime = replayTime;
+                return true;
+            }
+
             fixed (float* p = _matrixDTO)
             {
                 fixed (int* u = _infoDTO)
@@ -461,18 +482,7 @@ namespace VRSYS.Recording
                     }
                     else
                     {
-                        if (!originalIdFound)
-                        {
-                            originalId = GetOriginalID(controller.RecorderID, _name, _name.Length, id);
-                            originalIdFound = true;
-                            controller.AddOriginalIdGameobject(originalId, id, gameObject);
-                            _firstSeenTime = GetGameObjectFirstSeenTimeByID(controller.RecorderID, originalId);
-                        }
-
                         var replayCapture = new TransformCapture(_matrixDTO, _infoDTO, replayTime);
-                        // Not in the recording yet at this time (e.g. spawned later): hidden until it appears.
-                        if (replayTime < _firstSeenTime)
-                            replayCapture.active = false;
                         ApplyReplayCapture(replayCapture, _transform, replayPose);
                         _lastReplayedCapture = replayCapture;
                     }

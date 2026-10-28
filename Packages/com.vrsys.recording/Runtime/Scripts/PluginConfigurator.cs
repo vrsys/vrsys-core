@@ -33,7 +33,7 @@ namespace VRSYS.Recording
         [HideInInspector] public string recordingDirectory = "";
     }
 
-    internal static class RecordingPluginConfigurator
+    public static class RecordingPluginConfigurator
     {
         [DllImport("RecordingPlugin")]
         private static extern bool SetRecordingMaxBufferSize(int recorderId, int maxBufferSize);
@@ -106,11 +106,9 @@ namespace VRSYS.Recording
             SetReplayBufferNumber(recorderId, settings.replayBufferNumber);
             SetReplayBufferStoredTimeInterval(recorderId, settings.replayBufferTimeInterval);
 
-            int maxSize = 300;
-            StringBuilder buffer = new StringBuilder(maxSize);
-            int len = GetVersionNumber(buffer, buffer.Capacity);
-            if (len > 0)
-                settings.versionInfo = buffer.ToString();
+            string version = GetVersionInfo();
+            if (!string.IsNullOrEmpty(version))
+                settings.versionInfo = version;
 
             ApplyLogLevel(settings.logLevel);
         }
@@ -118,6 +116,12 @@ namespace VRSYS.Recording
         public static void ApplyLogLevel(LogLevel logLevel)
         {
             SetLogLevel((int)logLevel);
+        }
+
+        public static string GetVersionInfo()
+        {
+            StringBuilder buffer = new StringBuilder(300);
+            return GetVersionNumber(buffer, buffer.Capacity) > 0 ? buffer.ToString() : null;
         }
 
         private delegate void debugCallback(IntPtr request, int level, int size);

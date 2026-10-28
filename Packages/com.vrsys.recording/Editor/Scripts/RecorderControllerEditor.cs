@@ -92,6 +92,7 @@ namespace VRSYS.Recording
         private Label _stateLabel;
         private Label _subtitleLabel;
         private Label _timeLabel;
+        private Label _performanceLabel;
         private Slider _scrubber;
         private VisualElement _scrubberFill;
         private bool _scrubbing;
@@ -699,19 +700,32 @@ namespace VRSYS.Recording
 
             row.Add(titles);
             row.Add(Spacer());
-            row.Add(_stateLabel);
+            VisualElement status = new VisualElement();
+            status.AddToClassList("rc-header-status");
+            _performanceLabel = new Label { name = "framePerformance" };
+            _performanceLabel.AddToClassList("rc-performance");
+            _performanceLabel.tooltip = "Max FPS based on the average recording or playback frame cost in " +
+                                        "RecorderController.LateUpdate, updated once per second. " +
+                                        "Excludes other frame work, Update, GPU work and background threads.";
+            status.Add(_performanceLabel);
+            status.Add(_stateLabel);
+            row.Add(status);
             _header.Add(row);
 
             _timeLabel = new Label();
             _timeLabel.AddToClassList("rc-time");
             _header.Add(_timeLabel);
 
+            VisualElement footer = new VisualElement();
+            footer.AddToClassList("rc-header-footer");
+            _header.Add(footer);
+
             _timeline = new VisualElement();
             _timeline.AddToClassList("rc-timeline");
             _timelineFill = new VisualElement();
             _timelineFill.AddToClassList("rc-timeline-fill");
             _timeline.Add(_timelineFill);
-            _header.Add(_timeline);
+            footer.Add(_timeline);
 
             // Interactive replay timeline: drag to jump to a time (replaces the static bar while replaying).
             _scrubber = new Slider(0f, 1f) { tooltip = "Drag to jump to a time in the replay" };
@@ -727,7 +741,24 @@ namespace VRSYS.Recording
                 _scrubberFill.AddToClassList("rc-scrubber-fill");
                 tracker.Add(_scrubberFill);
             }
-            _header.Add(_scrubber);
+            footer.Add(_scrubber);
+
+            Label pluginVersion = new Label { name = "pluginVersion" };
+            pluginVersion.AddToClassList("rc-plugin-version");
+            try
+            {
+                string version = RecordingPluginConfigurator.GetVersionInfo();
+                pluginVersion.text = string.IsNullOrEmpty(version) ? "Plugin version unavailable" : "Plugin " + version;
+                pluginVersion.tooltip = "Version reported by the loaded native recording plugin.";
+            }
+            catch (Exception exception) when (exception is DllNotFoundException ||
+                                              exception is EntryPointNotFoundException ||
+                                              exception is BadImageFormatException)
+            {
+                pluginVersion.text = "Plugin version unavailable";
+                pluginVersion.tooltip = exception.Message;
+            }
+            footer.Add(pluginVersion);
 
             return _header;
         }
@@ -1010,6 +1041,15 @@ namespace VRSYS.Recording
             foreach (State s in Enum.GetValues(typeof(State)))
                 _header.EnableInClassList(StateClass(s), hasState && s == current);
             _header.EnableInClassList("rc-state-missing", !hasState);
+
+            bool recording = hasState && current == State.Recording;
+            bool replaying = hasState && current == State.Replaying;
+            _performanceLabel.EnableInClassList("rc-performance-active", recording || replaying);
+            if (recording || replaying)
+            {
+                double maxFps = recording ? _controller.RecordingMaxFps : _controller.PlaybackMaxFps;
+                _performanceLabel.text = maxFps > 0.0 ? $"Max FPS: {maxFps:N0}" : "Max FPS: measuring…";
+            }
 
             string mode = null;
             if (hasState && current == State.Recording)

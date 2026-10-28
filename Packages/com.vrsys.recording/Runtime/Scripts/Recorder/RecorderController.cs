@@ -14,6 +14,7 @@ using VRSYS.Core.Interaction;
 using VRSYS.Core.Logging;
 using VRSYS.Core.Networking;
 using Random = UnityEngine.Random;
+using Stopwatch = System.Diagnostics.Stopwatch;
 
 namespace VRSYS.Recording
 {
@@ -117,6 +118,37 @@ namespace VRSYS.Recording
         public bool debugLogs = true;
         private const float ReplayBoundaryPaddingSeconds = 0.1f;
         private LogLevel _lastAppliedPluginLogLevel;
+        private FramePerformance _recordingPerformance;
+        private FramePerformance _playbackPerformance;
+
+        private struct FramePerformance
+        {
+            private long _windowStarted;
+            private long _totalTicks;
+            private int _sampleCount;
+
+            public double FrameMilliseconds { get; private set; }
+            public double MaxFps { get; private set; }
+
+            public void AddSample(long started)
+            {
+                long finished = Stopwatch.GetTimestamp();
+                long elapsed = finished - started;
+                FrameMilliseconds = elapsed * 1000.0 / Stopwatch.Frequency;
+                if (_windowStarted == 0)
+                    _windowStarted = started;
+
+                _totalTicks += elapsed;
+                _sampleCount++;
+                if (finished - _windowStarted < Stopwatch.Frequency)
+                    return;
+
+                MaxFps = _totalTicks > 0 ? _sampleCount * (double)Stopwatch.Frequency / _totalTicks : 0.0;
+                _windowStarted = finished;
+                _totalTicks = 0;
+                _sampleCount = 0;
+            }
+        }
 
         #endregion
 
@@ -135,6 +167,11 @@ namespace VRSYS.Recording
         #endregion
 
         #region Public Properties
+
+        public double RecordingFrameMilliseconds => _recordingPerformance.FrameMilliseconds;
+        public double PlaybackFrameMilliseconds => _playbackPerformance.FrameMilliseconds;
+        public double RecordingMaxFps => _recordingPerformance.MaxFps;
+        public double PlaybackMaxFps => _playbackPerformance.MaxFps;
 
         [HideInInspector]
         public int RecorderID
@@ -644,6 +681,7 @@ namespace VRSYS.Recording
                                   (recorderState.recordedObjectPresent == null
                                       ? 0
                                       : recorderState.recordedObjectPresent.Count));
+            _playbackPerformance = default;
             recorderState.currentState = State.Replaying;
             recorderState.currentReplayTime = GetReplayStartTime();
             recorderState.currentRecordingTime = -1.0f;
@@ -765,6 +803,7 @@ namespace VRSYS.Recording
 
         public void StartRecording()
         {
+            _recordingPerformance = default;
             recorderState.currentState = State.Recording;
             recorderState.currentReplayTime = -1.0f;
             recorderState.currentRecordingTime = 0.0f;
@@ -1325,21 +1364,39 @@ namespace VRSYS.Recording
                 Idle();
 
             if (recorderState.currentState == State.Recording)
-                Recording();
+            {
+                long started = Stopwatch.GetTimestamp();
+                try
+                {
+                    Recording();
+                }
+                finally
+                {
+                    _recordingPerformance.AddSample(started);
+                }
+            }
 
             if (recorderState.currentState == State.Replaying)
             {
-                AdvanceReplayTime();
-
-                if (recorderState.currentReplayTime < recorderState.recordingDuration - ReplayBoundaryPaddingSeconds ||
-                    indefinitePlayback)
-                    Replay();
-                else if (endPlaybackOnDurationReached)
+                long started = Stopwatch.GetTimestamp();
+                try
                 {
-                    if (!NetworkManager.Singleton)
-                        EndReplay();
-                    else
-                        SendEndReplayEvent();
+                    AdvanceReplayTime();
+
+                    if (recorderState.currentReplayTime < recorderState.recordingDuration - ReplayBoundaryPaddingSeconds ||
+                        indefinitePlayback)
+                        Replay();
+                    else if (endPlaybackOnDurationReached)
+                    {
+                        if (!NetworkManager.Singleton)
+                            EndReplay();
+                        else
+                            SendEndReplayEvent();
+                    }
+                }
+                finally
+                {
+                    _playbackPerformance.AddSample(started);
                 }
             }
         }

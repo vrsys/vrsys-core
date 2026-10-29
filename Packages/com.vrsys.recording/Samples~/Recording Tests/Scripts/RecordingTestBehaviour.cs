@@ -143,11 +143,13 @@ namespace VRSYS.Recording.Testing
 
         private void FindController()
         {
-            if (_controller != null)
-                return;
-            _controller = FindFirstObjectByType<RecorderController>();
+            if (_controller == null)
+                _controller = FindFirstObjectByType<RecorderController>();
             if (_controller != null)
             {
+                // Hot reload can retain the controller reference while its provider list is rebuilt.
+                _controller.onReplayIsPreparing.RemoveListener(HandleReplayPreparing);
+                _controller.onRecordingHasStarted.RemoveListener(HandleRecordingStarted);
                 _controller.onReplayIsPreparing.AddListener(HandleReplayPreparing);
                 _controller.onRecordingHasStarted.AddListener(HandleRecordingStarted);
                 OnControllerFound(_controller);

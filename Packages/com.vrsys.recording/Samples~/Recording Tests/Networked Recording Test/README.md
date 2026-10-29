@@ -7,7 +7,8 @@ groups:
 - **Local**: the same tests as the Local Recording Test (transforms, active state,
   parent changes, `Spawned Cube <n>` instances that are created and destroyed, the
   one-shot, stationary looping and moving spatial audio sources, and the spot light recorded as generic
-  data). Every peer animates and records its own copy.
+  data), plus the Renderer Appearance cube and seeded Particle System fountain.
+  Every peer animates and records its own copy.
 - **Networked**: NetworkObjects with server-authoritative NetworkTransforms that
   move, rotate, scale and change parent, plus a spawner that spawns a
   `Networked Spawned Sphere <n>` every 1.5 s and despawns it after 3.5 s. Only the
@@ -54,7 +55,8 @@ spawner. Recording and replay components remain active while the tests are pause
 5. Select the recording in **Selected Replay File** and click **Distributed** in
    the **Replay** controls. Check that transforms, active state and hierarchy
    changes, the spawned cubes and spheres (replay copies are named
-   `...[Rec<id>]`), the sounds and the spot light repeat as recorded.
+   `...[Rec<id>]`), the sounds, spot light, renderer appearance and particle fountain
+   repeat as recorded. Pause and scrub backward to check particle reconstruction.
 
 Record at least eight seconds to capture a full orbit of **Audio Source (Moving
 Spatial Loop)** in the Local group. Each peer records its local source's mono

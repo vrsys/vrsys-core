@@ -6,7 +6,7 @@ One import includes both test scenes and the shared scripts and assets they use:
 - `Local Recording Test/Scenes/VRSYS-Recording-LocalTest.unity`: local recording
   and replay of transforms, active state, hierarchy changes, objects created and
   destroyed during the recording, sound (including a moving spatial loop) and
-  generic data (a spot light).
+  generic data (a spot light, renderer appearance and a seeded particle fountain).
 - `Networked Recording Test/Scenes/VRSYS-Recording-NetworkedTest.unity`: the same
   tests in a networked session, plus networked objects (including ones that are
   spawned and despawned) and recordable user prefabs.
@@ -25,6 +25,12 @@ One import includes both test scenes and the shared scripts and assets they use:
   - `RecordingTestSpotLight`, `RecordingTestSpotLightRecorder`: animate a spot
     light's cone and color and record them with a custom `GenericRecorder`
     attached through an `IGenericRecorderProvider`.
+  - `RecordingTestRenderer`, `RecordingTestRendererRecorder`: animate and record a
+    mesh renderer's color, emission and enabled state using a MaterialPropertyBlock.
+  - `RecordingTestParticles`, `RecordingTestParticlesRecorder`: record a seeded,
+    animated particle settings and reconstruct the fountain when seeking.
+- `Editor/RecordingTestGenericRecorderChecks`: run **VRSYS > Recording > Validate
+  Generic Recorder Samples** to check renderer state and particle seeking.
 - `Shared`: the test sound (`Audio/RecordingTestChime.wav`) and the local spawned
   prefab (`Resources/VRSYS-Recording-Tests`) with its prefab mapping
   (`Prefab Information`).

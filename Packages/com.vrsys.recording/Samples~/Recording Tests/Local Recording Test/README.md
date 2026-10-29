@@ -21,6 +21,8 @@ replay to inspect playback without restarting live animations or test audio.
 | One-Shot Audio | a chime started every 2 s, silent in between |
 | Continuous Audio | the same chime in a continuous loop; the pitch changes every 2 s |
 | Moving Audio | a looping mono chime with an eight-second orbit and a pulsing sphere; both sound and source movement are recorded |
+| Renderer Appearance | color, emission and visibility of the floating cube |
+| Particle System | seed and simulation time of the soft particle fountain |
 | Generic Data | cone angle and color of the spot light projected onto its column |
 
 ## Prerequisites
@@ -45,7 +47,9 @@ replay to inspect playback without restarting live animations or test audio.
      replay creates copies named `Spawned Cube <n>[Rec<id>]` from the prefab);
    - the chimes play at the recorded times and pitches, from the positions of the
      audio sources (each has a `Pulse` sphere that grows when its clip starts);
-   - the spot light's cone and color change as recorded.
+   - the spot light's cone and color change as recorded;
+   - the cube's color, emission and visibility repeat, and the fountain reconstructs
+     correctly when paused or scrubbed backward, including across its eight-second cycle.
 
 The moving spatial source travels 0.55 metres left/right and 0.35 metres
 forward/back around its starting position, staying above its column. Record at

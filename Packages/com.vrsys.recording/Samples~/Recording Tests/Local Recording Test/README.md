@@ -23,7 +23,7 @@ replay to inspect playback without restarting live animations or test audio.
 | Moving Audio | a looping mono chime with an eight-second orbit and a pulsing sphere; both sound and source movement are recorded |
 | Renderer Appearance | color, emission and visibility of the floating cube |
 | Particle System | seed and simulation time of the soft particle fountain |
-| Generic Data | cone angle and color of the spot light projected onto its column |
+| Generic Data | cone angle, color and intensity of the spot light, shown as a light cone over its column |
 
 ## Prerequisites
 
@@ -47,7 +47,8 @@ replay to inspect playback without restarting live animations or test audio.
      replay creates copies named `Spawned Cube <n>[Rec<id>]` from the prefab);
    - the chimes play at the recorded times and pitches, from the positions of the
      audio sources (each has a `Pulse` sphere that grows when its clip starts);
-   - the spot light's cone and color change as recorded;
+   - the light cone over the Generic Data column changes width, color and brightness as
+     recorded, also with **Run Test Behaviours** disabled;
    - the cube's color, emission and visibility repeat, and the fountain reconstructs
      correctly when paused or scrubbed backward, including across its eight-second cycle.
 
@@ -80,6 +81,9 @@ recording are disabled in this scene.
   `RecordingTestSpotLightRecorder` (a `GenericRecorder`) to the light, which writes
   the cone angles, color and intensity into the generic data slots and applies
   them again on replay. Use it as a template for recording other custom data.
+  The animation changes cone angle, color and intensity at different rates. The
+  `Light Cone` child (`RecordingTestLightCone`) only reads the light, so the beam
+  shows the live values while recording and the recorded values during replay.
 
 The test behaviours are in the imported sample's shared `../Scripts` folder and
 compile into the `vrsys.recording.samples` assembly. VRSYS Core's **Sample Scene

@@ -23,8 +23,10 @@ One import includes both test scenes and the shared scripts and assets they use:
     create and remove (spawn and despawn) prefab instances with unique names.
   - `RecordingTestAudio`: plays a clip as one-shots or as a continuous loop.
   - `RecordingTestSpotLight`, `RecordingTestSpotLightRecorder`: animate a spot
-    light's cone and color and record them with a custom `GenericRecorder`
-    attached through an `IGenericRecorderProvider`.
+    light's cone angle, color and intensity and record them with a custom
+    `GenericRecorder` attached through an `IGenericRecorderProvider`.
+  - `RecordingTestLightCone`: draws the spot light's cone as a translucent beam that
+    follows the light's angles, color and intensity, live and during replay.
   - `RecordingTestRenderer`, `RecordingTestRendererRecorder`: animate and record a
     mesh renderer's color, emission and enabled state using a MaterialPropertyBlock.
   - `RecordingTestParticles`, `RecordingTestParticlesRecorder`: record a seeded,

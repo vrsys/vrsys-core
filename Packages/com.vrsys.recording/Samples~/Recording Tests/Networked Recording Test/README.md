@@ -11,13 +11,21 @@ groups:
   Every peer animates and records its own copy.
 - **Networked**: NetworkObjects with server-authoritative NetworkTransforms that
   move, rotate, scale and change parent, plus a spawner that spawns a
-  `Networked Spawned Sphere <n>` every 1.5 s and despawns it after 3.5 s. Only the
-  server drives them; Netcode syncs them to the clients.
+  `Networked Spawned Sphere <n>` every 1.5 s and despawns it after 3.5 s, and a UFO
+  (`Networked Teleporter (UFO)`) that teleports between two spots 1.1 m apart every
+  2 s. Only the server drives them; Netcode syncs them to the clients.
 
 Every test is displayed on its own small column with a fixed, single-line
 world-space UI headline. The first two rows show the eleven local tests; the
-third row has the five networked tests, labeled **Network Position**, **Network
-Rotation**, **Network Scale**, **Network Parent** and **Network Spawn / Despawn**.
+third row has the six networked tests, labeled **Network Position**, **Network
+Rotation**, **Network Scale**, **Network Parent**, **Network Spawn / Despawn** and
+**Network Teleport**.
+
+The UFO checks that teleports of networked objects stay teleports. While recording,
+the server teleports it through its NetworkTransform. During replay with **Replay on
+server only**, the server detects the jump (more than 1 m between two replay steps,
+the same limit the recorder uses) and teleports it again, so clients see it jump
+without sliding between the spots.
 Labels stay visible when an object is deactivated, removed or moved to another
 parent. The column and plaque assets are shared with the local scene.
 

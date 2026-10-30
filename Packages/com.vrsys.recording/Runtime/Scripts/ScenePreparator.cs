@@ -122,7 +122,7 @@ namespace VRSYS.Recording
 
         // Registered on every peer before any replay, so a client builds a replay copy that arrives at any time (also
         // while it joins late) through the handler. Prefabs the application already handles itself are left alone.
-        private void RegisterReplayPrefabHandlers()
+        internal void RegisterReplayPrefabHandlers()
         {
             NetworkManager networkManager = NetworkManager.Singleton;
             if (_controller == null || !_controller.spawnNetworkedPrefabsForReplay || networkManager == null ||
@@ -157,7 +157,8 @@ namespace VRSYS.Recording
         private bool ShouldSpawnNetworked(GameObject prefab)
         {
             NetworkManager networkManager = NetworkManager.Singleton;
-            return prefab != null && _replayPrefabHandlers.ContainsKey(prefab) && !_controller.localPlayback &&
+            return prefab != null && _controller.spawnNetworkedPrefabsForReplay &&
+                   _replayPrefabHandlers.ContainsKey(prefab) && !_controller.localPlayback &&
                    _controller.replayNetworkedTransformOnServerOnly && networkManager != null &&
                    networkManager.IsListening;
         }
@@ -600,6 +601,9 @@ namespace VRSYS.Recording
         
         public unsafe void PrepareReplayScene()
         {
+            // Spawn network prefabs may have been switched on after Start (e.g. in the Inspector); registering skips
+            // prefabs that already have a handler.
+            RegisterReplayPrefabHandlers();
             PauseAllAudioSources();
             
             replayGameObjectInformations.Clear();

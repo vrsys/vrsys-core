@@ -140,6 +140,14 @@ namespace VRSYS.Recording
         private int originalId;
         // Replay: recording time at which the object first appears (e.g. spawned during the recording).
         private float _firstSeenTime = float.NegativeInfinity;
+        // Networked object moved to its first recorded pose while still hidden (see PlaceAtFirstRecordedPose).
+        private bool _placedAtFirstPose;
+        private const float FirstPoseLeadSeconds = 0.5f;
+        // A change larger than this between two recorded samples (CheckIfWasTeleported) or two replay steps
+        // (IsReplayJump) is a teleport. During replay a jump in replay time (seeking) is one as well.
+        private const float TeleportDistance = 1f;
+        private const float TeleportScaleChange = 0.3f;
+        private const float MaxContinuousReplayStepSeconds = 0.5f;
 
         private bool anonymiseName;
         private string trueName;
@@ -348,7 +356,7 @@ namespace VRSYS.Recording
             // static period and must insert a hold keyframe to stop the plugin from smearing
             // the first motion delta across the whole gap.
             float timeDif = currentCapture.time - _lastRecordedCapture.Value.time;
-            bool relevantChange = (posDif > 1f || scaDif > 0.3f);
+            bool relevantChange = (posDif > TeleportDistance || scaDif > TeleportScaleChange);
             return ((timeDif > 1.5f / (float)controller.transformRecordingStepsPerSecond) || relevantChange) &&
                    currentCapture.time > 0.001f;
         }
@@ -458,6 +466,8 @@ namespace VRSYS.Recording
             if (replayTime < _firstSeenTime)
             {
                 SetReplayedActive(false);
+                if (replayPose && !_placedAtFirstPose && replayTime >= _firstSeenTime - FirstPoseLeadSeconds)
+                    PlaceAtFirstRecordedPose();
                 _lastReplayedCapture = null;
                 _lastReplayTime = replayTime;
                 return true;
@@ -483,14 +493,67 @@ namespace VRSYS.Recording
                     else
                     {
                         var replayCapture = new TransformCapture(_matrixDTO, _infoDTO, replayTime);
+                        bool jumped = replayPose && IsReplayJump(replayCapture, replayTime);
                         ApplyReplayCapture(replayCapture, _transform, replayPose);
+                        if (jumped)
+                            TeleportNetworkTransform();
                         _lastReplayedCapture = replayCapture;
+                        _placedAtFirstPose = false;
                     }
 
                     _lastReplayTime = replayTime;
                     return result;
                 }
             }
+        }
+
+        // A networked object stays active while it is hidden (see SetReplayedActive), and clients get its pose from its
+        // NetworkTransform. Without this it would wait at its spawn pose and, when first seen, clients would interpolate
+        // it from there to the recorded pose. Teleporting it there while still hidden makes it appear in place.
+        private unsafe void PlaceAtFirstRecordedPose()
+        {
+            if (_networkTransform == null || !_networkTransform.IsSpawned || !_networkTransform.CanCommitToTransform)
+                return;
+
+            fixed (float* p = _matrixDTO)
+            fixed (int* u = _infoDTO)
+            {
+                if (!GetTransformAndInformationAtTime(recorderId, _name, _name.Length, id, _firstSeenTime, (IntPtr)p,
+                        (IntPtr)u))
+                    return;
+            }
+
+            ApplyReplayCapture(new TransformCapture(_matrixDTO, _infoDTO, _firstSeenTime), _transform);
+            SetReplayedActive(false);
+            TeleportNetworkTransform();
+            _placedAtFirstPose = true;
+        }
+
+        // The recorder writes a teleport as a hold keyframe 1 ms before the new pose, so the replay passes the whole
+        // jump within one step. Seeking also skips the motion in between, and so does the first pose after the object
+        // was hidden unless it was already placed there.
+        private bool IsReplayJump(TransformCapture capture, float replayTime)
+        {
+            if (!_lastReplayedCapture.HasValue)
+                return !_placedAtFirstPose;
+            if (Mathf.Abs(replayTime - _lastReplayTime) > MaxContinuousReplayStepSeconds)
+                return true;
+
+            TransformCapture last = _lastReplayedCapture.Value;
+            return (capture.localPosition - last.localPosition).magnitude > TeleportDistance ||
+                   (capture.localScale - last.localScale).magnitude > TeleportScaleChange;
+        }
+
+        // Sends the pose that was just applied as a teleport, so clients snap to it instead of interpolating. Only the
+        // side with authority over the NetworkTransform (e.g. the server replaying networked objects) can do this.
+        private void TeleportNetworkTransform()
+        {
+            if (_networkTransform == null || !_networkTransform.IsSpawned || !_networkTransform.CanCommitToTransform)
+                return;
+
+            bool local = _networkTransform.InLocalSpace;
+            _networkTransform.Teleport(local ? _transform.localPosition : _transform.position,
+                local ? _transform.localRotation : _transform.rotation, _transform.localScale);
         }
 
         private void ApplyReplayCapture(TransformCapture capture, Transform tr, bool replayPose = true)

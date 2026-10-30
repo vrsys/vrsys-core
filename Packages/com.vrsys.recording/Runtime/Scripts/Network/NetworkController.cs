@@ -170,11 +170,14 @@ namespace VRSYS.Recording
             _awaitingDownloads = _clientDownloading.Count > 0;
             DebugDistributedReplayStatusIfChanged("StartDownloadsServerRpc");
 
-            StartDownloadsClientRpc(replayFile, recorderId);
+            // The server decides how networked objects are replayed; every peer has to make the same choice.
+            StartDownloadsClientRpc(replayFile, recorderId, _controller.spawnNetworkedPrefabsForReplay,
+                _controller.replayNetworkedTransformOnServerOnly);
         }
 
         [Rpc(SendTo.ClientsAndHost, InvokePermission = RpcInvokePermission.Server)]
-        private void StartDownloadsClientRpc(string replayFile, int recorderId)
+        private void StartDownloadsClientRpc(string replayFile, int recorderId, bool spawnNetworkedPrefabs,
+            bool networkedTransformOnServerOnly)
         {
             DebugDistributedReplayLog("StartDownloadsClientRpc received: replayFile=" + replayFile +
                                       ", incomingRecorderId=" + recorderId +
@@ -190,6 +193,14 @@ namespace VRSYS.Recording
                     DebugDistributedReplayLog("StartDownloadsClientRpc ignored after idle check: recorder id mismatch.");
                     return;
                 }
+
+                // Use the server's choice: a client that decided on its own would build a local copy of an object the
+                // server spawns. Register the handlers now, before the server spawns its replay copies.
+                _controller.spawnNetworkedPrefabsForReplay = spawnNetworkedPrefabs;
+                _controller.replayNetworkedTransformOnServerOnly = networkedTransformOnServerOnly;
+                ScenePreparator scenePreparator = GetComponent<ScenePreparator>();
+                if (scenePreparator != null)
+                    scenePreparator.RegisterReplayPrefabHandlers();
                 
                 if (_controller != null && RecordingLogger.IsEnabled(LogLevel.Info))
                     RecordingLogger.LogInfo(GetType().Name, "Download started for recorder id: " + _state.recorderID, this);

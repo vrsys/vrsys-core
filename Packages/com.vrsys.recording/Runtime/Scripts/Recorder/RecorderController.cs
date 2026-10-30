@@ -18,6 +18,14 @@ using Stopwatch = System.Diagnostics.Stopwatch;
 
 namespace VRSYS.Recording
 {
+    public enum RecordingUploadState
+    {
+        None,
+        Uploading,
+        Completed,
+        Failed
+    }
+
     [RequireComponent(typeof(RecorderState))]
     [RequireComponent(typeof(NetworkController))]
     public class RecorderController : MonoBehaviour
@@ -134,6 +142,9 @@ namespace VRSYS.Recording
         public bool localPlayback = false;
         private Coroutine _replayStartupRoutine;
         public bool uploadFilesToServer = false;
+        public RecordingUploadState UploadState { get; private set; }
+        private int _pendingRecordingUploads;
+        private bool _recordingUploadFailed;
         // Kept for existing scene/prefab serialization; pluginSettings.logLevel controls all recording logs.
         [HideInInspector] public bool debugLogs = true;
         private const float ReplayBoundaryPaddingSeconds = 0.1f;
@@ -834,6 +845,8 @@ namespace VRSYS.Recording
 
         public void StartRecording()
         {
+            if (_pendingRecordingUploads == 0)
+                UploadState = RecordingUploadState.None;
             _recordingPerformance = default;
             _recordingDspStartTime = AudioSettings.dspTime;
             recorderState.currentState = State.Recording;
@@ -929,49 +942,39 @@ namespace VRSYS.Recording
 
         private void UploadFilesToServer()
         {
-            string transformFile = ActiveRecordingDirectory + recorderState.recordingFile + ".transform";
-            string soundFile = ActiveRecordingDirectory + recorderState.recordingFile + ".sound";
-            string arbFile = ActiveRecordingDirectory + recorderState.recordingFile + ".generic";
-            string metaFile = ActiveRecordingDirectory + recorderState.recordingFile + ".recordmeta";
-            string date = DateTime.Now.ToString("g", CultureInfo.GetCultureInfo("es-ES")).Replace(" ", "_")
-                .Replace(":", "_").Replace("/", "_");
+            string[] extensions = { ".transform", ".sound", ".recordmeta", ".generic" };
+            extensions = extensions.Where(extension =>
+                File.Exists(ActiveRecordingDirectory + recorderState.recordingFile + extension)).ToArray();
+            if (_pendingRecordingUploads == 0)
+                _recordingUploadFailed = false;
+            if (extensions.Length == 0)
+            {
+                _recordingUploadFailed = true;
+                UploadState = _pendingRecordingUploads > 0 ? RecordingUploadState.Uploading : RecordingUploadState.Failed;
+                RecordingLogger.LogError(GetType().Name, "No recording files found to upload.", this);
+                return;
+            }
 
+            // Count the whole batch before starting requests, including requests that fail immediately.
+            _pendingRecordingUploads += extensions.Length;
+            UploadState = RecordingUploadState.Uploading;
             string fileName = GenerateFileName();
+            foreach (string extension in extensions)
+                _networkController.Upload(recorderState.projectName,
+                    ActiveRecordingDirectory + recorderState.recordingFile + extension,
+                    fileName + extension, recorderState.selectedServer, OnRecordingFileUploaded);
+        }
 
-            if (RecordingLogger.IsEnabled(LogLevel.Info))
-                RecordingLogger.LogInfo(GetType().Name, "Trying to transmit transform file: " + transformFile, this);
-            if (File.Exists(transformFile))
-            {
-                _networkController.Upload(recorderState.projectName, transformFile, fileName + ".transform",
-                    recorderState.selectedServer);
-            }
+        private void OnRecordingFileUploaded(bool success)
+        {
+            _recordingUploadFailed |= !success;
+            _pendingRecordingUploads--;
+            if (_pendingRecordingUploads > 0)
+                return;
 
-            if (RecordingLogger.IsEnabled(LogLevel.Info))
-                RecordingLogger.LogInfo(GetType().Name, "Trying to transmit sound file: " + soundFile, this);
-            if (File.Exists(soundFile))
-            {
-                _networkController.Upload(recorderState.projectName, soundFile, fileName + ".sound",
-                    recorderState.selectedServer);
-            }
-
-            if (RecordingLogger.IsEnabled(LogLevel.Info))
-                RecordingLogger.LogInfo(GetType().Name, "Trying to transmit meta file: " + metaFile, this);
-            if (File.Exists(metaFile))
-            {
-                _networkController.Upload(recorderState.projectName, metaFile, fileName + ".recordmeta",
-                    recorderState.selectedServer);
-            }
-
-            if (RecordingLogger.IsEnabled(LogLevel.Info))
-                RecordingLogger.LogInfo(GetType().Name, "Trying to transmit arbitrary file: " + arbFile, this);
-            if (File.Exists(arbFile))
-            {
-                _networkController.Upload(recorderState.projectName, arbFile, fileName + ".generic",
-                    recorderState.selectedServer);
-            }
-
-            if (RecordingLogger.IsEnabled(LogLevel.Info))
-                RecordingLogger.LogInfo(GetType().Name, "Finished transmitting all files.", this);
+            UploadState = _recordingUploadFailed ? RecordingUploadState.Failed : RecordingUploadState.Completed;
+            if (UploadState == RecordingUploadState.Completed)
+                RecordingLogger.LogInfo(GetType().Name, "Finished uploading all recording files.", this);
         }
 
         private string GenerateFileName()

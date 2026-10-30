@@ -139,30 +139,35 @@ namespace VRSYS.Recording
                            ((x & 0xff000000) >> 24));
         }
 
-        public static IEnumerator UploadToServer(string projectName, string filePath, string fileName, string serverAddress)
+        public static IEnumerator UploadToServer(string projectName, string filePath, string fileName,
+            string serverAddress, Action<bool> onComplete = null)
         {
-
-            while (!File.Exists(filePath))
+            bool success = false;
+            try
             {
-                RecordingLogger.LogError(nameof(NetworkUtils), "The file: " + filePath + " does not exist.");
-                yield return new WaitForSeconds(0.01f);
-            }
-
-            // Without a project the file goes into the server's top-level upload folder.
-            string url = serverAddress + "/upload/" +
-                         (string.IsNullOrEmpty(projectName) ? "" : projectName + "/") + fileName;
-            RecordingLogger.LogInfo(nameof(NetworkUtils), "Upload file to: " + url);
-
-            using (var uwr = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPUT))
-            {
-                uwr.uploadHandler = new UploadHandlerFile(filePath);
-                yield return uwr.SendWebRequest();
-                if (uwr.result != UnityWebRequest.Result.Success)
-                    RecordingLogger.LogError(nameof(NetworkUtils), uwr.error);
-                else
+                while (!File.Exists(filePath))
                 {
-                    // file data successfully sent
+                    RecordingLogger.LogError(nameof(NetworkUtils), "The file: " + filePath + " does not exist.");
+                    yield return new WaitForSeconds(0.01f);
                 }
+
+                // Without a project the file goes into the server's top-level upload folder.
+                string url = serverAddress + "/upload/" +
+                             (string.IsNullOrEmpty(projectName) ? "" : projectName + "/") + fileName;
+                RecordingLogger.LogInfo(nameof(NetworkUtils), "Upload file to: " + url);
+
+                using (var uwr = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPUT))
+                {
+                    uwr.uploadHandler = new UploadHandlerFile(filePath);
+                    yield return uwr.SendWebRequest();
+                    success = uwr.result == UnityWebRequest.Result.Success;
+                    if (!success)
+                        RecordingLogger.LogError(nameof(NetworkUtils), uwr.error);
+                }
+            }
+            finally
+            {
+                onComplete?.Invoke(success);
             }
         }
 

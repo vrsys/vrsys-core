@@ -1096,6 +1096,14 @@ namespace VRSYS.Recording
 
             // Header
             _stateLabel.text = hasState ? StateDisplayName(current) : "No state";
+            if (hasState && current == State.Idle)
+                _stateLabel.text = _controller.UploadState switch
+                {
+                    RecordingUploadState.Uploading => "Upload zum Server",
+                    RecordingUploadState.Completed => "Upload fertig",
+                    RecordingUploadState.Failed => "Upload fehlgeschlagen",
+                    _ => _stateLabel.text
+                };
             foreach (State s in Enum.GetValues(typeof(State)))
                 _header.EnableInClassList(StateClass(s), hasState && s == current);
             _header.EnableInClassList("rc-state-missing", !hasState);

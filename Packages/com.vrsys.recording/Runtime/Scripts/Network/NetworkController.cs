@@ -14,6 +14,23 @@ using VRSYS.Core.Logging;
 
 namespace VRSYS.Recording
 {
+    public struct RecordingDownloadProgress : INetworkSerializable, IEquatable<RecordingDownloadProgress>
+    {
+        public int FinishedClients;
+        public int TotalClients;
+
+        public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+        {
+            serializer.SerializeValue(ref FinishedClients);
+            serializer.SerializeValue(ref TotalClients);
+        }
+
+        public bool Equals(RecordingDownloadProgress other) =>
+            FinishedClients == other.FinishedClients && TotalClients == other.TotalClients;
+
+        public override bool Equals(object obj) => obj is RecordingDownloadProgress other && Equals(other);
+        public override int GetHashCode() => HashCode.Combine(FinishedClients, TotalClients);
+    }
 
     /// <remarks>
     /// RPC conventions: commands that change shared replay/recording state (download,
@@ -41,6 +58,10 @@ namespace VRSYS.Recording
         /// synchronization target for synchronized playback, replacing the previous app-level singleton.
         /// </summary>
         public float HostReplayTime { get; private set; }
+
+        private NetworkVariable<RecordingDownloadProgress> _downloadProgress = new NetworkVariable<RecordingDownloadProgress>(
+            default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+        public RecordingDownloadProgress DownloadProgress => _downloadProgress.Value;
 
         private RecorderState _state;
         private RecorderController _controller;
@@ -168,6 +189,7 @@ namespace VRSYS.Recording
             foreach (ulong clientId in NetworkManager.ConnectedClientsIds)
                 _clientDownloading[clientId] = true;
             _awaitingDownloads = _clientDownloading.Count > 0;
+            PublishDownloadProgress();
             DebugDistributedReplayStatusIfChanged("StartDownloadsServerRpc");
 
             // The server decides how networked objects are replayed; every peer has to make the same choice.
@@ -332,11 +354,26 @@ namespace VRSYS.Recording
             TryStartReplayWhenAllDownloaded();
         }
 
+        private void PublishDownloadProgress()
+        {
+            int finished = 0;
+            foreach (bool downloading in _clientDownloading.Values)
+                if (!downloading)
+                    finished++;
+            _downloadProgress.Value = new RecordingDownloadProgress
+            {
+                FinishedClients = finished,
+                TotalClients = _clientDownloading.Count
+            };
+        }
+
         // Server only: starts the synchronized replay once every participating client has its files.
         private void TryStartReplayWhenAllDownloaded()
         {
             if (!_awaitingDownloads)
                 return;
+
+            PublishDownloadProgress();
 
             if (_clientDownloading.Count == 0)
             {
@@ -898,6 +935,7 @@ namespace VRSYS.Recording
         {
             _awaitingDownloads = false;
             _clientDownloading.Clear();
+            PublishDownloadProgress();
             EndReplayOnClientRpc(stopTime, recorderId);
         }
 
@@ -1117,10 +1155,10 @@ namespace VRSYS.Recording
             }
         }
         
-        public void Upload(string projectName, string filePath, string fileName, string serverAddress)
+        public void Upload(string projectName, string filePath, string fileName, string serverAddress, Action<bool> onComplete = null)
         {
 
-            StartCoroutine(NetworkUtils.UploadToServer(projectName, filePath, fileName, serverAddress));
+            StartCoroutine(NetworkUtils.UploadToServer(projectName, filePath, fileName, serverAddress, onComplete));
         }
 
         public bool IsServerOrHost()

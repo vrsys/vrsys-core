@@ -42,7 +42,11 @@ namespace VRSYS.Recording
 
         public UnityEvent OnStateChanged = new UnityEvent();
         
+        [Tooltip("Project the recordings belong to. Recordings are created in, replayed from and downloaded to a " +
+                 "subfolder with this name in the recording directory, and uploaded to this project on the server. " +
+                 "Leave empty to use the recording directory itself.")]
         public string projectName;
+        [Tooltip("Folder for recordings (the persistent data path if empty). Projects are subfolders of it.")]
         public string recordingDirectory;
         [Tooltip("Name of the recording file created.")]
         public string recordingFile = "New_Recording";
@@ -72,6 +76,40 @@ namespace VRSYS.Recording
         [Tooltip("If enabled, the playback list is populated from recordings in the local recording " +
                  "directory and the server is not queried for the replay list.")]
         public bool useLocalReplayFiles = true;
+
+        /// <summary>
+        /// Folder of the current project's recordings: the recording directory (the persistent data path if none is
+        /// set), with the project name as a subfolder if one is set. Ends with '/', as the native plugin expects.
+        /// </summary>
+        public string ProjectDirectory => GetProjectDirectory(recordingDirectory, projectName);
+
+        public static string GetProjectDirectory(string baseDirectory, string project)
+        {
+            string directory = (string.IsNullOrEmpty(baseDirectory) ? Application.persistentDataPath : baseDirectory)
+                .TrimEnd('/', '\\');
+            if (!string.IsNullOrEmpty(project))
+                directory += "/" + project;
+            return directory + "/";
+        }
+
+        /// <summary>
+        /// A project name that works as a folder name and in server URLs: ASCII letters, digits, '-', '_' and '.' are
+        /// kept, every other character becomes '_' (the recording server accepts the same characters).
+        /// </summary>
+        public static string SanitizeProjectName(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+                return "";
+            char[] chars = name.Trim().ToCharArray();
+            for (int i = 0; i < chars.Length; i++)
+            {
+                char c = chars[i];
+                bool allowed = c < 128 && (char.IsLetterOrDigit(c) || c == '-' || c == '_' || c == '.');
+                if (!allowed)
+                    chars[i] = '_';
+            }
+            return new string(chars).Trim('.', '_');
+        }
 
         public void Start()
         {

@@ -102,6 +102,12 @@ namespace VRSYS.Recording
         public bool downloadFilesFromServer = false;
 
         private ScenePreparator _scenePreparator;
+
+        // Project folder the last recording was created in (see PrepareRecording).
+        private string _activeRecordingDirectory;
+        private string ActiveRecordingDirectory => string.IsNullOrEmpty(_activeRecordingDirectory)
+            ? recorderState.ProjectDirectory
+            : _activeRecordingDirectory;
         public RecorderState recorderState;
         public RecordingPluginSettings pluginSettings = new RecordingPluginSettings();
         private NetworkController _networkController;
@@ -601,12 +607,13 @@ namespace VRSYS.Recording
             DebugReplayStartupLog("StartReplay before native open. openForEditing=" + openForEditing +
                                   ", recordingDirectoryLength=" + recorderState.recordingDirectory.Length +
                                   ", selectedReplayFileLength=" + recorderState.selectedReplayFile.Length);
+            string replayDirectory = recorderState.ProjectDirectory;
             bool result = openForEditing
-                ? OpenExistingRecordingFileForEditing(recorderState.recorderID, recorderState.recordingDirectory,
-                    recorderState.recordingDirectory.Length, recorderState.selectedReplayFile,
+                ? OpenExistingRecordingFileForEditing(recorderState.recorderID, replayDirectory,
+                    replayDirectory.Length, recorderState.selectedReplayFile,
                     recorderState.selectedReplayFile.Length)
-                : OpenExistingRecordingFile(recorderState.recorderID, recorderState.recordingDirectory,
-                    recorderState.recordingDirectory.Length, recorderState.selectedReplayFile,
+                : OpenExistingRecordingFile(recorderState.recorderID, replayDirectory,
+                    replayDirectory.Length, recorderState.selectedReplayFile,
                     recorderState.selectedReplayFile.Length);
             DebugReplayStartupLog("StartReplay after native open. result=" + result);
 
@@ -836,8 +843,11 @@ namespace VRSYS.Recording
             AttachTransformRecorder();
             AttachGenericRecorder();
 
-            bool result = CreateNewRecordingFile(recorderState.recorderID, recorderState.recordingDirectory,
-                recorderState.recordingDirectory.Length, recorderState.recordingFile,
+            // Recorded into the project folder; uploads and exports after the recording use the same folder.
+            _activeRecordingDirectory = recorderState.ProjectDirectory;
+            Directory.CreateDirectory(_activeRecordingDirectory);
+            bool result = CreateNewRecordingFile(recorderState.recorderID, _activeRecordingDirectory,
+                _activeRecordingDirectory.Length, recorderState.recordingFile,
                 recorderState.recordingFile.Length);
             if (!result)
                 RecordingLogger.LogError(GetType().Name,
@@ -903,10 +913,10 @@ namespace VRSYS.Recording
 
         private void UploadFilesToServer()
         {
-            string transformFile = recorderState.recordingDirectory + "/" + recorderState.recordingFile + ".transform";
-            string soundFile = recorderState.recordingDirectory + "/" + recorderState.recordingFile + ".sound";
-            string arbFile = recorderState.recordingDirectory + "/" + recorderState.recordingFile + ".generic";
-            string metaFile = recorderState.recordingDirectory + "/" + recorderState.recordingFile + ".recordmeta";
+            string transformFile = ActiveRecordingDirectory + recorderState.recordingFile + ".transform";
+            string soundFile = ActiveRecordingDirectory + recorderState.recordingFile + ".sound";
+            string arbFile = ActiveRecordingDirectory + recorderState.recordingFile + ".generic";
+            string metaFile = ActiveRecordingDirectory + recorderState.recordingFile + ".recordmeta";
             string date = DateTime.Now.ToString("g", CultureInfo.GetCultureInfo("es-ES")).Replace(" ", "_")
                 .Replace(":", "_").Replace("/", "_");
 
@@ -1565,7 +1575,7 @@ namespace VRSYS.Recording
 
         private string RecordingDataFilePath(string extension)
         {
-            return Path.Combine(recorderState.recordingDirectory, recorderState.recordingFile + extension);
+            return Path.Combine(ActiveRecordingDirectory, recorderState.recordingFile + extension);
         }
 
         IEnumerator CreateAndUploadWAVFiles()
@@ -1639,7 +1649,7 @@ namespace VRSYS.Recording
             }
 
             string pluginOutput = RecordingDataFilePath(".csv");
-            string target = Path.Combine(recorderState.recordingDirectory, recorderState.recordingFile + targetSuffix);
+            string target = Path.Combine(ActiveRecordingDirectory, recorderState.recordingFile + targetSuffix);
 
             if (File.Exists(pluginOutput))
                 File.Delete(pluginOutput); // the plugin appends, so start from an empty file

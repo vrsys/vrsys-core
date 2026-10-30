@@ -147,11 +147,11 @@ namespace VRSYS.Recording
                                       ", selectedServer=" + _state.selectedServer +
                                       ", recordingDirectory=" + _state.recordingDirectory);
             DebugDistributedReplayStatusIfChanged("StartDownloadOnAllClientsEvent");
-            StartDownloadsServerRpc(_state.selectedReplayFile, _state.recorderID);
+            StartDownloadsServerRpc(_state.selectedReplayFile, _state.recorderID, _state.projectName ?? "");
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
-        private void StartDownloadsServerRpc(string replayFile, int recorderId)
+        private void StartDownloadsServerRpc(string replayFile, int recorderId, string projectName)
         {
             DebugDistributedReplayLog("StartDownloadsServerRpc: replayFile=" + replayFile +
                                       ", recorderId=" + recorderId +
@@ -171,13 +171,13 @@ namespace VRSYS.Recording
             DebugDistributedReplayStatusIfChanged("StartDownloadsServerRpc");
 
             // The server decides how networked objects are replayed; every peer has to make the same choice.
-            StartDownloadsClientRpc(replayFile, recorderId, _controller.spawnNetworkedPrefabsForReplay,
+            StartDownloadsClientRpc(replayFile, recorderId, projectName, _controller.spawnNetworkedPrefabsForReplay,
                 _controller.replayNetworkedTransformOnServerOnly);
         }
 
         [Rpc(SendTo.ClientsAndHost, InvokePermission = RpcInvokePermission.Server)]
-        private void StartDownloadsClientRpc(string replayFile, int recorderId, bool spawnNetworkedPrefabs,
-            bool networkedTransformOnServerOnly)
+        private void StartDownloadsClientRpc(string replayFile, int recorderId, string projectName,
+            bool spawnNetworkedPrefabs, bool networkedTransformOnServerOnly)
         {
             DebugDistributedReplayLog("StartDownloadsClientRpc received: replayFile=" + replayFile +
                                       ", incomingRecorderId=" + recorderId +
@@ -193,6 +193,9 @@ namespace VRSYS.Recording
                     DebugDistributedReplayLog("StartDownloadsClientRpc ignored after idle check: recorder id mismatch.");
                     return;
                 }
+
+                // The replay file belongs to the requester's project: download it into that project's folder.
+                _state.projectName = projectName;
 
                 // Use the server's choice: a client that decided on its own would build a local copy of an object the
                 // server spawns. Register the handlers now, before the server spawns its replay copies.
@@ -364,25 +367,25 @@ namespace VRSYS.Recording
                 if (_transformsDownloadFailed)
                 {
                     _transformsDownloadFailed = false;
-                    StartCoroutine(DownloadFileFromServer(_state.projectName, _state.recordingDirectory, "get_transform_recording", _state.selectedReplayFile));
+                    StartCoroutine(DownloadFileFromServer(_state.projectName, DownloadDirectory(), "get_transform_recording", _state.selectedReplayFile));
                 }
 
                 if (_soundsDownloadFailed)
                 {
                     _soundsDownloadFailed = false;
-                    StartCoroutine(DownloadFileFromServer(_state.projectName, _state.recordingDirectory, "get_sound_recording", _state.selectedReplayFile));
+                    StartCoroutine(DownloadFileFromServer(_state.projectName, DownloadDirectory(), "get_sound_recording", _state.selectedReplayFile));
                 }
 
                 if (_metaInformationDownloadFailed)
                 {
                     _metaInformationDownloadFailed = false;
-                    StartCoroutine(DownloadFileFromServer(_state.projectName, _state.recordingDirectory, "get_meta_recording", _state.selectedReplayFile));
+                    StartCoroutine(DownloadFileFromServer(_state.projectName, DownloadDirectory(), "get_meta_recording", _state.selectedReplayFile));
                 }
 
                 if (_genericDownloadFailed)
                 {
                     _genericDownloadFailed = false;
-                    StartCoroutine(DownloadFileFromServer(_state.projectName, _state.recordingDirectory, "get_generic_recording", _state.selectedReplayFile));
+                    StartCoroutine(DownloadFileFromServer(_state.projectName, DownloadDirectory(), "get_generic_recording", _state.selectedReplayFile));
                 }
 
                 return true;
@@ -396,7 +399,9 @@ namespace VRSYS.Recording
         
         private IEnumerator DownloadFileFromServer(string projectName, string directory, string url, string fileName)
         {
-            string completeURL = _state.selectedServer + "/" + url + "/" + projectName + "/"+ fileName;
+            // Without a project the files come from the server's top-level upload folder.
+            string completeURL = _state.selectedServer + "/" + url + "/" +
+                                 (string.IsNullOrEmpty(projectName) ? "" : projectName + "/") + fileName;
             if (_controller != null && RecordingLogger.IsEnabled(LogLevel.Info))
                 RecordingLogger.LogInfo(GetType().Name, "Started download of file from: " + completeURL, this);
 
@@ -421,7 +426,7 @@ namespace VRSYS.Recording
             
             using (var uwr = new UnityWebRequest(completeURL, UnityWebRequest.kHttpVerbGET))
             {
-                string file = directory + "/" + fileName + fileType;
+                string file = Path.Combine(directory, fileName + fileType);
                 DebugDistributedReplayLog("DownloadFileFromServer: url=" + completeURL +
                                           ", targetFile=" + file +
                                           ", fileType=" + fileType +
@@ -524,6 +529,14 @@ namespace VRSYS.Recording
             }
         }
 
+        // Downloads go into the folder of the selected project (see RecorderState.ProjectDirectory).
+        private string DownloadDirectory()
+        {
+            string directory = _state.ProjectDirectory;
+            Directory.CreateDirectory(directory);
+            return directory;
+        }
+
         private void StartDownloadCoroutines()
         {
             string replayFile = _state.selectedReplayFile;
@@ -532,10 +545,10 @@ namespace VRSYS.Recording
                                       ", projectName=" + projectName +
                                       ", recordingDirectory=" + _state.recordingDirectory +
                                       ", selectedServer=" + _state.selectedServer);
-            StartCoroutine(DownloadFileFromServer(projectName, _state.recordingDirectory, "get_transform_recording", replayFile));
-            StartCoroutine(DownloadFileFromServer(projectName, _state.recordingDirectory, "get_sound_recording", replayFile));
-            StartCoroutine(DownloadFileFromServer(projectName, _state.recordingDirectory, "get_meta_recording", replayFile));
-            StartCoroutine(DownloadFileFromServer(projectName, _state.recordingDirectory, "get_generic_recording", replayFile));
+            StartCoroutine(DownloadFileFromServer(projectName, DownloadDirectory(), "get_transform_recording", replayFile));
+            StartCoroutine(DownloadFileFromServer(projectName, DownloadDirectory(), "get_sound_recording", replayFile));
+            StartCoroutine(DownloadFileFromServer(projectName, DownloadDirectory(), "get_meta_recording", replayFile));
+            StartCoroutine(DownloadFileFromServer(projectName, DownloadDirectory(), "get_generic_recording", replayFile));
         }
         #endregion
         
@@ -1038,28 +1051,38 @@ namespace VRSYS.Recording
 
         private void UpdateLocalReplayList()
         {
-            string directory = string.IsNullOrEmpty(_state.recordingDirectory)
-                ? Application.persistentDataPath
-                : _state.recordingDirectory;
-
-            if (!Directory.Exists(directory))
-                return;
-
-            string[] filesWithPaths = Directory.GetFiles(directory, "*.recordmeta");
-            string[] replayNames = new string[filesWithPaths.Length];
-            for (int i = 0; i < filesWithPaths.Length; i++)
-                replayNames[i] = Path.GetFileNameWithoutExtension(filesWithPaths[i]);
-
-            if (_state.replayList == null || _state.replayList.replayNames == null ||
-                replayNames.Length != _state.replayList.replayNames.Length)
+            // Only the recordings of the selected project (its folder), or of the base folder without a project.
+            string directory = _state.ProjectDirectory;
+            string[] replayNames = new string[0];
+            if (Directory.Exists(directory))
             {
-                _state.replayList = new ReplayList { replayNames = replayNames };
+                string[] filesWithPaths = Directory.GetFiles(directory, "*.recordmeta");
+                replayNames = new string[filesWithPaths.Length];
+                for (int i = 0; i < filesWithPaths.Length; i++)
+                    replayNames[i] = Path.GetFileNameWithoutExtension(filesWithPaths[i]);
             }
+
+            if (!SameReplayNames(_state.replayList, replayNames))
+                _state.replayList = new ReplayList { replayNames = replayNames };
+        }
+
+        private static bool SameReplayNames(ReplayList list, string[] names)
+        {
+            if (list == null || list.replayNames == null || names == null)
+                return list?.replayNames == names;
+            if (list.replayNames.Length != names.Length)
+                return false;
+            for (int i = 0; i < names.Length; i++)
+                if (list.replayNames[i] != names[i])
+                    return false;
+            return true;
         }
         
         private IEnumerator GetReplayList(string serverAddress, string projectName)
         {
-            string completeURL = serverAddress + "/all_recording_names/project/" + projectName;
+            string completeURL = string.IsNullOrEmpty(projectName)
+                ? serverAddress + "/all_recording_names"
+                : serverAddress + "/all_recording_names/project/" + projectName;
 
             using (var uwr = new UnityWebRequest(completeURL, UnityWebRequest.kHttpVerbGET))
             {
@@ -1074,7 +1097,9 @@ namespace VRSYS.Recording
                     string response = uwr.downloadHandler.text;
                     ReplayList newReplayList = JsonUtility.FromJson<ReplayList>(response);
           
-                    if (_state.replayList == null || _state.replayList.replayNames == null || newReplayList.replayNames.Length != _state.replayList.replayNames.Length)
+                    // The project may have changed while the request was running.
+                    if (newReplayList != null && projectName == _state.projectName &&
+                        !SameReplayNames(_state.replayList, newReplayList.replayNames))
                         _state.replayList = newReplayList;
                 }
             }

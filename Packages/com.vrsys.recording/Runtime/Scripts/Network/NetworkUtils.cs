@@ -148,7 +148,9 @@ namespace VRSYS.Recording
                 yield return new WaitForSeconds(0.01f);
             }
 
-            string url = serverAddress + "/upload/" +  projectName + "/" + fileName;
+            // Without a project the file goes into the server's top-level upload folder.
+            string url = serverAddress + "/upload/" +
+                         (string.IsNullOrEmpty(projectName) ? "" : projectName + "/") + fileName;
             RecordingLogger.LogInfo(nameof(NetworkUtils), "Upload file to: " + url);
 
             using (var uwr = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPUT))

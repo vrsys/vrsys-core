@@ -7,6 +7,7 @@ using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.Networking;
 using UnityEngine.UIElements;
 
 namespace VRSYS.Recording
@@ -366,7 +367,7 @@ namespace VRSYS.Recording
                 "rc-accent-server", ServerStatus, "CloudConnect", "Folder Icon");
             Heading(server, "Connection");
             StateProp(server, "projectName", "Project name",
-                "Name of the project for which recordings are created. Used for upload and download.",
+                "Name of the project for which recordings are created. Recordings and downloads are stored in a subfolder with this name, and uploads go to this project on the server. Can also be chosen above the replay file dropdown.",
                 "project name upload download zip");
             StateProp(server, "selectedServer", "Server URL",
                 "URL of the server to which files are uploaded and from which files are downloaded.",
@@ -1526,12 +1527,12 @@ namespace VRSYS.Recording
 
         #region Custom entry builders
 
+        // The folder of the selected project (the base recording folder without a project).
         private string GetRecordingDirectory()
         {
             RecorderState state = _controller.recorderState;
-            return state != null && !string.IsNullOrEmpty(state.recordingDirectory)
-                ? state.recordingDirectory
-                : Application.persistentDataPath;
+            return RecorderState.GetProjectDirectory(state != null ? state.recordingDirectory : null,
+                state != null ? state.projectName : null).TrimEnd('/', '\\');
         }
 
         private VisualElement BuildRecordingFolderField()
@@ -1571,6 +1572,9 @@ namespace VRSYS.Recording
             SerializedProperty directoryProperty = _stateSerializedObject?.FindProperty("recordingDirectory");
             if (directoryProperty != null)
                 container.TrackPropertyValue(directoryProperty, _ => RefreshDirectory());
+            SerializedProperty projectProperty = _stateSerializedObject?.FindProperty("projectName");
+            if (projectProperty != null)
+                container.TrackPropertyValue(projectProperty, _ => RefreshDirectory());
             return container;
         }
 
@@ -1586,6 +1590,11 @@ namespace VRSYS.Recording
 
             VisualElement container = new VisualElement();
             container.AddToClassList("rc-playback-file");
+
+            // The project decides which recordings are listed below (its folder, or its list on the server).
+            SerializedProperty projectProperty = _stateSerializedObject.FindProperty("projectName");
+            if (projectProperty != null)
+                container.Add(BuildProjectField(projectProperty, label != null));
 
             VisualElement row = new VisualElement();
             row.AddToClassList("rc-row");
@@ -1656,12 +1665,19 @@ namespace VRSYS.Recording
             });
             refresh.clicked += () =>
             {
+                ClearServerLists();
                 lastSignature = null;
                 Reload();
             };
 
-            // Follow undo/redo and changes made elsewhere (e.g. the playback source toggle).
+            // Follow undo/redo and changes made elsewhere (e.g. the playback source toggle or the project).
             container.TrackPropertyValue(property, _ => Reload());
+            if (projectProperty != null)
+                container.TrackPropertyValue(projectProperty, _ =>
+                {
+                    lastSignature = null;
+                    Reload();
+                });
             container.TrackPropertyValue(useLocal, _ =>
             {
                 lastSignature = null;
@@ -1674,8 +1690,8 @@ namespace VRSYS.Recording
             return container;
         }
 
-        // Local: *.recordmeta files in the recording directory (persistent data path if none is set).
-        // Server: the replay list the RecorderState received at runtime.
+        // Local: *.recordmeta files in the selected project's folder (the base recording folder without a project).
+        // Server: the project's recordings on the server, asked for by the inspector (also in edit mode).
         private List<string> GetReplayFileOptions(out string source)
         {
             RecorderState state = _controller.recorderState;
@@ -1697,9 +1713,315 @@ namespace VRSYS.Recording
                     .ToList();
             }
 
-            source = "in the server's replay list (filled at runtime)";
+            bool hasProject = !string.IsNullOrEmpty(state.projectName);
+            string where = hasProject ? "for project '" + state.projectName + "' on the server" : "on the server";
+            if (!string.IsNullOrEmpty(state.selectedServer))
+            {
+                string url = state.selectedServer.TrimEnd('/') + (hasProject
+                    ? "/all_recording_names/project/" + UnityWebRequest.EscapeURL(state.projectName)
+                    : "/all_recording_names");
+                if (TryGetServerList(url, false, out string[] names, out string status))
+                {
+                    source = where;
+                    return names.ToList();
+                }
+                source = where + (status == null ? " (loading...)" : " (" + status + ")");
+            }
+            else
+            {
+                source = where + " (no server URL set)";
+            }
+
+            // Fall back to the list the runtime received (it follows the project as well).
+            if (!EditorApplication.isPlaying)
+                return new List<string>();
             return state.replayList?.replayNames?.Where(n => !string.IsNullOrEmpty(n)).ToList() ?? new List<string>();
         }
+
+        private const string NoProjectChoice = "(no project)";
+        private const string NewProjectChoice = "New project...";
+
+        // Dropdown for RecorderState.projectName: no project, the local project folders, the server's projects, or a
+        // new project (inline name field). Choosing a project clears the replay file so the first recording of the
+        // project is selected.
+        private VisualElement BuildProjectField(SerializedProperty projectProperty, bool aligned)
+        {
+            VisualElement container = new VisualElement();
+
+            VisualElement row = new VisualElement();
+            row.AddToClassList("rc-row");
+            DropdownField dropdown = new DropdownField("Project")
+            {
+                tooltip = "Project of the recordings (RecorderState.projectName). Recordings are stored in and downloaded " +
+                          "to a subfolder with the project name, uploaded to the project on the server, and only the " +
+                          "project's recordings are listed below. Lists the local project folders and the server's projects."
+            };
+            dropdown.AddToClassList("rc-playback-dropdown");
+            if (aligned)
+                dropdown.AddToClassList(AlignedFieldClass);
+            row.Add(dropdown);
+            Button refresh = new Button { tooltip = "Rescan the local project folders and ask the server again" };
+            refresh.AddToClassList("rc-icon-button");
+            AddIconOrText(refresh, "R", "Refresh");
+            row.Add(refresh);
+            container.Add(row);
+
+            VisualElement createRow = new VisualElement();
+            createRow.AddToClassList("rc-row");
+            TextField nameField = new TextField("New project")
+            {
+                tooltip = "Name of the new project. Letters, digits, '-', '_' and '.' are kept; other characters become '_'."
+            };
+            nameField.AddToClassList("rc-playback-dropdown");
+            if (aligned)
+                nameField.AddToClassList(AlignedFieldClass);
+            createRow.Add(nameField);
+            Button create = InlineButton("Create", "Create the project folder and select the project.", null);
+            Button cancel = InlineButton("Cancel", "Keep the current project.", null);
+            createRow.Add(create);
+            createRow.Add(cancel);
+            createRow.style.display = DisplayStyle.None;
+            container.Add(createRow);
+
+            Label hint = new Label();
+            hint.AddToClassList("rc-hint");
+            hint.AddToClassList("rc-playback-hint");
+            hint.style.display = DisplayStyle.None;
+            container.Add(hint);
+
+            string lastSignature = null;
+            void Reload()
+            {
+                if (_stateSerializedObject.targetObject == null)
+                    return;
+                _stateSerializedObject.Update();
+                RecorderState state = _controller.recorderState;
+                List<string> projects = GetProjectOptions(state, out string serverStatus);
+                string current = projectProperty.stringValue ?? "";
+                string signature = current + "|" + serverStatus + "|" + string.Join("|", projects);
+                if (signature == lastSignature)
+                    return;
+                lastSignature = signature;
+
+                List<string> choices = new List<string> { NoProjectChoice };
+                choices.AddRange(projects);
+                if (!string.IsNullOrEmpty(current) && !projects.Contains(current))
+                    choices.Insert(1, current);
+                choices.Add(NewProjectChoice);
+                dropdown.choices = choices;
+                dropdown.SetValueWithoutNotify(string.IsNullOrEmpty(current) ? NoProjectChoice : current);
+
+                if (createRow.style.display == DisplayStyle.None)
+                {
+                    hint.text = serverStatus ?? "";
+                    hint.style.display = string.IsNullOrEmpty(hint.text) ? DisplayStyle.None : DisplayStyle.Flex;
+                }
+            }
+
+            void SetProject(string name)
+            {
+                _stateSerializedObject.Update();
+                if ((projectProperty.stringValue ?? "") == name)
+                    return;
+                projectProperty.stringValue = name;
+                SerializedProperty file = _stateSerializedObject.FindProperty("fixedPlaybackRecordingName");
+                if (file != null)
+                    file.stringValue = "";
+                _stateSerializedObject.ApplyModifiedProperties();
+            }
+
+            void ShowCreateRow(bool show)
+            {
+                createRow.style.display = show ? DisplayStyle.Flex : DisplayStyle.None;
+                nameField.SetValueWithoutNotify("");
+                hint.text = show ? "Enter a name for the new project." : "";
+                hint.style.display = show ? DisplayStyle.Flex : DisplayStyle.None;
+                if (show)
+                    nameField.schedule.Execute(() => nameField.Focus());
+                lastSignature = null;
+                Reload();
+            }
+
+            void CreateProject()
+            {
+                string name = RecorderState.SanitizeProjectName(nameField.value);
+                if (string.IsNullOrEmpty(name))
+                {
+                    hint.text = "Enter a name with at least one letter or digit.";
+                    hint.style.display = DisplayStyle.Flex;
+                    return;
+                }
+                RecorderState state = _controller.recorderState;
+                Directory.CreateDirectory(RecorderState.GetProjectDirectory(state != null ? state.recordingDirectory : null, name));
+                SetProject(name);
+                ShowCreateRow(false);
+            }
+
+            dropdown.RegisterValueChangedCallback(evt =>
+            {
+                if (evt.newValue == NewProjectChoice)
+                {
+                    dropdown.SetValueWithoutNotify(evt.previousValue);
+                    ShowCreateRow(true);
+                    return;
+                }
+                SetProject(evt.newValue == NoProjectChoice || evt.newValue == null ? "" : evt.newValue);
+            });
+            nameField.RegisterValueChangedCallback(evt =>
+            {
+                string name = RecorderState.SanitizeProjectName(evt.newValue);
+                hint.text = string.IsNullOrEmpty(name)
+                    ? "Enter a name for the new project."
+                    : name != evt.newValue.Trim() ? "Will be created as '" + name + "'." : "";
+                hint.style.display = string.IsNullOrEmpty(hint.text) ? DisplayStyle.None : DisplayStyle.Flex;
+            });
+            nameField.RegisterCallback<KeyDownEvent>(evt =>
+            {
+                if (evt.keyCode == KeyCode.Return || evt.keyCode == KeyCode.KeypadEnter)
+                    CreateProject();
+                else if (evt.keyCode == KeyCode.Escape)
+                    ShowCreateRow(false);
+            }, TrickleDown.TrickleDown);
+            create.clicked += CreateProject;
+            cancel.clicked += () => ShowCreateRow(false);
+            refresh.clicked += () =>
+            {
+                ClearServerLists();
+                lastSignature = null;
+                Reload();
+            };
+
+            container.TrackPropertyValue(projectProperty, _ => Reload());
+            SerializedProperty serverProperty = _stateSerializedObject.FindProperty("selectedServer");
+            if (serverProperty != null)
+                container.TrackPropertyValue(serverProperty, _ => Reload());
+            container.RegisterCallback<AttachToPanelEvent>(_ => _playbackFileReloaders.Add(Reload));
+            container.RegisterCallback<DetachFromPanelEvent>(_ => _playbackFileReloaders.Remove(Reload));
+            Reload();
+            return container;
+        }
+
+        // Local project folders (subfolders of the base recording folder with recordings) and the server's projects.
+        private List<string> GetProjectOptions(RecorderState state, out string serverStatus)
+        {
+            serverStatus = null;
+            List<string> projects = new List<string>();
+            if (state == null)
+                return projects;
+
+            string baseDirectory = RecorderState.GetProjectDirectory(state.recordingDirectory, null);
+            if (Directory.Exists(baseDirectory))
+            {
+                foreach (string directory in Directory.GetDirectories(baseDirectory))
+                {
+                    try
+                    {
+                        if (Directory.EnumerateFiles(directory, "*.recordmeta").Any())
+                            projects.Add(Path.GetFileName(directory));
+                    }
+                    catch (Exception)
+                    {
+                        // Unreadable folder: not a project.
+                    }
+                }
+            }
+
+            if (!string.IsNullOrEmpty(state.selectedServer))
+            {
+                string url = state.selectedServer.TrimEnd('/') + "/all_project_names";
+                if (TryGetServerList(url, true, out string[] serverProjects, out string status))
+                    projects.AddRange(serverProjects);
+                else if (!state.useLocalReplayFiles && status != null)
+                    serverStatus = "Server projects not available: " + status;
+            }
+
+            return projects.Distinct(StringComparer.Ordinal)
+                .OrderBy(n => n, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+        }
+
+        #region Server lists
+
+        // Lists the inspector asks the server for (a project's recordings, the project names), also in edit mode.
+        // A result is reused for ServerListLifetime seconds; after that it is shown until the new answer arrives.
+        private const double ServerListLifetime = 10.0;
+        private static readonly Dictionary<string, (string[] names, string error, double time)> ServerLists =
+            new Dictionary<string, (string[], string, double)>();
+        private static readonly HashSet<string> ServerListRequests = new HashSet<string>();
+
+        [Serializable]
+        private class ServerProjectList
+        {
+            public string[] projectNames;
+        }
+
+        private static void ClearServerLists()
+        {
+            ServerLists.Clear();
+        }
+
+        // True with the names once the server answered; otherwise status is null while loading, or the error.
+        private bool TryGetServerList(string url, bool projectNames, out string[] names, out string status)
+        {
+            names = null;
+            status = null;
+            bool known = ServerLists.TryGetValue(url, out var entry);
+            if (!known || EditorApplication.timeSinceStartup - entry.time > ServerListLifetime)
+                RequestServerList(url, projectNames);
+            if (!known)
+                return false;
+            names = entry.names;
+            status = entry.error;
+            return names != null;
+        }
+
+        private void RequestServerList(string url, bool projectNames)
+        {
+            if (!ServerListRequests.Add(url))
+                return;
+            UnityWebRequest request = UnityWebRequest.Get(url);
+            request.timeout = 5;
+            request.SendWebRequest().completed += _ =>
+            {
+                ServerListRequests.Remove(url);
+                string[] names = null;
+                string error = null;
+                try
+                {
+                    if (request.result == UnityWebRequest.Result.Success)
+                    {
+                        string json = request.downloadHandler.text;
+                        names = (projectNames
+                                    ? JsonUtility.FromJson<ServerProjectList>(json)?.projectNames
+                                    : JsonUtility.FromJson<ReplayList>(json)?.replayNames) ?? new string[0];
+                        names = names.Where(n => !string.IsNullOrEmpty(n)).ToArray();
+                    }
+                    else
+                    {
+                        error = request.responseCode == 404 && projectNames
+                            ? "the server has no project list (update the REST server)"
+                            : request.error;
+                    }
+                }
+                catch (Exception e)
+                {
+                    error = e.Message;
+                }
+                finally
+                {
+                    request.Dispose();
+                }
+
+                // Keep the last good list if a later request fails.
+                if (names == null && ServerLists.TryGetValue(url, out var previous) && previous.names != null)
+                    names = previous.names;
+                ServerLists[url] = (names, error, EditorApplication.timeSinceStartup);
+                foreach (System.Action reload in _playbackFileReloaders.ToList())
+                    reload();
+            };
+        }
+
+        #endregion
 
         private VisualElement BuildMaxSyncTimeField()
         {

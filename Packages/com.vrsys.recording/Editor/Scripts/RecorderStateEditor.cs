@@ -86,7 +86,7 @@ namespace VRSYS.Recording
             useLocalReplayFiles = EditorGUILayout.Toggle(new GUIContent("Use Local Replay Files", "If enabled, the playback dropdown lists recordings found in the local recording directory and the server is not queried for the replay list. If disabled, it lists recordings retrieved from the server."), state.useLocalReplayFiles);
 
             if (useLocalReplayFiles)
-                IdentifyLocallyStoredRecordings(Application.persistentDataPath);
+                IdentifyLocallyStoredRecordings(RecorderState.GetProjectDirectory(state.recordingDirectory, state.projectName));
             else
                 replayFileOptions = state.replayList != null ? state.replayList.replayNames : null;
 
@@ -149,9 +149,10 @@ namespace VRSYS.Recording
 
         private void IdentifyLocallyStoredRecordings(string directory)
         {
+            // A project folder is created by the first recording or download of the project.
             if (!Directory.Exists(directory))
             {
-                RecordingLogger.LogError(nameof(RecorderStateEditor), "Directory does not exist: " + directory);
+                replayFileOptions = new string[0];
                 return;
             }
 

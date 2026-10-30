@@ -40,7 +40,7 @@ namespace VRSYS.Recording
             if (!instantiationData.isReplayCopy || _scenePreparator == null)
                 return Object.Instantiate(_prefab, position, rotation).GetComponent<NetworkObject>();
 
-            GameObject copy = ScenePreparator.CreateNetworkedCopy(_prefab, null);
+            GameObject copy = ScenePreparator.CreateNetworkedCopy(_prefab, null, _scenePreparator.RecorderId);
             copy.transform.SetPositionAndRotation(position, rotation);
             copy.SetActive(true);
             _scenePreparator.OnNetworkedCopyArrived(instantiationData.recordedObjectId, copy);

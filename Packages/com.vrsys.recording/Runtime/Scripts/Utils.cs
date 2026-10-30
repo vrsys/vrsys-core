@@ -950,14 +950,11 @@ namespace VRSYS.Recording
             }
         }
 
+        [System.Obsolete("Replay copies are marked with the ReplayInstance component instead of the " +
+                         "\"InstantiatedForPlayback\" tag. Use ReplayInstance.Mark(root, recorderId).")]
         public static void ModifyComponents(Transform root)
         {
-            foreach (Transform child in root.transform)
-            {
-                ModifyComponents(child);
-            }
-            
-            root.gameObject.tag = "InstantiatedForPlayback";
+            ReplayInstance.Mark(root, -1);
         }
 
         public static Button CreateButton(GameObject buttonPrefab, string buttonText, Color color, Transform parent,

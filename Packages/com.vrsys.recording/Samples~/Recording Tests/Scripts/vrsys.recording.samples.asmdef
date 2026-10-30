@@ -4,7 +4,8 @@
     "references": [
         "vrsys.recording",
         "Unity.Netcode.Runtime",
-        "Unity.Collections"
+        "Unity.Collections",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

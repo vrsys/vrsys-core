@@ -97,10 +97,9 @@ namespace VRSYS.Recording.Testing
                 return;
 
             GameObject lightObject = spotLight.gameObject;
-            var recorder = lightObject.GetComponent<RecordingTestSpotLightRecorder>();
-            if (recorder == null)
-                recorder = lightObject.AddComponent<RecordingTestSpotLightRecorder>();
-            recorder.controller = controller;
+            if (!controller.CoversObject(lightObject))
+                return;
+            var recorder = GetOrAddGenericRecorder<RecordingTestSpotLightRecorder>(lightObject, controller);
             recorder.SetId(Utils.GetObjectName(lightObject, controller.replayRoot).GetHashCode());
             recorder.RegisterRecorder();
         }

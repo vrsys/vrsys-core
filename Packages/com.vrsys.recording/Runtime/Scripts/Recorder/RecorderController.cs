@@ -70,6 +70,12 @@ namespace VRSYS.Recording
         public int audioRecordingStepsPerSecond = 10;
 
         public bool attachTransformRecorderToAll = true;
+
+        [Tooltip("Used when Attach Transform Recorder To All is off: only these objects and their children are " +
+                 "recorded (transforms and, with Record All Sound Sources, their audio sources). A replay without a " +
+                 "replay root drives only objects beneath them, so several recorders can record and replay different " +
+                 "parts of the scene at the same time.")]
+        public List<Transform> recordingRoots = new List<Transform>();
         public bool replayHierarchyChanges = true;
         public bool recordOnLocalTransformChangesOnly = true;
         public bool replayLocalTransformChangesOnly = true;
@@ -393,6 +399,8 @@ namespace VRSYS.Recording
                         FindObjectsByType<AudioSource>(FindObjectsInactive.Include, FindObjectsSortMode.None);
                     for (int i = 0; i < sources.Length; ++i)
                     {
+                        if (!IsInRecordingScope(sources[i].gameObject))
+                            continue;
                         AudioSourceRecorder recorder = sources[i].gameObject.AddComponent<AudioSourceRecorder>();
                         recorder.SetId(2 + i);
                         recorder.Controller = this;
@@ -421,7 +429,14 @@ namespace VRSYS.Recording
                 return;
             }
 
-            if (attachTransformRecorderToAll)
+            if (!attachTransformRecorderToAll)
+            {
+                // Only the configured recording roots: recording captures them, and an in-place replay only drives them.
+                foreach (Transform root in recordingRoots)
+                    if (root != null)
+                        AttachTransformRecorderRecursively(root.gameObject);
+            }
+            else
             {
                 GameObject[] rootObjects = SceneManager.GetActiveScene().GetRootGameObjects();
 
@@ -464,7 +479,8 @@ namespace VRSYS.Recording
                     return;
             }
 
-            if (root.CompareTag("DoNotPlayback"))
+            // ExcludeFromRecording component (or the legacy "DoNotPlayback" tag): skip the object and its subtree.
+            if (ExcludeFromRecording.IsMarked(root))
                 return;
 
 
@@ -1049,9 +1065,43 @@ namespace VRSYS.Recording
             return null;
         }
 
+        /// <summary>
+        /// True if <paramref name="go"/> is within this recorder's recording scope: everything with Attach Transform
+        /// Recorder To All, otherwise the recording roots and their children.
+        /// </summary>
+        public bool IsInRecordingScope(GameObject go)
+        {
+            if (go == null)
+                return false;
+            if (attachTransformRecorderToAll)
+                return true;
+            foreach (Transform root in recordingRoots)
+                if (root != null && go.transform.IsChildOf(root))
+                    return true;
+            return false;
+        }
+
+        /// <summary>
+        /// True if this recorder records or replays <paramref name="go"/> in its current state: during a replay with a
+        /// replay root the objects beneath that root, otherwise the recording scope (see <see cref="IsInRecordingScope"/>).
+        /// Test and generic-data components use it to find the recorder responsible for them when several recorders
+        /// work on different parts of the scene.
+        /// </summary>
+        public bool CoversObject(GameObject go)
+        {
+            if (go == null || recorderState == null)
+                return false;
+            bool replay = recorderState.currentState == State.PreparingReplay ||
+                          recorderState.currentState == State.Replaying;
+            if (replay && replayRoot != null)
+                return go.transform != replayRoot && go.transform.IsChildOf(replayRoot);
+            return IsInRecordingScope(go);
+        }
+
         public IEnumerator SignalObjectInstantiation(GameObject go)
         {
-            if (recorderState.currentState == State.Recording)
+            if (recorderState.currentState == State.Recording && IsInRecordingScope(go) &&
+                !ExcludeFromRecording.IsExcluded(go))
             {
                 // This yield is done, as spawned network objects might be renamed briefly after spawn
                 // Because of this the recorders are first attached after a small wait

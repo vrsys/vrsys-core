@@ -27,6 +27,8 @@ namespace VRSYS.Recording
         public float firstSeenTime = -1;
         public bool instantiated = false;
         public GameObject foundObject = null;
+        // The object exists but another recorder is already replaying it; this replay leaves it alone.
+        public bool replayedByOtherRecorder = false;
     }
 
     public class ScenePreparator : MonoBehaviour
@@ -59,6 +61,9 @@ namespace VRSYS.Recording
         private const int MaxSoundSources = 100;
 
         private RecorderController _controller;
+
+        /// <summary>ID of this preparator's recorder, stored in the <see cref="ReplayInstance"/> of the objects it creates.</summary>
+        internal int RecorderId => _controller != null ? _controller.RecorderID : -1;
         private List<GameObject> _instantiatedGameObjects = new List<GameObject>();
         private List<ReplayGameObjectInformation> replayGameObjectInformations = new List<ReplayGameObjectInformation>();
         private int[] _soundIDs = new int[MaxSoundSources];
@@ -172,14 +177,14 @@ namespace VRSYS.Recording
         /// Builds an inactive replay copy of a networked prefab. The server and every client use this, so the copies
         /// keep the same NetworkBehaviours. The parent is set locally on each peer, not by Netcode.
         /// </summary>
-        internal static GameObject CreateNetworkedCopy(GameObject prefab, Transform parent)
+        internal static GameObject CreateNetworkedCopy(GameObject prefab, Transform parent, int recorderId)
         {
             bool prefabWasActive = prefab.activeSelf;
             prefab.SetActive(false);
             GameObject copy = Instantiate(prefab, parent);
             prefab.SetActive(prefabWasActive);
             Utils.RemoveCustomComponents(copy.transform, keepNetworkComponents: true);
-            Utils.ModifyComponents(copy.transform);
+            ReplayInstance.Mark(copy.transform, recorderId);
             foreach (NetworkObject networkObject in copy.GetComponentsInChildren<NetworkObject>(true))
                 networkObject.AutoObjectParentSync = false;
             return copy;
@@ -191,7 +196,7 @@ namespace VRSYS.Recording
             NetworkManager networkManager = NetworkManager.Singleton;
             if (networkManager.IsServer)
             {
-                GameObject copy = CreateNetworkedCopy(prefab, parent);
+                GameObject copy = CreateNetworkedCopy(prefab, parent, RecorderId);
                 AttachNetworkedCopy(information, copy, parentName);
                 var spawnData = new ReplaySpawnData { isReplayCopy = true, recordedObjectId = information.id };
                 networkManager.PrefabHandler.SetInstantiationData(copy, spawnData);
@@ -322,11 +327,17 @@ namespace VRSYS.Recording
                 RecordingLogger.LogInfo(GetType().Name, "Scene Graph existence check finished.", this);
 
             bool error = false;
+            int leftToOthers = 0;
             foreach (var info in replayGameObjectInformations)
             {
-                if (info.foundObject == null)
+                if (info.replayedByOtherRecorder)
+                    leftToOthers++;
+                else if (info.foundObject == null)
                     error = true;
             }
+            if (leftToOthers > 0)
+                RecordingLogger.LogInfo(GetType().Name, leftToOthers +
+                    " recorded objects are already replayed by another recorder and are left to it.", this);
 
             // Create parents before their children: a missing object is placed under its recorded parent only if that
             // parent already exists, otherwise it ends up at the scene root and its replay name no longer matches the
@@ -425,7 +436,7 @@ namespace VRSYS.Recording
                 if (RecordingLogger.IsEnabled(LogLevel.Info))
                     RecordingLogger.LogInfo(GetType().Name, "Removing custom components.", this);
                 Utils.RemoveCustomComponents(newGo.transform);
-                Utils.ModifyComponents(newGo.transform);
+                ReplayInstance.Mark(newGo.transform, RecorderId);
                 if (RecordingLogger.IsEnabled(LogLevel.Info))
                     RecordingLogger.LogInfo(GetType().Name, "Removing custom components finished.", this);
                 newGo.name = information.gameObjectName;
@@ -506,6 +517,7 @@ namespace VRSYS.Recording
         {
             GameObject newGo = new GameObject(information.gameObjectName);
             newGo.transform.parent = parent;
+            ReplayInstance.Mark(newGo.transform, RecorderId);
             MarkAsPlaybackGO(newGo);
             _instantiatedGameObjects.Add(newGo);
             information.foundObject = newGo;
@@ -545,6 +557,7 @@ namespace VRSYS.Recording
 
                         GameObject newGo = new GameObject();
                         newGo.name = "SoundSource:" + soundSourceId;
+                        ReplayInstance.Mark(newGo.transform, RecorderId);
                         AudioSourceRecorder recorder = newGo.AddComponent<AudioSourceRecorder>();
                         recorder.SetId(soundSourceId);
                         recorder.Controller = _controller;
@@ -573,6 +586,10 @@ namespace VRSYS.Recording
 
         #region Audio Source Control
 
+        // Live audio within this recorder's recording scope is paused during its replay (everything when it records all
+        // objects), so another recorder's objects keep sounding. Only the sources paused here are resumed.
+        private readonly List<AudioSource> _pausedAudioSources = new List<AudioSource>();
+
         private void PauseAllAudioSources()
         {
             AudioSource[] audioSources = (AudioSource[])FindObjectsOfType(typeof(AudioSource));
@@ -580,21 +597,21 @@ namespace VRSYS.Recording
             foreach (AudioSource audioSource in audioSources)
             {
                 if (audioSource.gameObject.name != "UserSpeaker" &&
-                    !audioSource.gameObject.name.Contains("Speaker for Player"))
+                    !audioSource.gameObject.name.Contains("Speaker for Player") &&
+                    _controller.IsInRecordingScope(audioSource.gameObject))
                 {
                     audioSource.Pause();
+                    _pausedAudioSources.Add(audioSource);
                 }
             }
         }
 
         private void ResumeAllAudioSources()
         {
-            AudioSource[] audioSources = (AudioSource[])FindObjectsOfType(typeof(AudioSource));
-
-            foreach (AudioSource audioSource in audioSources)
-            {
-                audioSource.UnPause();
-            }
+            foreach (AudioSource audioSource in _pausedAudioSources)
+                if (audioSource != null)
+                    audioSource.UnPause();
+            _pausedAudioSources.Clear();
         }
 
         #endregion
@@ -823,22 +840,30 @@ namespace VRSYS.Recording
             var info = replayGameObjectInformations.FirstOrDefault(i => i.hierarchyName == name);
             if (info != null)
             {
+                // Another recorder that is replaying this object keeps it: this replay neither drives it nor creates
+                // a copy. A recorder that only records it (e.g. a recording of a running replay) does not block it.
                 TransformRecorder[] transformRecorders = currentGameObj.GetComponents<TransformRecorder>();
                 bool found = false;
-                bool recorderAttached = false;
+                bool replayedByOther = false;
 
                 foreach (var transformRecorder in transformRecorders)
                 {
-                    recorderAttached = true;
-                    if (transformRecorder.controller.RecorderID == _controller.RecorderID)
+                    RecorderController owner = transformRecorder.controller;
+                    if (owner == null)
+                        continue;
+                    if (owner.RecorderID == _controller.RecorderID)
                         found = true;
+                    else if (owner.recorderState != null &&
+                             (owner.recorderState.currentState == State.Replaying ||
+                              owner.recorderState.currentState == State.PreparingReplay))
+                        replayedByOther = true;
                 }
 
-                if (!recorderAttached || found)
-                {
+                info.instantiated = true;
+                if (found || !replayedByOther)
                     info.foundObject = currentGameObj;
-                    info.instantiated = true;
-                }
+                else
+                    info.replayedByOtherRecorder = true;
             }
             else
             {

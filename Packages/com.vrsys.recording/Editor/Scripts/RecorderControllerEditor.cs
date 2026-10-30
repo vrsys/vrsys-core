@@ -262,34 +262,44 @@ namespace VRSYS.Recording
                     "Adds or updates RecordingPrefabInformation on every .prefab under Assets.",
                     AddPrefabInformationToAllPrefabs));
 
-            // --- Transform Recording ---
-            Category transform = AddCategory("transform", "Transform Recording",
-                "What is captured from transforms and how often.",
-                "rc-accent-transform", TransformStatus, "Transform Icon");
-            Prop(transform, "attachTransformRecorderToAll", "Attach to all transforms",
-                "Attach a transform recorder to every object in the scene when recording.",
+            // --- Data Recording ---
+            Category recording = AddCategory("recording", "Data Recording",
+                "Which objects, transforms and audio are captured, and how often.",
+                "rc-accent-transform", () => Join(TransformStatus(), AudioStatus()), "Transform Icon");
+            Heading(recording, "Recording scope");
+            Prop(recording, "attachTransformRecorderToAll", "Record all scene objects",
+                "Attach a transform recorder to every object in the scene when recording. Disable to record only the recording roots.",
                 "transform recorder every object scene");
-            Prop(transform, "transformRecordingStepsPerSecond", "Recording steps per second",
+            Prop(recording, "recordingRoots", "Recording roots",
+                "Used when 'Record all scene objects' is off: only these objects and their children are recorded (transforms and their audio sources). A replay without a replay root drives only objects beneath them, so several recorders can record and replay different parts of the scene at the same time.",
+                "recording roots scope subtree multi recorder group objects",
+                field =>
+                {
+                    SerializedProperty all = serializedObject.FindProperty("attachTransformRecorderToAll");
+                    void Update(SerializedProperty p) =>
+                        field.style.display = p.boolValue ? DisplayStyle.None : DisplayStyle.Flex;
+                    Update(all);
+                    field.TrackPropertyValue(all, Update);
+                });
+            Heading(recording, "Transforms");
+            Prop(recording, "transformRecordingStepsPerSecond", "Recording steps per second",
                 "How many transform samples are captured per second while recording.",
                 "rate frequency hz sample fps steps");
-            Prop(transform, "recordOnLocalTransformChangesOnly", "Record on local changes only",
+            Prop(recording, "recordOnLocalTransformChangesOnly", "Record on local changes only",
                 "When enabled, a transform is recorded only when its local position/rotation/scale changes. When disabled, changes are detected from the global (world) transform instead.",
                 "local world global position rotation scale change detection");
 
-            // --- Audio Recording ---
-            Category audio = AddCategory("audio", "Audio Recording",
-                "Which audio is captured into the recording.",
-                "rc-accent-audio", AudioStatus, "AudioSource Icon");
-            Prop(audio, "recordMicro", "Record microphone",
+            Heading(recording, "Audio");
+            Prop(recording, "recordMicro", "Record microphone",
                 "Capture the local microphone into the recording.",
                 "mic microphone voice sound audio");
-            Prop(audio, "recordAudioListener", "Record audio listener",
+            Prop(recording, "recordAudioListener", "Record audio listener",
                 "Capture the scene's AudioListener output into the recording.",
                 "listener mix output sound audio");
-            Prop(audio, "recordAllSoundSources", "Record all sound sources",
+            Prop(recording, "recordAllSoundSources", "Record all sound sources",
                 "Capture every AudioSource in the scene into the recording.",
                 "audiosource sources sound audio");
-            Prop(audio, "audioRecordingStepsPerSecond", "Audio steps per second",
+            Prop(recording, "audioRecordingStepsPerSecond", "Audio steps per second",
                 "How many audio recording steps are captured per second.",
                 "rate frequency hz sample steps sound audio");
 
@@ -586,7 +596,9 @@ namespace VRSYS.Recording
         {
             return Join(
                 _controller.transformRecordingStepsPerSecond + " Hz",
-                _controller.attachTransformRecorderToAll ? "all objects" : "selected",
+                _controller.attachTransformRecorderToAll
+                    ? "all objects"
+                    : _controller.recordingRoots.Count(r => r != null) + " recording roots",
                 _controller.recordOnLocalTransformChangesOnly ? "local" : "world");
         }
 

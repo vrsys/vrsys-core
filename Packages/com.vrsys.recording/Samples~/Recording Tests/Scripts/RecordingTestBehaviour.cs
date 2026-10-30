@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace VRSYS.Recording.Testing
 {
@@ -15,10 +17,17 @@ namespace VRSYS.Recording.Testing
     ///
     /// Networked targets (with a <see cref="NetworkObject"/>) are only driven by the server; their changes reach
     /// the clients through Netcode (e.g. a NetworkTransform). Everything else is driven locally on every peer.
+    ///
+    /// A scene may contain several recorders that record and replay different parts of the scene
+    /// (<see cref="RecorderController.recordingRoots"/>). The component follows every recorder, but only reacts to
+    /// the ones that cover this object (<see cref="RecorderController.CoversObject"/>): it pauses while one of them
+    /// replays it and keeps running while another recorder replays other objects.
     /// </summary>
     public abstract class RecordingTestBehaviour : MonoBehaviour
     {
-        private RecorderController _controller;
+        private readonly List<RecorderController> _controllers = new List<RecorderController>();
+        private readonly Dictionary<RecorderController, (UnityAction preparing, UnityAction started)> _handlers =
+            new Dictionary<RecorderController, (UnityAction, UnityAction)>();
         private float _nextControllerLookup;
         private bool _wasRunning = true;
 
@@ -42,17 +51,66 @@ namespace VRSYS.Recording.Testing
         /// <summary>Restore the state captured in Awake (pose, parent, active state) and restart the animation.</summary>
         protected abstract void ResetToInitialState();
 
-        /// <summary>The scene's recorder, once found (looked up once per second until one exists).</summary>
-        protected RecorderController Controller => _controller;
+        /// <summary>
+        /// The recorder responsible for this object: one that is replaying or recording it, otherwise the first one
+        /// that covers it, otherwise the first recorder in the scene (null until one is found).
+        /// </summary>
+        protected RecorderController Controller
+        {
+            get
+            {
+                RecorderController covering = null;
+                foreach (RecorderController controller in _controllers)
+                {
+                    if (controller == null || !controller.CoversObject(gameObject))
+                        continue;
+                    State state = controller.recorderState.currentState;
+                    if (state != State.Idle)
+                        return controller;
+                    if (covering == null)
+                        covering = controller;
+                }
+                if (covering != null)
+                    return covering;
+                foreach (RecorderController controller in _controllers)
+                    if (controller != null)
+                        return controller;
+                return null;
+            }
+        }
 
-        /// <summary>Called once the recorder is found, e.g. to register a generic recorder provider.</summary>
+        /// <summary>All recorders in the scene (looked up again once per second).</summary>
+        protected IReadOnlyList<RecorderController> Controllers => _controllers;
+
+        /// <summary>Called once per recorder when it is found, e.g. to register a generic recorder provider.</summary>
         protected virtual void OnControllerFound(RecorderController controller)
         {
         }
 
-        /// <summary>Called when this component is disabled while it knows a recorder.</summary>
+        /// <summary>Called for every known recorder when this component is disabled.</summary>
         protected virtual void OnControllerLost(RecorderController controller)
         {
+        }
+
+        /// <summary>
+        /// The generic recorder of type <typeparamref name="T"/> on <paramref name="target"/> that belongs to
+        /// <paramref name="controller"/>, added if missing. Each recorder gets its own component, so one recorder can
+        /// replay the data while another one records it.
+        /// </summary>
+        protected static T GetOrAddGenericRecorder<T>(GameObject target, RecorderController controller)
+            where T : GenericRecorder
+        {
+            foreach (T existing in target.GetComponents<T>())
+            {
+                if (existing.controller == controller || existing.controller == null)
+                {
+                    existing.controller = controller;
+                    return existing;
+                }
+            }
+            T recorder = target.AddComponent<T>();
+            recorder.controller = controller;
+            return recorder;
         }
 
         /// <summary>
@@ -66,26 +124,32 @@ namespace VRSYS.Recording.Testing
         protected virtual void OnEnable()
         {
             TestObjectsController = GetComponentInParent<RecordingTestObjectsController>(true);
-            FindController();
+            FindControllers();
         }
 
         protected virtual void OnDisable()
         {
-            if (_controller != null)
+            foreach (RecorderController controller in _controllers)
             {
-                _controller.onReplayIsPreparing.RemoveListener(HandleReplayPreparing);
-                _controller.onRecordingHasStarted.RemoveListener(HandleRecordingStarted);
-                OnControllerLost(_controller);
+                if (controller == null)
+                    continue;
+                if (_handlers.TryGetValue(controller, out var handlers))
+                {
+                    controller.onReplayIsPreparing.RemoveListener(handlers.preparing);
+                    controller.onRecordingHasStarted.RemoveListener(handlers.started);
+                }
+                OnControllerLost(controller);
             }
-            _controller = null;
+            _controllers.Clear();
+            _handlers.Clear();
         }
 
         protected virtual void Update()
         {
-            if (_controller == null && Time.unscaledTime >= _nextControllerLookup)
+            if (Time.unscaledTime >= _nextControllerLookup)
             {
                 _nextControllerLookup = Time.unscaledTime + 1f;
-                FindController();
+                FindControllers();
             }
 
             bool running = TestObjectsController == null || TestObjectsController.IsRunning;
@@ -101,15 +165,21 @@ namespace VRSYS.Recording.Testing
             Tick(Time.deltaTime);
         }
 
-        /// <summary>True while a replay is being prepared or running.</summary>
-        protected bool IsReplaying
+        /// <summary>True while a recorder that covers this object prepares or runs a replay.</summary>
+        protected bool IsReplaying => IsReplayedBy(null);
+
+        // True if a recorder other than `except` replays (or prepares to replay) this object.
+        private bool IsReplayedBy(RecorderController except)
         {
-            get
+            foreach (RecorderController controller in _controllers)
             {
-                RecorderState state = _controller != null ? _controller.recorderState : null;
-                return state != null &&
-                       (state.currentState == State.PreparingReplay || state.currentState == State.Replaying);
+                if (controller == null || controller == except || controller.recorderState == null)
+                    continue;
+                State state = controller.recorderState.currentState;
+                if ((state == State.PreparingReplay || state == State.Replaying) && controller.CoversObject(gameObject))
+                    return true;
             }
+            return false;
         }
 
         /// <summary>
@@ -141,29 +211,40 @@ namespace VRSYS.Recording.Testing
             }
         }
 
-        private void FindController()
+        private void FindControllers()
         {
-            if (_controller == null)
-                _controller = FindFirstObjectByType<RecorderController>();
-            if (_controller != null)
+            _controllers.RemoveAll(c => c == null);
+            foreach (RecorderController controller in
+                     FindObjectsByType<RecorderController>(FindObjectsInactive.Exclude, FindObjectsSortMode.InstanceID))
             {
-                // Hot reload can retain the controller reference while its provider list is rebuilt.
-                _controller.onReplayIsPreparing.RemoveListener(HandleReplayPreparing);
-                _controller.onRecordingHasStarted.RemoveListener(HandleRecordingStarted);
-                _controller.onReplayIsPreparing.AddListener(HandleReplayPreparing);
-                _controller.onRecordingHasStarted.AddListener(HandleRecordingStarted);
-                OnControllerFound(_controller);
+                if (_controllers.Contains(controller))
+                    continue;
+                _controllers.Add(controller);
+                UnityAction preparing = () => HandleReplayPreparing(controller);
+                UnityAction started = () => HandleRecordingStarted(controller);
+                _handlers[controller] = (preparing, started);
+                controller.onReplayIsPreparing.AddListener(preparing);
+                controller.onRecordingHasStarted.AddListener(started);
+                OnControllerFound(controller);
             }
         }
 
-        private void HandleRecordingStarted()
+        // A recording starts from the initial layout, unless another recorder is replaying this object right now
+        // (a recording of a running replay captures the replayed state instead).
+        private void HandleRecordingStarted(RecorderController controller)
         {
+            if (!controller.CoversObject(gameObject) || IsReplayedBy(controller))
+                return;
             if (HasAuthority)
                 ResetToInitialState();
         }
 
-        private void HandleReplayPreparing()
+        // Only the recorder that will replay this object resets it; one that is already replayed by another recorder
+        // stays with that replay.
+        private void HandleReplayPreparing(RecorderController controller)
         {
+            if (!controller.CoversObject(gameObject) || IsReplayedBy(controller))
+                return;
             OnReplayPreparing();
             if (HasAuthority)
                 ResetToInitialState();

@@ -1,7 +1,7 @@
 # Recording Tests
 
 Import **Recording Tests** from **VRSYS Recording > Samples** in Package Manager.
-One import includes both test scenes and the shared scripts and assets they use:
+One import includes the test scenes and the shared scripts and assets they use:
 
 - `Local Recording Test/Scenes/VRSYS-Recording-LocalTest.unity`: local recording
   and replay of transforms, active state, hierarchy changes, objects created and
@@ -10,13 +10,18 @@ One import includes both test scenes and the shared scripts and assets they use:
 - `Networked Recording Test/Scenes/VRSYS-Recording-NetworkedTest.unity`: the same
   tests in a networked session, plus networked objects (including ones that are
   spawned and despawned) and recordable user prefabs.
+- `Multi Recorder Test/Scenes/VRSYS-Recording-MultiRecorderTest.unity`: three
+  recorders with their own recording roots in one local scene: simultaneous
+  recordings and replays of different object groups, a replay next to live
+  objects, and a recording of a running replay.
 - `Scripts`: the test behaviours in the `vrsys.recording.samples` assembly. These
   scripts are sample content and are only compiled into a consuming project when
   this sample is imported.
   - `RecordingTestObjectsController`: a **Run Test Behaviours** checkbox on the
     **Recording Test Objects** root starts/stops the procedural tests together.
   - `RecordingTestBehaviour`: base class that pauses the tests during replay and
-    resets them when a recording starts or a replay is prepared.
+    resets them when a recording starts or a replay is prepared. With several
+    recorders it only reacts to the recorders that cover its object.
   - `RecordingTestMotion`, `RecordingTestActiveToggle`, `RecordingTestReparent`:
     transform, active-state and parent changes.
   - `RecordingTestSpawner`, `RecordingTestSpawnedObject`, `RecordingTestNetworkName`:
@@ -31,6 +36,8 @@ One import includes both test scenes and the shared scripts and assets they use:
     mesh renderer's color, emission and enabled state using a MaterialPropertyBlock.
   - `RecordingTestParticles`, `RecordingTestParticlesRecorder`: record a seeded,
     animated particle settings and reconstruct the fountain when seeking.
+  - `RecordingTestRecorderStatus`: world-space status line of one recorder (state,
+    file and time), used by the multi-recorder scene.
 - `Editor/RecordingTestGenericRecorderChecks`: run **VRSYS > Recording > Validate
   Generic Recorder Samples** to check renderer state and particle seeking.
 - `Shared`: the test sound (`Audio/RecordingTestChime.wav`) and the local spawned
@@ -73,3 +80,45 @@ then copy its complete contents, including `.meta` files, to
 `Packages/com.vrsys.recording/Samples~/Recording Tests` before distribution.
 Test Package Manager import in a separate project so the working copy and imported
 sample do not introduce duplicate script classes, GUIDs or Resources paths.
+
+## Renderer and particle examples
+
+Both scenes include **Renderer Appearance** and **Particle System** columns at
+opposite ends of the second row. In the networked scene they belong to the
+**Local** group: each peer animates and records its own copy, like the spotlight.
+
+The floating cube smoothly changes from teal to coral, pulses its emission and
+briefly hides once per eight seconds. Its GenericRecorder stores enabled state
+in one integer and base/emission RGBA in eight floats. It changes only a
+MaterialPropertyBlock, leaving the shared material untouched. Its gentle motion
+uses the existing transform recorder.
+
+The fountain swells between a narrow cyan stream and a wider lilac/pink spray.
+The test script animates emission rate and enabled state, start speed, lifetime,
+size, gravity, rotation, color, and cone angle/radius. The recorder captures these
+scalar settings along with elapsed time, the seed, shape enabled state and
+renderer visibility. Start color uses four Color32 bytes (8 bits per channel).
+
+The v2 layout uses nine floats, five integers and four bytes of the existing
+generic payload. It accepts earlier time/seed-only samples without overwriting
+module settings. Replay restores the live settings afterward, including the
+original curves/gradients and auto-random-seed setting.
+
+For this example, both live animation and replay reconstruct an eight-second
+local-space cycle using the settings at the sampled instant. This makes backward
+seeks and paused playback independent of frame history; changing a property at
+the same timestamp also updates the result. The cycle restarts with an empty
+fountain, and each reconstruction simulates at most eight seconds. This is not a
+general particle snapshot recorder: arbitrary parameter curves/gradients,
+world-space motion, collisions, sub-emitters and external forces need additional
+recorded state or simulation history.
+
+The RecordingTestObjectsController also registers a root IGenericRecorderProvider
+that attaches child custom recorders even when their test behaviours are disabled.
+Providers re-register when scripts reload, including when a controller reference
+is retained. The live-animation toggle does not disable recorder attachment.
+
+Both examples register through IGenericRecorderProvider, stop their live animation
+during replay and follow **Run Test Behaviours**. Renderer properties are restored
+when replay ends. The sample includes small display and particle shaders that work
+with Built-in and URP without changing the project's render pipeline.

@@ -65,9 +65,8 @@ namespace VRSYS.Recording.Testing
         protected override void OnControllerLost(RecorderController controller) { controller.UnregisterGenericRecorderProvider(this); }
         public void AttachGenericRecorders(RecorderController controller)
         {
-            var recorder = GetComponent<RecordingTestParticlesRecorder>();
-            if (recorder == null) recorder = gameObject.AddComponent<RecordingTestParticlesRecorder>();
-            recorder.controller = controller;
+            if (!controller.CoversObject(gameObject)) return;
+            var recorder = GetOrAddGenericRecorder<RecordingTestParticlesRecorder>(gameObject, controller);
             recorder.SetId(Utils.GetObjectName(gameObject, controller.replayRoot).GetHashCode());
             recorder.RegisterRecorder();
         }

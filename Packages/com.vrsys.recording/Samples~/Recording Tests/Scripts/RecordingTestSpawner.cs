@@ -120,11 +120,12 @@ namespace VRSYS.Recording.Testing
 
             _instances.Add(new Instance { gameObject = instance });
 
-            // Objects created during a recording are not picked up automatically; tell the recorder about them.
-            RecorderController controller = Controller;
-            if (controller != null && controller.recorderState != null &&
-                controller.recorderState.currentState == State.Recording)
-                controller.StartCoroutine(controller.SignalObjectInstantiation(instance));
+            // Objects created during a recording are not picked up automatically; tell the recorders about them.
+            // Each one only attaches its recorder if the instance is within its recording scope.
+            foreach (RecorderController controller in Controllers)
+                if (controller != null && controller.recorderState != null &&
+                    controller.recorderState.currentState == State.Recording)
+                    controller.StartCoroutine(controller.SignalObjectInstantiation(instance));
         }
 
         private static void Remove(GameObject instance, bool beforeReplay)

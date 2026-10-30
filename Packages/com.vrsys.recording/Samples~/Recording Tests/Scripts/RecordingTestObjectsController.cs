@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace VRSYS.Recording.Testing
@@ -19,7 +20,7 @@ namespace VRSYS.Recording.Testing
                  "recording and replay keep working.")]
         public bool runTestBehaviours = true;
 
-        private RecorderController _recorder;
+        private readonly List<RecorderController> _recorders = new List<RecorderController>();
 
         private void Awake()
         {
@@ -29,18 +30,25 @@ namespace VRSYS.Recording.Testing
 
         private void OnEnable() { RegisterRecorderProvider(); }
 
+        // Every recorder in the scene; each provider below only attaches recorders for the objects a recorder covers.
         private void RegisterRecorderProvider()
         {
-            if (_recorder == null)
-                _recorder = FindFirstObjectByType<RecorderController>();
-            if (_recorder != null)
-                _recorder.RegisterGenericRecorderProvider(this);
+            foreach (RecorderController recorder in
+                     FindObjectsByType<RecorderController>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+            {
+                if (_recorders.Contains(recorder))
+                    continue;
+                _recorders.Add(recorder);
+                recorder.RegisterGenericRecorderProvider(this);
+            }
         }
 
         private void OnDestroy()
         {
-            if (_recorder != null)
-                _recorder.UnregisterGenericRecorderProvider(this);
+            foreach (RecorderController recorder in _recorders)
+                if (recorder != null)
+                    recorder.UnregisterGenericRecorderProvider(this);
+            _recorders.Clear();
         }
 
         public void AttachGenericRecorders(RecorderController controller)

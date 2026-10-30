@@ -771,7 +771,8 @@ namespace VRSYS.Recording
             // Hand physics back after the replay. Without network authority, NetworkRigidbody keeps the body kinematic.
             if (_holdsRigidbody && _rigidbody != null && HasNetworkAuthority())
                 _rigidbody.isKinematic = _wasKinematic;
-            if (_presentInRecording == 1 && tag != "InstantiatedForPlayback")
+            // Objects the replay created are destroyed with it; only objects that were in the scene get their pose back.
+            if (_presentInRecording == 1 && !ReplayInstance.IsReplayInstance(gameObject))
             {
                 // Restore the original parent first: playback may have reparented this object, and the
                 // cached local TRS below is only meaningful relative to the original parent. Restoring the

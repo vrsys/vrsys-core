@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Linq;
+using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -68,14 +69,20 @@ namespace VRSYS.Recording
             RecorderController[] recorderControllers = FindObjectsOfType<RecorderController>();
             foreach (RecorderController recorderController in recorderControllers)
             {
-                if (recorderController.CurrentState == State.Recording)
+                // Only recorders whose recording scope contains the new object (see RecorderController.recordingRoots).
+                if (recorderController.CurrentState == State.Recording &&
+                    recorderController.IsInRecordingScope(gameObject))
                 {
-                    recorderController.AttachTransformRecorderRecursively(gameObject);
+                    if (!ExcludeFromRecording.IsExcluded(gameObject))
+                        recorderController.AttachTransformRecorderRecursively(gameObject);
                     
                     AudioSource[] sources = FindObjectsByType<AudioSource>(FindObjectsInactive.Include, FindObjectsSortMode.None);
                     for (int i = 0; i < sources.Length; ++i)
                     {
-                        AudioSourceRecorder recorder = sources[i].GetComponent<AudioSourceRecorder>();
+                        if (!recorderController.IsInRecordingScope(sources[i].gameObject))
+                            continue;
+                        AudioSourceRecorder recorder = sources[i].GetComponents<AudioSourceRecorder>()
+                            .FirstOrDefault(r => r.Controller == recorderController);
                         if (recorder == null)
                         {
                             recorder = sources[i].gameObject.AddComponent<AudioSourceRecorder>();

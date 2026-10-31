@@ -108,7 +108,9 @@ namespace VRSYS.Recording
                             RecordingLogger.LogInfo(GetType().Name, "Initial microphone recording time: " + RecordingTime, this);
                     }
 
-                    if (RecordingTime >= 0.0f)
+                    // Silent blocks are skipped, but RecordingTime still advances below, so the next block keeps
+                    // its correct time and the gap replays as silence.
+                    if (RecordingTime >= 0.0f && ShouldRecordChunk(_audioData, _audioData.Length))
                     {
                         _goIDDTO[0] = _userTransform != null ? _userTransform.gameObject.GetInstanceID() : gameObject.GetInstanceID();
 

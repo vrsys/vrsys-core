@@ -99,6 +99,25 @@ namespace VRSYS.Recording
         public bool recordAudioListener = true;
         public bool recordAllSoundSources = true;
 
+        [Tooltip("Skip audio blocks whose samples all stay within the silence threshold, so silent sources do not " +
+                 "fill the .sound file. The first block of every source is always written, so the source still exists " +
+                 "in the recording. Replay plays silence for the skipped blocks.")]
+        public bool skipSilentAudio = true;
+
+        [Tooltip("Largest absolute sample value that still counts as silence (1e-4 is about -80 dBFS).")]
+        public float silenceThreshold = 1e-4f;
+
+        // Replay options per kind of recorded sound (all of them also need replayAudio).
+        [Tooltip("Replay the recorded microphone (sound id 0).")]
+        public bool replayMicrophone = true;
+
+        [Tooltip("Replay the recorded audio listener mix (sound id 1) as a non-spatial source. It already contains " +
+                 "every other sound, so it plays them twice when the sources are replayed too.")]
+        public bool replayAudioListener = false;
+
+        [Tooltip("Replay the recorded audio sources (sound ids 2 and up).")]
+        public bool replayAudioSources = true;
+
         [Tooltip("Optional anchor for playback. When set, recorded objects are matched/placed relative " +
                  "to this transform: pre-existing duplicate objects beneath it are matched to the " +
                  "recording, and objects that have to be instantiated for playback are created under it. " +

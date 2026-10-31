@@ -302,6 +302,19 @@ namespace VRSYS.Recording
             Prop(recording, "audioRecordingStepsPerSecond", "Audio steps per second",
                 "How many audio recording steps are captured per second.",
                 "rate frequency hz sample steps sound audio");
+            Prop(recording, "skipSilentAudio", "Skip silent audio",
+                "Do not write audio blocks whose samples all stay within the silence threshold, so silent sources do not fill the .sound file. The first block of every source is always written. Replay plays silence for the skipped blocks.",
+                "silence silent gate skip size file sound audio");
+            Prop(recording, "silenceThreshold", "Silence threshold",
+                "Largest absolute sample value that still counts as silence (1e-4 is about -80 dBFS).",
+                "silence threshold gate level db sound audio",
+                field =>
+                {
+                    SerializedProperty skip = serializedObject.FindProperty("skipSilentAudio");
+                    void Update(SerializedProperty p) => field.SetEnabled(p.boolValue);
+                    Update(skip);
+                    field.TrackPropertyValue(skip, Update);
+                });
 
             // --- Playback ---
             Category playback = AddCategory("playback", "Playback",
@@ -323,8 +336,17 @@ namespace VRSYS.Recording
                 "When enabled, recorded objects that are not present in the scene are instantiated for playback (querying their mesh/prefab information). When disabled, only objects already present in the scene are played back.",
                 "spawn create missing prefab mesh");
             Prop(playback, "replayAudio", "Playback audio",
-                "Handle recorded audio sources during replay.",
+                "Handle recorded audio during replay. Turn off to replay no audio at all; the options below choose which recorded sounds are replayed.",
                 "sound audio");
+            Prop(playback, "replayMicrophone", "Replay microphone",
+                "Replay the recorded microphone (sound id 0).",
+                "mic microphone voice sound audio replay", ReplayAudioDependent);
+            Prop(playback, "replayAudioListener", "Replay audio listener",
+                "Replay the recorded audio listener mix (sound id 1) as a non-spatial source. It already contains every other sound, so it plays them twice when the audio sources are replayed too.",
+                "listener mix output sound audio replay", ReplayAudioDependent);
+            Prop(playback, "replayAudioSources", "Replay audio sources",
+                "Replay the recorded AudioSources (sound ids 2 and up) at their recorded emitters.",
+                "audiosource sources sound audio replay", ReplayAudioDependent);
             Heading(playback, "End of playback");
             Prop(playback, "endPlaybackOnDurationReached", "Stop at recording end",
                 "Once playback time has reached the duration, the playback will be stopped.",
@@ -482,6 +504,15 @@ namespace VRSYS.Recording
             return category;
         }
 
+        // Greys out a replay audio option while 'Playback audio' is off.
+        private void ReplayAudioDependent(PropertyField field)
+        {
+            SerializedProperty replayAudio = serializedObject.FindProperty("replayAudio");
+            void Update(SerializedProperty p) => field.SetEnabled(p.boolValue);
+            Update(replayAudio);
+            field.TrackPropertyValue(replayAudio, Update);
+        }
+
         private void Prop(Category category, string path, string label, string tooltip, string keywords,
             System.Action<PropertyField> configure = null, bool requiresServerOnly = false)
         {
@@ -608,14 +639,29 @@ namespace VRSYS.Recording
                 _controller.recordMicro ? "Mic" : null,
                 _controller.recordAudioListener ? "Listener" : null,
                 _controller.recordAllSoundSources ? "Sources" : null);
-            return string.IsNullOrEmpty(sources) ? "No audio captured" : sources;
+            if (string.IsNullOrEmpty(sources))
+                return "No audio captured";
+            return Join(sources, _controller.skipSilentAudio ? "skip silence" : null);
+        }
+
+        private string ReplayAudioStatus()
+        {
+            if (!_controller.replayAudio)
+                return null;
+            string sounds = string.Join(", ", new[]
+            {
+                _controller.replayMicrophone ? "mic" : null,
+                _controller.replayAudioListener ? "listener" : null,
+                _controller.replayAudioSources ? "sources" : null
+            }.Where(p => p != null));
+            return string.IsNullOrEmpty(sounds) ? null : "audio: " + sounds;
         }
 
         private string PlaybackStatus()
         {
             return Join(
                 _controller.replayRoot != null ? "Root: " + _controller.replayRoot.name : "Scene root",
-                _controller.replayAudio ? "audio" : null,
+                ReplayAudioStatus(),
                 _controller.indefinitePlayback ? "indefinite" : _controller.endPlaybackOnDurationReached ? "stops at end" : null);
         }
 

@@ -55,6 +55,9 @@ namespace VRSYS.Recording
                 return;
 
             // dspTime identifies the current block; no shared sample counter or wall clock is needed.
+            if (!ShouldRecordChunk(data, data.Length))
+                return;
+
             float recordingTimeOfChunk = Mathf.Max(0.0f, controller.GetRecordingTime());
             RecordSoundDataWithGOInfoAtTimestamp(controller.RecorderID, data, data.Length, RecordingSamplingRate, 0, RecordingChannelNum, _goIDDTO[0], recordingTimeOfChunk, id);
         }

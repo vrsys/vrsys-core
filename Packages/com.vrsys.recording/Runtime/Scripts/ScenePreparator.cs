@@ -549,9 +549,17 @@ namespace VRSYS.Recording
                         int soundSourceId = _soundIDs[k];
                         DebugScenePreparationLog("HandleAudioSources processing sound source index=" + k +
                                                  ", id=" + soundSourceId);
-                        if (soundSourceId == 1)
+                        // Sound id 0 is the microphone, 1 the audio listener mix, 2 and up the recorded AudioSources.
+                        bool replaySound = soundSourceId == 0 ? _controller.replayMicrophone
+                            : soundSourceId == 1 ? _controller.replayAudioListener
+                            : _controller.replayAudioSources;
+                        if (!replaySound)
                         {
-                            RecordingLogger.LogWarning(GetType().Name, "The recorded audiolistener data is not played back!", this);
+                            if (RecordingLogger.IsEnabled(LogLevel.Info))
+                                RecordingLogger.LogInfo(GetType().Name, "Recorded sound " + soundSourceId +
+                                    " is not played back (" + (soundSourceId == 0 ? "Replay microphone"
+                                        : soundSourceId == 1 ? "Replay audio listener" : "Replay audio sources") +
+                                    " is off).", this);
                             continue;
                         }
 
@@ -560,6 +568,9 @@ namespace VRSYS.Recording
                         ReplayInstance.Mark(newGo.transform, RecorderId);
                         AudioSourceRecorder recorder = newGo.AddComponent<AudioSourceRecorder>();
                         recorder.SetId(soundSourceId);
+                        // The listener mix was heard at the listener, so it is replayed without spatialization.
+                        if (soundSourceId == 1)
+                            recorder.replaySpatialBlend = 0f;
                         recorder.Controller = _controller;
                         _instantiatedGameObjects.Add(newGo);
                     }

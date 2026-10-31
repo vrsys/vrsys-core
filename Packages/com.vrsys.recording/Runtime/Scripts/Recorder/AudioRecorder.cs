@@ -45,6 +45,15 @@ namespace VRSYS.Recording
 
         public GameObject correspondingGameObject;
 
+        [Tooltip("Spatial blend of the AudioSource that replays this sound (1 = 3D at the recorded emitter, 0 = 2D).")]
+        public float replaySpatialBlend = 1f;
+
+        // Silence detection while recording. Only touched by the thread that records this source (the audio
+        // thread for AudioSource and AudioListener recorders, the main thread for the microphone).
+        private bool _wroteFirstChunk;
+        private int _recordedChunks;
+        private int _skippedSilentChunks;
+
         private List<RerecordChunk> _rerecBuffer = new List<RerecordChunk>();
         private readonly object _rerecSync = new object();
 
@@ -187,6 +196,57 @@ namespace VRSYS.Recording
             return true;
         }
 
+        // True if any of the first `count` samples lies outside [-threshold, threshold]. Stops at the first such
+        // sample, so blocks with sound cost only a few comparisons; only silent blocks are scanned completely.
+        public static bool ContainsSignal(float[] data, int count, float threshold)
+        {
+            if (data == null)
+                return false;
+            if (count > data.Length)
+                count = data.Length;
+            for (int i = 0; i < count; ++i)
+            {
+                float s = data[i];
+                if (s > threshold || s < -threshold)
+                    return true;
+            }
+            return false;
+        }
+
+        // Decides whether a recorded block is passed to the plugin. The first block of a source is always written,
+        // so the source (with its sampling rate and channels) exists in the recording even if it stays silent, and
+        // e.g. an avatar's voice can still be rerecorded later.
+        protected bool ShouldRecordChunk(float[] data, int count)
+        {
+            if (!_wroteFirstChunk || controller == null || !controller.skipSilentAudio ||
+                ContainsSignal(data, count, controller.silenceThreshold))
+            {
+                _wroteFirstChunk = true;
+                _recordedChunks++;
+                return true;
+            }
+
+            _skippedSilentChunks++;
+            return false;
+        }
+
+        public override void OnRecordingStart()
+        {
+            base.OnRecordingStart();
+            _wroteFirstChunk = false;
+            _recordedChunks = 0;
+            _skippedSilentChunks = 0;
+        }
+
+        public override void OnRecordingEnd()
+        {
+            base.OnRecordingEnd();
+            if (RecordingLogger.IsEnabled(LogLevel.Info))
+                RecordingLogger.LogInfo(GetType().Name, "Sound " + id + " (" + name + "): " + _recordedChunks +
+                                                         " audio blocks recorded, " + _skippedSilentChunks +
+                                                         " silent blocks skipped.", this);
+        }
+
         public void SuspendPlayback()
         {
             if (_source != null) _source.Stop();
@@ -242,8 +302,8 @@ namespace VRSYS.Recording
             _source.loop = true;
             _initializedReplay = true;
 
-            _source.spatialBlend = 1f;
-            _source.spatialize = true;
+            _source.spatialBlend = replaySpatialBlend;
+            _source.spatialize = replaySpatialBlend > 0f;
             _source.volume = 1f;
 
             SoundRecordingStepsPerSecond = _playbackSamplingRate / 1024;

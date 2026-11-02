@@ -92,7 +92,6 @@ namespace VRSYS.Recording
         public bool spawnNetworkedPrefabsForReplay = false;
         // How long a client waits for those spawned copies before it starts the replay without them.
         public float networkedSpawnTimeout = 5.0f;
-        public bool replayAudio = true;
         public bool playbackTransform = true;
         public bool instantiateMissingObjects = true;
         public bool recordMicro = true;
@@ -107,7 +106,7 @@ namespace VRSYS.Recording
         [Tooltip("Largest absolute sample value that still counts as silence (1e-4 is about -80 dBFS).")]
         public float silenceThreshold = 1e-4f;
 
-        // Replay options per kind of recorded sound (all of them also need replayAudio).
+        // Replay options per kind of recorded sound. Audio is replayed when any of them is enabled (ReplayAudio).
         [Tooltip("Replay the recorded microphone (sound id 0).")]
         public bool replayMicrophone = true;
 
@@ -117,6 +116,9 @@ namespace VRSYS.Recording
 
         [Tooltip("Replay the recorded audio sources (sound ids 2 and up).")]
         public bool replayAudioSources = true;
+
+        // True when any recorded sound is replayed.
+        public bool ReplayAudio => replayMicrophone || replayAudioListener || replayAudioSources;
 
         [Tooltip("Optional anchor for playback. When set, recorded objects are matched/placed relative " +
                  "to this transform: pre-existing duplicate objects beneath it are matched to the " +

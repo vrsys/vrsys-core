@@ -753,7 +753,7 @@ namespace VRSYS.Recording
                         "Not all gameObjects from the recording are present in the current scene graph!", this);
             }
 
-            if (_controller.replayAudio)
+            if (_controller.ReplayAudio)
             {
                 if (RecordingLogger.IsEnabled(LogLevel.Info))
                     RecordingLogger.LogInfo(GetType().Name, "Trying to handle missing audio sources.", this);
@@ -772,7 +772,7 @@ namespace VRSYS.Recording
             }
             else
             {
-                DebugScenePreparationLog("PrepareReplayScene skipped HandleAudioSources because replayAudio=false.");
+                DebugScenePreparationLog("PrepareReplayScene skipped HandleAudioSources because no recorded sound is replayed.");
             }
         }
 

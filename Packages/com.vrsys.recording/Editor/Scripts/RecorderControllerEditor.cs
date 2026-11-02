@@ -316,37 +316,40 @@ namespace VRSYS.Recording
                     field.TrackPropertyValue(skip, Update);
                 });
 
-            // --- Playback ---
-            Category playback = AddCategory("playback", "Playback",
+            // --- Data Playback ---
+            Category playback = AddCategory("playback", "Data Playback",
                 "How a recording is applied to the scene when it is replayed.",
                 "rc-accent-playback", PlaybackStatus, "Animation.Play", "PlayButton");
+            Heading(playback, "Playback scope");
             Prop(playback, "replayRoot", "Replay Root",
                 "Optional anchor for playback. When set, recorded objects are matched/placed relative to this transform: pre-existing duplicate objects beneath it are matched to the recording, and objects that have to be instantiated for playback are created under it. Its position/rotation/scale thus offsets the whole replay. Leave empty to match/place objects at the scene root.",
                 "anchor offset parent origin root");
+            Prop(playback, "instantiateMissingObjects", "Instantiate missing objects",
+                "When enabled, recorded objects that are not present in the scene are instantiated for playback (querying their mesh/prefab information). When disabled, only objects already present in the scene are played back.",
+                "spawn create missing prefab mesh");
+
+            Heading(playback, "Transforms");
+            Prop(playback, "playbackTransform", "Playback transform",
+                "Attach TransformRecorder components during replay so recorded transforms are applied.",
+                "transform recorder apply");
             Prop(playback, "replayHierarchyChanges", "Replay hierarchy changes",
                 "Reapply recorded reparenting (hierarchy changes) during playback. Disable to keep objects under their initial parent.",
                 "parent reparent hierarchy");
             Prop(playback, "replayLocalTransformChangesOnly", "Replay on local changes only",
                 "When enabled, a replayed transform is applied from its recorded local position/rotation/scale. When disabled, the recorded global (world) transform is used instead.",
                 "local world global position rotation scale");
-            Prop(playback, "playbackTransform", "Playback transform",
-                "Attach TransformRecorder components during replay so recorded transforms are applied.",
-                "transform recorder apply");
-            Prop(playback, "instantiateMissingObjects", "Instantiate missing objects",
-                "When enabled, recorded objects that are not present in the scene are instantiated for playback (querying their mesh/prefab information). When disabled, only objects already present in the scene are played back.",
-                "spawn create missing prefab mesh");
-            Prop(playback, "replayAudio", "Playback audio",
-                "Handle recorded audio during replay. Turn off to replay no audio at all; the options below choose which recorded sounds are replayed.",
-                "sound audio");
+
+            Heading(playback, "Audio");
             Prop(playback, "replayMicrophone", "Replay microphone",
                 "Replay the recorded microphone (sound id 0).",
-                "mic microphone voice sound audio replay", ReplayAudioDependent);
+                "mic microphone voice sound audio replay");
             Prop(playback, "replayAudioListener", "Replay audio listener",
                 "Replay the recorded audio listener mix (sound id 1) as a non-spatial source. It already contains every other sound, so it plays them twice when the audio sources are replayed too.",
-                "listener mix output sound audio replay", ReplayAudioDependent);
+                "listener mix output sound audio replay");
             Prop(playback, "replayAudioSources", "Replay audio sources",
                 "Replay the recorded AudioSources (sound ids 2 and up) at their recorded emitters.",
-                "audiosource sources sound audio replay", ReplayAudioDependent);
+                "audiosource sources sound audio replay");
+
             Heading(playback, "End of playback");
             Prop(playback, "endPlaybackOnDurationReached", "Stop at recording end",
                 "Once playback time has reached the duration, the playback will be stopped.",
@@ -504,15 +507,6 @@ namespace VRSYS.Recording
             return category;
         }
 
-        // Greys out a replay audio option while 'Playback audio' is off.
-        private void ReplayAudioDependent(PropertyField field)
-        {
-            SerializedProperty replayAudio = serializedObject.FindProperty("replayAudio");
-            void Update(SerializedProperty p) => field.SetEnabled(p.boolValue);
-            Update(replayAudio);
-            field.TrackPropertyValue(replayAudio, Update);
-        }
-
         private void Prop(Category category, string path, string label, string tooltip, string keywords,
             System.Action<PropertyField> configure = null, bool requiresServerOnly = false)
         {
@@ -646,7 +640,7 @@ namespace VRSYS.Recording
 
         private string ReplayAudioStatus()
         {
-            if (!_controller.replayAudio)
+            if (!_controller.ReplayAudio)
                 return null;
             string sounds = string.Join(", ", new[]
             {

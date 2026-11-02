@@ -1425,13 +1425,6 @@ namespace VRSYS.Recording
 
             if (recorderState.currentState != State.Recording && lateJoinPlayback)
                 LateJoinLocalPlaybackStart();
-
-            if (recorderState.currentState == State.Replaying && synchronizedPlayback)
-            {
-                // The host publishes its replay time; every client (incl. the host) syncs to it.
-                _networkController.PublishHostReplayTime(recorderState.currentReplayTime);
-                SynchronizePlayback();
-            }
         }
 
         private void ApplyPluginLogLevelIfChanged()
@@ -1475,6 +1468,15 @@ namespace VRSYS.Recording
                 try
                 {
                     AdvanceReplayTime();
+
+                    // Sync after advancing, so host and client compare their replay times of this frame. Before
+                    // advancing, a long client frame looked like the client falling behind and snapped it forward.
+                    if (synchronizedPlayback)
+                    {
+                        // The host publishes its replay time; every client (incl. the host) syncs to it.
+                        _networkController.PublishHostReplayTime(recorderState.currentReplayTime);
+                        SynchronizePlayback();
+                    }
 
                     if (recorderState.currentReplayTime < recorderState.recordingDuration - ReplayBoundaryPaddingSeconds ||
                         indefinitePlayback)

@@ -56,8 +56,15 @@ namespace VRSYS.Recording
         /// <summary>
         /// The host's (Netcode server's) current replay time, broadcast to every client. Used as the
         /// synchronization target for synchronized playback, replacing the previous app-level singleton.
+        /// Clients advance the last published value by the network time since it was sent (unless paused), so
+        /// they compare against the host's time now instead of a value one latency old.
         /// </summary>
-        public float HostReplayTime { get; private set; }
+        public float HostReplayTime => _hostReplayTime + (_state.replayPaused || !IsSpawned
+            ? 0.0f
+            : (float)Math.Max(0.0, NetworkManager.ServerTime.Time - _hostReplayServerTime));
+
+        private float _hostReplayTime;
+        private double _hostReplayServerTime;
 
         private NetworkVariable<RecordingDownloadProgress> _downloadProgress = new NetworkVariable<RecordingDownloadProgress>(
             default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
@@ -1059,17 +1066,19 @@ namespace VRSYS.Recording
             if (!IsServer)
                 return;
 
-            HostReplayTime = replayTime;
-            PublishHostReplayTimeRpc(replayTime, _state.recorderID);
+            _hostReplayTime = replayTime;
+            _hostReplayServerTime = NetworkManager.ServerTime.Time;
+            PublishHostReplayTimeRpc(replayTime, _hostReplayServerTime, _state.recorderID);
         }
 
         [Rpc(SendTo.NotServer, InvokePermission = RpcInvokePermission.Server)]
-        private void PublishHostReplayTimeRpc(float replayTime, int recorderId)
+        private void PublishHostReplayTimeRpc(float replayTime, double serverTime, int recorderId)
         {
             if (recorderId != _state.recorderID)
                 return;
 
-            HostReplayTime = replayTime;
+            _hostReplayTime = replayTime;
+            _hostReplayServerTime = serverTime;
         }
         #endregion
         

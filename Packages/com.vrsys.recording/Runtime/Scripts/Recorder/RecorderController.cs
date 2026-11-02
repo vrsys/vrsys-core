@@ -1502,9 +1502,14 @@ namespace VRSYS.Recording
             if (recorderState.replayPaused)
                 return;
 
+            // Replay time follows the real clock like the recording time (audio clock), not the frame rate:
+            // unscaledDeltaTime is not capped by Time.maximumDeltaTime, so slow or stalled frames no longer slow
+            // the replay down. Offline capture (Time.captureFramerate) keeps its fixed frame steps.
+            float elapsed = Time.captureDeltaTime > 0.0f ? Time.deltaTime : Time.unscaledDeltaTime;
+
             // hold just short of the end (same as the old TimeInteractor behaviour) instead of
             // looping/auto-ending. Change the cap here if auto-end/loop is wanted.
-            float nextPlaybackTime = recorderState.currentReplayTime + Time.deltaTime;
+            float nextPlaybackTime = recorderState.currentReplayTime + elapsed;
             bool nextTimeWithinDuration = nextPlaybackTime < recorderState.recordingDuration;
 
             if (nextTimeWithinDuration || indefinitePlayback)

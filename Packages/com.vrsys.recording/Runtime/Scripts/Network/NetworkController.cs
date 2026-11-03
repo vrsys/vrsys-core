@@ -70,6 +70,10 @@ namespace VRSYS.Recording
             default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
         public RecordingDownloadProgress DownloadProgress => _downloadProgress.Value;
 
+        // The server's RecorderState.useLocalReplayFiles, so every peer populates its replay list from the same source.
+        private NetworkVariable<bool> _useLocalReplayFiles = new NetworkVariable<bool>(
+            true, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
         private RecorderState _state;
         private RecorderController _controller;
 
@@ -116,14 +120,37 @@ namespace VRSYS.Recording
 
         public override void OnNetworkSpawn()
         {
+            // OnNetworkSpawn can run before Start for in-scene objects.
+            _state = GetComponent<RecorderState>();
+
             if (IsServer)
+            {
                 NetworkManager.OnClientDisconnectCallback += OnClientDisconnected;
+            }
+            else
+            {
+                _useLocalReplayFiles.OnValueChanged += OnUseLocalReplayFilesChanged;
+                _state.useLocalReplayFiles = _useLocalReplayFiles.Value;
+            }
         }
 
         public override void OnNetworkDespawn()
         {
             if (NetworkManager != null)
                 NetworkManager.OnClientDisconnectCallback -= OnClientDisconnected;
+            _useLocalReplayFiles.OnValueChanged -= OnUseLocalReplayFilesChanged;
+        }
+
+        private void Update()
+        {
+            // The inspector writes RecorderState.useLocalReplayFiles directly, so the server publishes changes by polling.
+            if (IsServer && _useLocalReplayFiles.Value != _state.useLocalReplayFiles)
+                _useLocalReplayFiles.Value = _state.useLocalReplayFiles;
+        }
+
+        private void OnUseLocalReplayFilesChanged(bool previous, bool current)
+        {
+            _state.useLocalReplayFiles = current;
         }
         
         #region RecordingFileDownload

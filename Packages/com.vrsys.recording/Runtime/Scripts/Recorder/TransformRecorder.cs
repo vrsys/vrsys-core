@@ -187,6 +187,7 @@ namespace VRSYS.Recording
         private bool _physicsComponentsLookedUp;
         private bool _holdsRigidbody;
         private bool _wasKinematic;
+        private RigidbodyInterpolation _interpolationBefore;
 
         private void SetDrivenByReplay(bool driven)
         {
@@ -206,19 +207,27 @@ namespace VRSYS.Recording
                 if (!_holdsRigidbody)
                 {
                     _wasKinematic = _rigidbody.isKinematic;
+                    _interpolationBefore = _rigidbody.interpolation;
                     _holdsRigidbody = true;
                 }
 
-                // Re-applied every frame: NetworkRigidbody makes the body dynamic when this peer gains authority.
+                // Re-applied every frame: NetworkRigidbody makes the body dynamic (and restores its interpolation) when
+                // this peer gains authority. The replay writes the pose directly; Rigidbody interpolation would blend it
+                // with the previous physics pose, so the object would lag behind or judder.
                 if (!_rigidbody.isKinematic)
                     _rigidbody.isKinematic = true;
+                if (_rigidbody.interpolation != RigidbodyInterpolation.None)
+                    _rigidbody.interpolation = RigidbodyInterpolation.None;
             }
             else if (_holdsRigidbody)
             {
                 // Only with authority: otherwise the owner simulates the body (e.g. a client throwing it during a
                 // take) and NetworkRigidbody keeps this copy kinematic, so it follows the owner's pose.
                 if (HasNetworkAuthority())
+                {
                     _rigidbody.isKinematic = _wasKinematic;
+                    _rigidbody.interpolation = _interpolationBefore;
+                }
                 _holdsRigidbody = false;
             }
         }
@@ -782,7 +791,10 @@ namespace VRSYS.Recording
 
             // Hand physics back after the replay. Without network authority, NetworkRigidbody keeps the body kinematic.
             if (_holdsRigidbody && _rigidbody != null && HasNetworkAuthority())
+            {
                 _rigidbody.isKinematic = _wasKinematic;
+                _rigidbody.interpolation = _interpolationBefore;
+            }
             // Objects the replay created are destroyed with it; only objects that were in the scene get their pose back.
             if (_presentInRecording == 1 && !ReplayInstance.IsReplayInstance(gameObject))
             {

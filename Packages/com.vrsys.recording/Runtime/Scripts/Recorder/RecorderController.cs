@@ -148,6 +148,8 @@ namespace VRSYS.Recording
         private NetworkController _networkController;
 
         private float _lastTransformRecordTime;
+        private float _lastReplayLoopTime;
+        private const float ReclaimOnJumpSeconds = 0.5f;
         private double _recordingDspStartTime;
 
         // Use the audio clock for all recording tracks, including after a main-thread stall.
@@ -759,32 +761,37 @@ namespace VRSYS.Recording
             onReplayHasStarted.Invoke();
         }
 
-        // A client can still own a live networked prop when a replay starts (e.g. it never settled after a grab, so
-        // ownership was not returned). The server then has no authority and skips it in the replay loop, and clients
-        // never replay networked transforms, so nobody would move it. Take ownership back once, at replay start only,
-        // so a client grabbing a prop during the replay (rerecording takeover) still keeps it. Props a client is
-        // holding right now are left with that client.
-        private void ReclaimReplayedNetworkObjects()
+        // A client can own a networked prop the replay drives: it still owns it when the replay starts (ownership is
+        // not returned after a grab), or it grabbed the prop during the replay. The server then has no authority and
+        // skips it in the replay loop, and clients never replay networked transforms, so nobody would move it. The
+        // server takes released props back at replay start, after a seek and when a rerecording take ends (called by
+        // the editor), not on release: a thrown prop flies and lands under its owner's physics first. Props a client
+        // holds, or a running take captures, stay with the client.
+        public void ReclaimReplayedNetworkObjects()
         {
             if (!replayNetworkedTransformOnServerOnly || !_networkController.IsServerOrHost())
                 return;
 
             foreach (var recorder in _transformRecorder.Values)
+                ReclaimIfReleased(recorder);
+        }
+
+        private void ReclaimIfReleased(Recorder recorder)
+        {
+            if (recorder == null || !recorder.IsNetworkedRecorder() || recorder.HasNetworkAuthority() ||
+                recorder.inRerecordingMode)
+                return;
+
+            InteractableNetworkState grabState = recorder.GetComponent<InteractableNetworkState>();
+            if (grabState != null && grabState.IsSpawned && grabState.isGrabbed.Value)
+                return;
+
+            NetworkObject networkObject = recorder.GetComponentInParent<NetworkObject>();
+            if (networkObject != null && networkObject.IsSpawned && !networkObject.IsOwnedByServer)
             {
-                if (recorder == null || !recorder.IsNetworkedRecorder() || recorder.HasNetworkAuthority())
-                    continue;
-
-                InteractableNetworkState grabState = recorder.GetComponent<InteractableNetworkState>();
-                if (grabState != null && grabState.IsSpawned && grabState.isGrabbed.Value)
-                    continue;
-
-                NetworkObject networkObject = recorder.GetComponentInParent<NetworkObject>();
-                if (networkObject != null && networkObject.IsSpawned && !networkObject.IsOwnedByServer)
-                {
-                    DebugReplayStartupLog("Reclaiming ownership of " + networkObject.name + " from client " +
-                                          networkObject.OwnerClientId + " for replay.");
-                    networkObject.ChangeOwnership(NetworkManager.ServerClientId);
-                }
+                DebugReplayStartupLog("Reclaiming ownership of " + networkObject.name + " from client " +
+                                      networkObject.OwnerClientId + " for replay.");
+                networkObject.ChangeOwnership(NetworkManager.ServerClientId);
             }
         }
 
@@ -1596,6 +1603,11 @@ namespace VRSYS.Recording
 
         private void Replay()
         {
+            // A seek (e.g. to review a take) puts released props back on their recorded path.
+            if (Mathf.Abs(recorderState.currentReplayTime - _lastReplayLoopTime) > ReclaimOnJumpSeconds)
+                ReclaimReplayedNetworkObjects();
+            _lastReplayLoopTime = recorderState.currentReplayTime;
+
             foreach (var (k,v) in _transformRecorder)
             {
                 if(v == null)

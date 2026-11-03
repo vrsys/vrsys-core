@@ -215,7 +215,10 @@ namespace VRSYS.Recording
             }
             else if (_holdsRigidbody)
             {
-                _rigidbody.isKinematic = _wasKinematic;
+                // Only with authority: otherwise the owner simulates the body (e.g. a client throwing it during a
+                // take) and NetworkRigidbody keeps this copy kinematic, so it follows the owner's pose.
+                if (HasNetworkAuthority())
+                    _rigidbody.isKinematic = _wasKinematic;
                 _holdsRigidbody = false;
             }
         }

@@ -883,7 +883,8 @@ namespace VRSYS.Recording
             foreach (Component comp in components)
             {
                 if (comp == null || !(ShouldPreserveComponent(comp) ||
-                                      keepNetworkComponents && (comp is NetworkObject || comp is NetworkBehaviour)))
+                                      keepNetworkComponents && (comp is NetworkObject || comp is NetworkBehaviour ||
+                                                                ReplayComponentPreserver.IsPreservedOnNetworkedCopies(comp))))
                     continue;
 
                 preservedComponents.Add(comp);

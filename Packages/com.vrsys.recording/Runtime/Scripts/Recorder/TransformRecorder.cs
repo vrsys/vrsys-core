@@ -160,9 +160,18 @@ namespace VRSYS.Recording
         private float lastErrorLog = 0.0f;
         private NetworkTransform _networkTransform;
 
+        // Looked up when the recorder is added, not in Start: the replay start reclaims client-owned networked objects
+        // in the same frame the recorders are attached (RecorderController.ReclaimReplayedNetworkObjects).
+        private void Awake() => LookUpNetworkTransform();
+
         public override void Start()
         {
             base.Start();
+            LookUpNetworkTransform();
+        }
+
+        private void LookUpNetworkTransform()
+        {
             _networkTransform = GetComponent<NetworkTransform>();
             isNetworkedRecorder = _networkTransform != null;
         }

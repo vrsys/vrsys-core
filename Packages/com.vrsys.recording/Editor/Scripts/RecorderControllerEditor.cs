@@ -266,8 +266,8 @@ namespace VRSYS.Recording
             Category recording = AddCategory("recording", "Data Recording",
                 "Which objects, transforms and audio are captured, and how often.",
                 "rc-accent-transform", () => Join(TransformStatus(), AudioStatus()), "Transform Icon");
-            Heading(recording, "Recording scope");
-            Prop(recording, "attachTransformRecorderToAll", "Record all scene objects",
+            Heading(recording, "Transforms");
+            Prop(recording, "attachTransformRecorderToAll", "Record all scene transforms",
                 "Attach a transform recorder to every object in the scene when recording. Disable to record only the recording roots.",
                 "transform recorder every object scene");
             Prop(recording, "recordingRoots", "Recording roots",
@@ -281,11 +281,10 @@ namespace VRSYS.Recording
                     Update(all);
                     field.TrackPropertyValue(all, Update);
                 });
-            Heading(recording, "Transforms");
             Prop(recording, "transformRecordingStepsPerSecond", "Recording steps per second",
                 "How many transform samples are captured per second while recording.",
                 "rate frequency hz sample fps steps");
-            Prop(recording, "recordOnLocalTransformChangesOnly", "Record on local changes only",
+            Prop(recording, "recordOnLocalTransformChangesOnly", "Record local transform changes",
                 "When enabled, a transform is recorded only when its local position/rotation/scale changes. When disabled, changes are detected from the global (world) transform instead.",
                 "local world global position rotation scale change detection");
 
@@ -335,7 +334,7 @@ namespace VRSYS.Recording
             Prop(playback, "replayHierarchyChanges", "Replay hierarchy changes",
                 "Reapply recorded reparenting (hierarchy changes) during playback. Disable to keep objects under their initial parent.",
                 "parent reparent hierarchy");
-            Prop(playback, "replayLocalTransformChangesOnly", "Replay on local changes only",
+            Prop(playback, "replayLocalTransformChangesOnly", "Replay local transform changes",
                 "When enabled, a replayed transform is applied from its recorded local position/rotation/scale. When disabled, the recorded global (world) transform is used instead.",
                 "local world global position rotation scale");
 

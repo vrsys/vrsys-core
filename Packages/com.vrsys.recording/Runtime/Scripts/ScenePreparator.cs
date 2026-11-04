@@ -607,8 +607,10 @@ namespace VRSYS.Recording
 
             foreach (AudioSource audioSource in audioSources)
             {
+                // Live users' audio (e.g. their ODIN voices) keeps playing, so they can still talk and be rerecorded.
                 if (audioSource.gameObject.name != "UserSpeaker" &&
                     !audioSource.gameObject.name.Contains("Speaker for Player") &&
+                    audioSource.GetComponentInParent<NetworkUser>() == null &&
                     _controller.IsInRecordingScope(audioSource.gameObject))
                 {
                     audioSource.Pause();

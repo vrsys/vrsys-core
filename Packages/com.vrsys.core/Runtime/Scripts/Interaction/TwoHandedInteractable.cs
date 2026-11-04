@@ -86,6 +86,7 @@ namespace VRSYS.Core.Interaction
 
         protected override void Awake()
         {
+            base.Awake();
             networkState = GetComponent<InteractableNetworkState>();
             selectMode = UnityEngine.XR.Interaction.Toolkit.Interactables.InteractableSelectMode.Multiple;
 
@@ -195,7 +196,8 @@ namespace VRSYS.Core.Interaction
         {
             UnityEngine.XR.Interaction.Toolkit.Interactors.XRBaseInteractor interactor = (UnityEngine.XR.Interaction.Toolkit.Interactors.XRBaseInteractor)interactorsSelecting[0];
 
-            Matrix4x4 interactorMat = GetWorldMatrix(interactor.attachTransform.gameObject);
+            // Tracked interactors can provide a live pinch pose different from their configured attachTransform.
+            Matrix4x4 interactorMat = GetWorldMatrix(interactor.GetAttachTransform(this).gameObject);
             Matrix4x4 mat = interactorMat * interactorOffsets[interactor.GetInstanceID()];
 
             SetTransformByMatrix(this.gameObject, mat);
@@ -217,10 +219,10 @@ namespace VRSYS.Core.Interaction
             UnityEngine.XR.Interaction.Toolkit.Interactors.XRBaseInteractor firstInteractor = (UnityEngine.XR.Interaction.Toolkit.Interactors.XRBaseInteractor)interactorsSelecting[0];
             UnityEngine.XR.Interaction.Toolkit.Interactors.XRBaseInteractor secondInteractor = (UnityEngine.XR.Interaction.Toolkit.Interactors.XRBaseInteractor)interactorsSelecting[1];
 
-            Matrix4x4 firstInteractorMat = GetWorldMatrix(firstInteractor.attachTransform.gameObject);
+            Matrix4x4 firstInteractorMat = GetWorldMatrix(firstInteractor.GetAttachTransform(this).gameObject);
             Matrix4x4 firstContactPoint = firstInteractorMat * contactPointOffsets[firstInteractor.GetInstanceID()];
 
-            Matrix4x4 secondInteractorMat = GetWorldMatrix(secondInteractor.attachTransform.gameObject);
+            Matrix4x4 secondInteractorMat = GetWorldMatrix(secondInteractor.GetAttachTransform(this).gameObject);
             Matrix4x4 secondContactPoint = secondInteractorMat * contactPointOffsets[secondInteractor.GetInstanceID()];
 
             if (contactDistance == -1)
@@ -280,7 +282,7 @@ namespace VRSYS.Core.Interaction
 
         private Matrix4x4 CalculateInteractorOffset(UnityEngine.XR.Interaction.Toolkit.Interactors.XRBaseInteractor interactor)
         {
-            Matrix4x4 interactorMat = Matrix4x4.TRS(interactor.attachTransform.position, interactor.attachTransform.rotation, interactor.attachTransform.lossyScale);
+            Matrix4x4 interactorMat = GetWorldMatrix(interactor.GetAttachTransform(this).gameObject);
             Matrix4x4 interactableMat = Matrix4x4.TRS(transform.position, transform.rotation, transform.lossyScale);
             return Matrix4x4.Inverse(interactorMat) * interactableMat;
         }
@@ -293,7 +295,7 @@ namespace VRSYS.Core.Interaction
                 UnityEngine.XR.Interaction.Toolkit.Interactors.XRRayInteractor rayInteractor = (UnityEngine.XR.Interaction.Toolkit.Interactors.XRRayInteractor)interactor;
                 rayInteractor.TryGetCurrent3DRaycastHit(out contactPoint);
 
-                Matrix4x4 interactorMat = Matrix4x4.TRS(interactor.attachTransform.position, interactor.attachTransform.rotation, interactor.attachTransform.lossyScale);
+                Matrix4x4 interactorMat = GetWorldMatrix(interactor.GetAttachTransform(this).gameObject);
                 Matrix4x4 hitPointMat = Matrix4x4.TRS(contactPoint.point, Quaternion.identity, Vector3.one);
 
                 return Matrix4x4.Inverse(interactorMat) * hitPointMat;

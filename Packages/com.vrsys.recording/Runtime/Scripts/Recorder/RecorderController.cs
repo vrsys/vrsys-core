@@ -974,7 +974,7 @@ namespace VRSYS.Recording
 
         private void UploadFilesToServer()
         {
-            string[] extensions = { ".transform", ".sound", ".recordmeta", ".generic" };
+            string[] extensions = { ".transform", ".sound", ".recordmeta", ".generic", ".events" };
             extensions = extensions.Where(extension =>
                 File.Exists(ActiveRecordingDirectory + recorderState.recordingFile + extension)).ToArray();
             if (_pendingRecordingUploads == 0)

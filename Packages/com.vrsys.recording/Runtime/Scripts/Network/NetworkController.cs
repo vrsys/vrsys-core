@@ -82,6 +82,9 @@ namespace VRSYS.Recording
         private bool _soundsDownloaded = false;
         private bool _metaInformationDownloaded = false;
         private bool _genericDownloaded = false;
+        // Optional: recordings without semantic events have no .events file on the server (404 counts as done).
+        private bool _eventsDownloaded = false;
+        private bool _eventsDownloadFailed = false;
         private bool _transformsDownloadFailed = false;
         private bool _soundsDownloadFailed = false;
         private bool _metaInformationDownloadFailed = false;
@@ -160,6 +163,7 @@ namespace VRSYS.Recording
                    ", transforms=" + _transformsDownloaded +
                    ", meta=" + _metaInformationDownloaded +
                    ", generic=" + _genericDownloaded +
+                   ", events=" + _eventsDownloaded +
                    ", failed(sounds=" + _soundsDownloadFailed +
                    ", transforms=" + _transformsDownloadFailed +
                    ", meta=" + _metaInformationDownloadFailed +
@@ -270,6 +274,7 @@ namespace VRSYS.Recording
                 _transformsDownloaded = false;
                 _metaInformationDownloaded = false;
                 _genericDownloaded = false;
+                _eventsDownloaded = false;
                 _replayStarted = false;
                 _downloadStatusReported = false;
 
@@ -309,6 +314,7 @@ namespace VRSYS.Recording
                 _transformsDownloaded = false;
                 _metaInformationDownloaded = false;
                 _genericDownloaded = false;
+                _eventsDownloaded = false;
                 _replayStarted = false;
                 _downloadStatusReported = false;
 
@@ -432,7 +438,8 @@ namespace VRSYS.Recording
         
         public bool IsDownloading()
         {
-            if (!_soundsDownloaded || !_transformsDownloaded || !_metaInformationDownloaded || !_genericDownloaded)
+            if (!_soundsDownloaded || !_transformsDownloaded || !_metaInformationDownloaded || !_genericDownloaded ||
+                !_eventsDownloaded)
             {
 
                 if (_transformsDownloadFailed)
@@ -457,6 +464,12 @@ namespace VRSYS.Recording
                 {
                     _genericDownloadFailed = false;
                     StartCoroutine(DownloadFileFromServer(_state.projectName, DownloadDirectory(), "get_generic_recording", _state.selectedReplayFile));
+                }
+
+                if (_eventsDownloadFailed)
+                {
+                    _eventsDownloadFailed = false;
+                    StartCoroutine(DownloadFileFromServer(_state.projectName, DownloadDirectory(), "get_events_recording", _state.selectedReplayFile));
                 }
 
                 return true;
@@ -493,6 +506,10 @@ namespace VRSYS.Recording
             else if (url.Contains("get_transform_recording"))
             {
                fileType = ".transform";
+            }
+            else if (url.Contains("get_events_recording"))
+            {
+                fileType = ".events";
             }
             
             using (var uwr = new UnityWebRequest(completeURL, UnityWebRequest.kHttpVerbGET))
@@ -548,6 +565,17 @@ namespace VRSYS.Recording
                         {
                             _transformsDownloadFailed = true;
                         }
+                        else if (url.Contains("get_events_recording"))
+                        {
+                            // No events for this recording: done, without keeping the error page as a file.
+                            if (uwr.responseCode == 404)
+                            {
+                                if (File.Exists(file)) File.Delete(file);
+                                _eventsDownloaded = true;
+                            }
+                            else
+                                _eventsDownloadFailed = true;
+                        }
                     }
                     else
                     {
@@ -569,6 +597,10 @@ namespace VRSYS.Recording
                         else if (url.Contains("get_transform_recording"))
                         {
                             _transformsDownloaded = true;
+                        }
+                        else if (url.Contains("get_events_recording"))
+                        {
+                            _eventsDownloaded = true;
                         }
                     }
                     DebugDistributedReplayStatusIfChanged("DownloadFileFromServer completion " + fileType);
@@ -595,6 +627,10 @@ namespace VRSYS.Recording
                     {
                         _transformsDownloaded = true;
                     }
+                    else if (url.Contains("get_events_recording"))
+                    {
+                        _eventsDownloaded = true;
+                    }
                     DebugDistributedReplayStatusIfChanged("DownloadFileFromServer skipped " + fileType);
                 }
             }
@@ -620,6 +656,7 @@ namespace VRSYS.Recording
             StartCoroutine(DownloadFileFromServer(projectName, DownloadDirectory(), "get_sound_recording", replayFile));
             StartCoroutine(DownloadFileFromServer(projectName, DownloadDirectory(), "get_meta_recording", replayFile));
             StartCoroutine(DownloadFileFromServer(projectName, DownloadDirectory(), "get_generic_recording", replayFile));
+            StartCoroutine(DownloadFileFromServer(projectName, DownloadDirectory(), "get_events_recording", replayFile));
         }
         #endregion
         

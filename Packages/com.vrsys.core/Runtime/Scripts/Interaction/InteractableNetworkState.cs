@@ -40,6 +40,7 @@ using System.Collections;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Serialization;
+using UnityEngine.XR.Interaction.Toolkit.Interactables;
 
 namespace VRSYS.Core.Interaction
 {
@@ -63,6 +64,34 @@ namespace VRSYS.Core.Interaction
         [SerializeField] private bool _getOwnership = false;
 
         private Coroutine _returnOwnershipRoutine;
+
+        // Server only: the client whose grab set isGrabbed.
+        private ulong _grabbedByClientId;
+
+        #endregion
+
+        #region NetworkBehaviour Callbacks
+
+        public override void OnNetworkSpawn()
+        {
+            base.OnNetworkSpawn();
+            if (IsServer)
+                NetworkManager.OnClientDisconnectCallback += OnClientDisconnected;
+        }
+
+        public override void OnNetworkDespawn()
+        {
+            if (IsServer && NetworkManager != null)
+                NetworkManager.OnClientDisconnectCallback -= OnClientDisconnected;
+            base.OnNetworkDespawn();
+        }
+
+        // A client that leaves while grabbing the object never sends the release, so the server clears it.
+        private void OnClientDisconnected(ulong clientId)
+        {
+            if (isGrabbed.Value && clientId == _grabbedByClientId)
+                isGrabbed.Value = false;
+        }
 
         #endregion
 
@@ -135,14 +164,31 @@ namespace VRSYS.Core.Interaction
             ReturnOwnershipRpc();
         }
 
+        /// <summary>
+        /// Server: the grab flag can outlive the grab, e.g. when the release happened while the owner's app was paused.
+        /// Asks the owner to release the object if nobody holds it there; it is then handed back to the server once it
+        /// has settled, like after a normal release.
+        /// </summary>
+        public void ReleaseIfNotHeld() => ReleaseIfNotHeldRpc();
+
         #endregion
 
         #region RPCs
 
         [Rpc(SendTo.Server)]
-        private void UpdateIsGrabbedRpc(bool isGrabbed)
+        private void UpdateIsGrabbedRpc(bool isGrabbed, RpcParams rpcParams = default)
         {
             this.isGrabbed.Value = isGrabbed;
+            _grabbedByClientId = rpcParams.Receive.SenderClientId;
+        }
+
+        [Rpc(SendTo.Owner)]
+        private void ReleaseIfNotHeldRpc()
+        {
+            // XR selection is local to each peer: on the owner it tells whether a user there holds the object.
+            var interactable = GetComponent<XRBaseInteractable>();
+            if (isGrabbed.Value && interactable != null && !interactable.isSelected)
+                UpdateIsGrabbed(false);
         }
 
         [Rpc(SendTo.Server)]

@@ -784,7 +784,11 @@ namespace VRSYS.Recording
 
             InteractableNetworkState grabState = recorder.GetComponent<InteractableNetworkState>();
             if (grabState != null && grabState.IsSpawned && grabState.isGrabbed.Value)
+            {
+                // Let the owner release it if the grab flag outlived the grab; the prop then returns to the server.
+                grabState.ReleaseIfNotHeld();
                 return;
+            }
 
             NetworkObject networkObject = recorder.GetComponentInParent<NetworkObject>();
             if (networkObject != null && networkObject.IsSpawned && !networkObject.IsOwnedByServer)

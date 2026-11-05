@@ -42,6 +42,9 @@ namespace VRSYS.Recording
         public IReadOnlyDictionary<MetaAvatarReplayDataWriter, MetaAvatarReplayDataReader> PlaybackToRealUser =>
             _playbackToRealUser;
 
+        // Raised on every peer after the networked links were resolved to local objects (PlaybackToRealUser is current).
+        public event Action LinksChanged;
+
         private void Awake()
         {
             if(Instance != null)
@@ -233,6 +236,8 @@ namespace VRSYS.Recording
                 RecordingLogger.LogInfo(GetType().Name,
                     $"Applied {_playbackToRealUser.Count} of {_links.Count} networked link(s):\n" + mapping, this);
             }
+
+            LinksChanged?.Invoke();
         }
  
         public void ClearLinks()

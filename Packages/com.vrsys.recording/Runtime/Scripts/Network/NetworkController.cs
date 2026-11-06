@@ -1127,7 +1127,9 @@ namespace VRSYS.Recording
         /// </summary>
         public void PublishHostReplayTime(float replayTime)
         {
-            if (!IsServer)
+            // The NetworkManager shuts down before the last replay frames when the application quits; RPCs fail then.
+            bool networkRunning = NetworkManager != null && NetworkManager.IsListening;
+            if (!IsServer || !networkRunning)
                 return;
 
             _hostReplayTime = replayTime;

@@ -1,4 +1,5 @@
 using System;
+using Oculus.Avatar2;
 using UnityEngine;
 using VRSYS.Core.Logging;
 using VRSYS.Meta.Avatars;
@@ -101,17 +102,20 @@ public class MetaAvatarReplayDataWriter : MonoBehaviour
 
     public void HideAvatar()
     {
-        if (_replayEntity == null)
+        if (!CanChangeEntity())
             return;
         _replayEntity.Hidden = true;
     }
 
     public void ShowAvatar()
     {
-        if (_replayEntity == null)
+        if (!CanChangeEntity())
             return;
         _replayEntity.Hidden = false;
     }
+
+    // When the application quits during a replay, the avatar SDK is shut down before the replay ends.
+    private bool CanChangeEntity() => _replayEntity != null && OvrAvatarManager.initialized;
 
     public void DestroyReplayEntity()
     {

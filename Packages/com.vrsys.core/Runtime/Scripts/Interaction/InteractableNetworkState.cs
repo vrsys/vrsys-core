@@ -36,6 +36,7 @@
 //   Date:           2025
 //-----------------------------------------------------------------
 
+using System;
 using System.Collections;
 using Unity.Netcode;
 using UnityEngine;
@@ -67,6 +68,9 @@ namespace VRSYS.Core.Interaction
 
         // Server only: the client whose grab set isGrabbed.
         private ulong _grabbedByClientId;
+
+        /// <summary>Server only: raised when a client grabs or releases an object (object, client id, grabbed).</summary>
+        public static event Action<InteractableNetworkState, ulong, bool> ServerGrabChanged;
 
         #endregion
 
@@ -180,6 +184,7 @@ namespace VRSYS.Core.Interaction
         {
             this.isGrabbed.Value = isGrabbed;
             _grabbedByClientId = rpcParams.Receive.SenderClientId;
+            ServerGrabChanged?.Invoke(this, _grabbedByClientId, isGrabbed);
         }
 
         [Rpc(SendTo.Owner)]

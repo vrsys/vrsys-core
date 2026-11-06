@@ -74,6 +74,12 @@ namespace VRSYS.Recording
         public UnityEvent onRecordingHasStarted = new UnityEvent();
         public UnityEvent onRecordingHasEnded = new UnityEvent();
 
+        // Raised in EndRecording before the native recording stops, while it is still open (e.g. for semantic events).
+        public event Action RecordingStopping;
+
+        // Raised for every recorder registered while a recording is prepared or running, not for replays.
+        public event Action<Recorder> RecorderRegisteredForRecording;
+
         public int transformRecordingStepsPerSecond = 20;
         public int audioRecordingStepsPerSecond = 10;
 
@@ -925,6 +931,8 @@ namespace VRSYS.Recording
 
         public void EndRecording()
         {
+            RecordingStopping?.Invoke();
+
             recorderState.currentState = State.Idle;
             recorderState.localRecording = false;
             if (RecordingLogger.IsEnabled(LogLevel.Info))
@@ -1046,12 +1054,28 @@ namespace VRSYS.Recording
 
         public void RegisterRecorder(int id, Recorder recorder)
         {
+            bool added = false;
             if (recorder is TransformRecorder && !_transformRecorder.ContainsKey(id))
+            {
                 _transformRecorder.Add(id, recorder);
+                added = true;
+            }
             if (recorder is AudioRecorder && !_audioRecorder.ContainsKey(id))
+            {
                 _audioRecorder.Add(id, recorder);
+                added = true;
+            }
             if (recorder is GenericRecorder && !_genericRecorder.ContainsKey(id))
+            {
                 _genericRecorder.Add(id, recorder);
+                added = true;
+            }
+
+            // Only new recorders that take part in a recording, not those attached for a replay.
+            bool forRecording = recorderState.currentState == State.PrepareRecording ||
+                                recorderState.currentState == State.Recording;
+            if (added && forRecording)
+                RecorderRegisteredForRecording?.Invoke(recorder);
         }
 
         public void DeregisterRecorder(int id, Recorder recorder)
